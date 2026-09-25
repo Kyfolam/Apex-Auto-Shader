@@ -8,53 +8,42 @@ Requires the [CAST importer](https://github.com/dtzxporter/cast).
 
 ## Install
 
-1. Install and enable the CAST importer.
-2. Download the latest **Release** zip of this addon.
+1. Install and enable the CAST importer
+2. Download the latest **Release** zip of this addon
 3. **Edit → Preferences → Get Extensions → Install from Disk**
-4. Enable **Apex Auto Shader**, then restart Blender.
-
-Zip the `apex_auto_shader` folder if you build it yourself. Do not use GitHub → Code → Download ZIP.
+4. Enable **Apex Auto Shader**
 
 ---
 
 ## How to use
 
-### Import
+<img width="236" height="101" alt="image" src="https://github.com/user-attachments/assets/53ca0948-5457-43b5-aaf6-d9906ec68ad0" />
 
-**N-Panel → Apex Shader → Import CAST Model** and pick a `.cast` file.
+### Import CAST Model(s)
 
-Textures next to the file are wired automatically. The model is scaled and shaded with Apex Shader+.
+Either you select the Folder where the Apex Legends Models are located in, then EVERY LOD0 Model is getting imported.
+Or select the CAST model directly (multiple selection possible).
 
-<!-- Add docs/import.png -->
+### Find Skins
 
-### Import all from folder
-
-Pick the folder instead of a single file. Every LOD0 model in that folder is imported.
-
-<!-- Add docs/import-folder.png -->
-
-### Import selected through Skinlist
-
-**Find Skins** — type a name or pick a legend, then import the match from your model folder.
-
-<!-- Add docs/find-skins.png -->
+Select the Folder of your exported files. The closer you are at the source, the faster the search is.
+Then the Skins are listed which can be found and which not. You can search by Legends.
+In the Search-Tab you can look for a specific Skin.
 
 ---
 
 ## Features
 
-- **Animations** — banner poses, emotes (ground / drop), finishers
+- **Animations** — Every Animation gets listed automatically. It includes banner poses, emotes (ground / drop), finishers.
+  Added to Finishers: You can select also a Finisher with a victim, add Legend and Skin of your choice.
 - **Studio** — camera, lights, showcase framing
 
 ---
 
-## Additional feature: Optic Enhancer
+## Additional feature: Optic Enhancer (UPCOMING)
 
 Optional companion addon for crease, wear, mythic glow and portrait shading.
 
-Install Apex Auto Shader first, then [Optic Enhancer](https://github.com/Kyfolam/Optic-Enhancer).
-
 ---
 
-Shaders: CoReArtZz (Cores), ovlack (Apex Shader+).  
-Started from [Kaiserouo](https://github.com/Kaiserouo/Apex-Legends-Titanfall-Auto-Shader-Blender-Addon).
+Shaders: CoReArtZz (Cores), ovlack (Apex Shader+). 
