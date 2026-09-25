@@ -1,0 +1,2544 @@
+{
+  "type": "character_emotes",
+  "note": "Ground Emotes inkl. Gibraltar (character_emotes.json). Slug overdrive → Axle.",
+  "stats": {
+    "total": 284,
+    "unnamed": 0,
+    "legends": 29
+  },
+  "legends": {
+    "Alter": {
+      "slug": "alter",
+      "displayName": "Alter",
+      "counts": {
+        "total": 6
+      },
+      "items": [
+        {
+          "file": "alter/lgnd_alter_celebration.json",
+          "name": "Burning Passion",
+          "locKey": "#ground_emote_alter_celebration",
+          "hash": "2186ef69ec26e051",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/epic_v23_tailstand.json",
+          "name": "Elevated Applause",
+          "locKey": "#ground_emote_cave_tailstand",
+          "hash": "f6145ef8ba9b11c2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/alter_basic.json",
+          "name": "Getting Started",
+          "locKey": "#ground_emote_alter_basic",
+          "hash": "d30133a0a2acf2e3",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/epic_v24_flyingstrikes.json",
+          "name": "Natural Advantage",
+          "locKey": "#ground_emote_alter_flyingstrikes",
+          "hash": "f52c879884f0a96c",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/lgnd_v24_powerwhip.json",
+          "name": "Scorpion's Kiss",
+          "locKey": "#ground_emote_alter_powerwhip",
+          "hash": "1b0989ae0fcbbba3",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/epic_v24_airguitar.json",
+          "name": "Void Guitar",
+          "locKey": "#ground_emote_alter_airguitar",
+          "hash": "533c1e106e0a6257",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Ash": {
+      "slug": "ash",
+      "displayName": "Ash",
+      "counts": {
+        "total": 12
+      },
+      "items": [
+        {
+          "file": "ash/lgnd_v22_flag.json",
+          "name": "Acrobatic Assailant",
+          "locKey": "#ground_emote_ash_flag",
+          "hash": "a4e97bb614e97cd9",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/lgnd_v22_magicwitch_sparkler.json",
+          "name": "Blazing Blade",
+          "locKey": "#ground_emote_ash_sparkler",
+          "hash": "8ea3a9fa2781b986",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/epic_v23_raga_drinkinghorn.json",
+          "name": "Can't Stomach This",
+          "locKey": "#ground_emote_ash_drinkinghorn",
+          "hash": "f0a05965bc953a23",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/legendary_sliceanddice.json",
+          "name": "Dancer of Death",
+          "locKey": "#ground_emote_ash_slicesanddices_NAME",
+          "hash": "d515845888835f88",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/epic_v24_swordplant.json",
+          "name": "Exceptional Victory",
+          "locKey": "#ground_emote_ash_swordplant",
+          "hash": "f619f21071456ec6",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/epic_v22_huntersafari_meditating.json",
+          "name": "Floating Point",
+          "locKey": "#ground_emote_ash_meditating_NAME",
+          "hash": "a2ba42417bd0b4b2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/epic_v22_swordmove.json",
+          "name": "Flourish",
+          "locKey": "#ground_emote_ash_swordmove",
+          "hash": "d8a5dcbc25e076ea",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/rare_respect.json",
+          "name": "Focus",
+          "locKey": "#emote_ash_rare_respect_NAME",
+          "hash": "caa1ee2ed6cdfcc2",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/epic_rat.json",
+          "name": "Living on the Edge",
+          "locKey": "#emote_ash_epic_rat_NAME",
+          "hash": "81eb415d2eeb24b0",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/legendary_ronin.json",
+          "name": "Murder in Motion",
+          "locKey": "#emote_ash_legendary_ronin_NAME",
+          "hash": "620b7d54abbb49c0",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/epic_sharpening.json",
+          "name": "Sharper Image",
+          "locKey": "#ground_emote_ash_sharpening_NAME",
+          "hash": "6308c345e54c1214",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/lgnd_v22_partymask_electroslash.json",
+          "name": "Slice and Dice",
+          "locKey": "#ground_emote_ash_electroslash",
+          "hash": "03ff5781258e309a",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Axle": {
+      "slug": "overdrive",
+      "displayName": "Axle",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "overdrive/lgnd_motorcycle.json",
+          "name": "Power Loop",
+          "locKey": "#ground_emote_overdrive_motorcycle",
+          "hash": "93e5a7f45e7bc32d",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "overdrive/epic_sit.json",
+          "name": "Seat Of Judgment",
+          "locKey": "#ground_emote_overdrive_sit",
+          "hash": "e481ad72f948b8ec",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "overdrive/rare_pushup.json",
+          "name": "Stable Axis",
+          "locKey": "#ground_emote_one_arm_handstand_pushup",
+          "hash": "6ae7e39da329f6dc",
+          "rarity": "rare",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Ballistic": {
+      "slug": "ballistic",
+      "displayName": "Ballistic",
+      "counts": {
+        "total": 7
+      },
+      "items": [
+        {
+          "file": "ballistic/epic_v22_partygun.json",
+          "name": "Bang",
+          "locKey": "#ground_emote_ballistic_partygun",
+          "hash": "dac0c49c51d7d4c9",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/epic_v23_coatpose.json",
+          "name": "Charged Whirlwind",
+          "locKey": "#ground_emote_ballistic_coatpose",
+          "hash": "85d5e2f1d7f9d53c",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/lgnd_v23_hmmm.json",
+          "name": "Conductor",
+          "locKey": "#ground_emote_ballistic_hmmm",
+          "hash": "0a96db63abbaadf3",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/rare_v22_taunt.json",
+          "name": "Looking Sharp",
+          "locKey": "#ground_emote_ballistic_taunt",
+          "hash": "e0272ca467a726b6",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/epic_v22_bulletflick.json",
+          "name": "Only Need One",
+          "locKey": "#ground_emote_ballistic_bulletflick",
+          "hash": "6889d52ed4d3a741",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/epic_v23_raga_drinkinghorn.json",
+          "name": "Strong Brew",
+          "locKey": "#ground_emote_ballistic_drinkinghorn",
+          "hash": "cd248176fa8065a8",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/epic_v24_coatflare.json",
+          "name": "Windswept Waltz",
+          "locKey": "#ground_emote_ballistic_coatflare",
+          "hash": "ef0092c0eb706703",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Bangalore": {
+      "slug": "bangalore",
+      "displayName": "Bangalore",
+      "counts": {
+        "total": 11
+      },
+      "items": [
+        {
+          "file": "bangalore/epic_v24_werewolf.json",
+          "name": "Beast Within",
+          "locKey": "#ground_emote_bangalore_werewolf",
+          "hash": "c7f06d044ef6c7c7",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/epic_v22_partymusic_dustoff.json",
+          "name": "Brush It Off",
+          "locKey": "#ground_emote_bangalore_dustoff",
+          "hash": "5f8f3aeaeea25b0f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/epic_boxing.json",
+          "name": "Butterfly Barrage",
+          "locKey": "#ground_emote_bangalore_boxing_NAME",
+          "hash": "1e53691307d2ad5f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/legendary_bugle.json",
+          "name": "Charge",
+          "locKey": "#CHAR_EMOTE_003",
+          "hash": "bc01703424094561",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/epic_v22_drinkingbros.json",
+          "name": "Earned It",
+          "locKey": "#ground_emote_bangalore_drinkingbros",
+          "hash": "861f95e7a867ba45",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/lgnd_v24_cardslinger.json",
+          "name": "Fast Hands",
+          "locKey": "#ground_emote_bangalore_cardslinger",
+          "hash": "2e14a5c12e231ae0",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/legendary_smokesignals.json",
+          "name": "Guiding Lights",
+          "locKey": "#CHAR_EMOTE_063",
+          "hash": "bc017034246799fe",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/epic_v24_imhere.json",
+          "name": "My Turf",
+          "locKey": "#ground_emote_bangalore_imhere",
+          "hash": "c0f31ec478116e79",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/default.json",
+          "name": "No Sweat",
+          "locKey": "#CHAR_EMOTE_001",
+          "hash": "bc0170340497bbae",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/lgnd_v22_redsmoke.json",
+          "name": "Playing It Cool",
+          "locKey": "#ground_emote_bangalore_redsmoke",
+          "hash": "0c16176a6b2c6bff",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/epic_rifledrill.json",
+          "name": "Present Arms",
+          "locKey": "#CHAR_EMOTE_002",
+          "hash": "bc01703414508087",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Bloodhound": {
+      "slug": "bloodhound",
+      "displayName": "Bloodhound",
+      "counts": {
+        "total": 13
+      },
+      "items": [
+        {
+          "file": "bloodhound/epic_v24_brandreveal.json",
+          "name": "Art of the Hunt",
+          "locKey": "#ground_emote_bloodhound_brandreveal",
+          "hash": "d8f97fac8323455d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_v23_giftgiving.json",
+          "name": "Bestowed Gift",
+          "locKey": "#ground_emote_bloodhound_giftgiving_NAME",
+          "hash": "15666886f42b586d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_birdcall.json",
+          "name": "Birds of a Feather",
+          "locKey": "#CHAR_EMOTE_birdcall",
+          "hash": "58fd9226f20b88ca",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_v23_evilvoidwalker.json",
+          "name": "Dark Hunter",
+          "locKey": "#ground_emote_bloodhound_epic_v23_evilvoidwalker",
+          "hash": "db8e01def5ead86e",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/legendary_v24_gremlin.json",
+          "name": "Demon Time",
+          "locKey": "#ground_emote_bloodhound_gremlin",
+          "hash": "9c53922fe835ccf1",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_v23_thankheavens.json",
+          "name": "Higher Devotion",
+          "locKey": "#ground_emote_bloodhound_thankheavens",
+          "hash": "94f4b1128cfd86a7",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/legendary_horn.json",
+          "name": "Hunter's Call",
+          "locKey": "#CHAR_EMOTE_006",
+          "hash": "bc017034533393ed",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_v23_hoverboard.json",
+          "name": "Hálfr Pipe",
+          "locKey": "#ground_emote_bloodhound_hoverboard",
+          "hash": "df580d82f5dd9dba",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_stubborn.json",
+          "name": "Perched",
+          "locKey": "#CHAR_EMOTE_005",
+          "hash": "bc017034437acf13",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/epic_wildman.json",
+          "name": "Primal Nature",
+          "locKey": "#ground_emote_bloodhound_epic_wildman_NAME",
+          "hash": "b56f56fc383f76c1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/lgnd_v22_flag.json",
+          "name": "Proud Pennant",
+          "locKey": "#ground_emote_bloodhound_flag",
+          "hash": "093637290c52f14f",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/legendary_birdmaster.json",
+          "name": "Teachers Pet",
+          "locKey": "#ground_emote_bloodhound_birdmaster_NAME",
+          "hash": "8aae26265490e071",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/default.json",
+          "name": "Tracking",
+          "locKey": "#CHAR_EMOTE_004",
+          "hash": "bc01703433c20a3a",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Catalyst": {
+      "slug": "catalyst",
+      "displayName": "Catalyst",
+      "counts": {
+        "total": 7
+      },
+      "items": [
+        {
+          "file": "catalyst/epic_v23_crown.json",
+          "name": "Ferro Queen",
+          "locKey": "#ground_emote_catalyst_crown",
+          "hash": "61f77de983eae0f2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/epic_v22_throne.json",
+          "name": "Fit for a Queen",
+          "locKey": "#ground_emote_catalyst_throne",
+          "hash": "98b839332cfb30be",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/epic_v24_ferralfluiddance.json",
+          "name": "Fluid Moves",
+          "locKey": "#ground_emote_catalyst_ferralfluiddance",
+          "hash": "6b672ed22112a226",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/rare_v22_sigil.json",
+          "name": "Go With A Smile",
+          "locKey": "#ground_emote_catalyst_sigil",
+          "hash": "66f79cada92f1ed7",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/epic_v23_lanternlighting.json",
+          "name": "Lantern Lighting",
+          "locKey": "#ground_emote_catalyst_lanternlighting",
+          "hash": "a56aabed80e92bb9",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/lgnd_v22_moonlounge.json",
+          "name": "Lunar Lounge",
+          "locKey": "#ground_emote_catalyst_moonlounge",
+          "hash": "7ea8ae45c2f40923",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/epic_v23_raga_drinkinghorn.json",
+          "name": "To Your Strength",
+          "locKey": "#ground_emote_catalyst_drinkinghorn",
+          "hash": "9e308ecbbffb4553",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Caustic": {
+      "slug": "caustic",
+      "displayName": "Caustic",
+      "counts": {
+        "total": 13
+      },
+      "items": [
+        {
+          "file": "caustic/epic_rakestep.json",
+          "name": "Design Flaw",
+          "locKey": "#CHAR_EMOTE_008",
+          "hash": "bc01703472a51da0",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/lgnd_v22_partymask_gasthrower.json",
+          "name": "Eau de Nox",
+          "locKey": "#ground_emote_caustic_gasthrower",
+          "hash": "394cea3a261e284a",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_v22_celebration.json",
+          "name": "Gas Giant",
+          "locKey": "#ground_emote_caustic_celebration",
+          "hash": "b25bb40e701af8a2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_v23_maniacallaugh.json",
+          "name": "Hysterical Laughter",
+          "locKey": "#ground_emote_caustic_maniacallaugh",
+          "hash": "bf5c73a91dd7353f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_punchingbag.json",
+          "name": "Knockout Gas",
+          "locKey": "#CHAR_EMOTE_062",
+          "hash": "bc01703414aed524",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/legendary_mixingliquids.json",
+          "name": "Noxious Discovery",
+          "locKey": "#CHAR_EMOTE_066",
+          "hash": "bc0170345391e88a",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_v23_cheerleading.json",
+          "name": "Once More With Apathy",
+          "locKey": "#ground_emote_caustic_cheerleading",
+          "hash": "34c2d58b32ce9f77",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/lgnd_v22_magicwitch_sparkler.json",
+          "name": "Reluctant Celebration",
+          "locKey": "#ground_emote_caustic_sparkler",
+          "hash": "752b1ad943e6e59e",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/default.json",
+          "name": "Sample Testing",
+          "locKey": "#CHAR_EMOTE_007",
+          "hash": "bc01703462ec58c6",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_v23_smokebomb.json",
+          "name": "Smoke and Steel",
+          "locKey": "#ground_emote_caustic_smokebomb",
+          "hash": "7405394f4f3b6320",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/legendary_notes.json",
+          "name": "Take Notes",
+          "locKey": "#CHAR_EMOTE_009",
+          "hash": "bc017034825de279",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_v22_waltzing.json",
+          "name": "Waltz for One",
+          "locKey": "#ground_emote_caustic_waltzing",
+          "hash": "38a378b602e3f5cf",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/epic_v24_yourefinished.json",
+          "name": "Zeal Appeal",
+          "locKey": "#ground_emote_caustic_yourefinished",
+          "hash": "bf69491f61455587",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Conduit": {
+      "slug": "conduit",
+      "displayName": "Conduit",
+      "counts": {
+        "total": 7
+      },
+      "items": [
+        {
+          "file": "conduit/epic_v23_holo.json",
+          "name": "Cool Beats",
+          "locKey": "#ground_emote_conduit_holo",
+          "hash": "bf77e40795d0e1c8",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/epic_v23_playdead.json",
+          "name": "Dramatic End",
+          "locKey": "#ground_emote_conduit_playdead",
+          "hash": "2bb19f4928e38da1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/epic_v23_smokebomb.json",
+          "name": "Dramatic Entrance",
+          "locKey": "#ground_emote_conduit_smokebomb",
+          "hash": "5553a9ea92beb368",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/epic_v24_kisscam.json",
+          "name": "Kiss Cam",
+          "locKey": "#ground_emote_conduit_kisscam",
+          "hash": "b5082ececb6ac7a7",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/epic_v24_dancing.json",
+          "name": "Party Jumpstarter",
+          "locKey": "#ground_emote_conduit_dancing",
+          "hash": "131a52625ad98cff",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/legendary_v23_flower.json",
+          "name": "Personal Growth",
+          "locKey": "#ground_emote_conduit_flower",
+          "hash": "9f35d75205db3b6e",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/rare_v23_boxing.json",
+          "name": "Shot To The Heart",
+          "locKey": "#ground_emote_conduit_boxing",
+          "hash": "a19d669149f96431",
+          "rarity": "rare",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Crypto": {
+      "slug": "crypto",
+      "displayName": "Crypto",
+      "counts": {
+        "total": 10
+      },
+      "items": [
+        {
+          "file": "crypto/epic_v24_inhale.json",
+          "name": "Body Hack",
+          "locKey": "#crypto_ground_emote_inhale",
+          "hash": "7e9295c50e9483e7",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/epic_v22_magicwitch_pullups.json",
+          "name": "Brain and Brawn",
+          "locKey": "#ground_emote_crypto_pullups",
+          "hash": "070f3d2ff72e0f02",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/legendary_kpop.json",
+          "name": "Break It Down",
+          "locKey": "#character_emote_crypto_legendary_kpop_NAME",
+          "hash": "0208e3ce985bd346",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/default.json",
+          "name": "Fistbump",
+          "locKey": "#CHAR_EMOTE_010",
+          "hash": "bc017033f4eeaf99",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/legendary_game.json",
+          "name": "Game Over",
+          "locKey": "#CHAR_EMOTE_012",
+          "hash": "bc0170341460394c",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/epic_v23_lanternlighting.json",
+          "name": "Lantern Lighting",
+          "locKey": "#crypto_ground_emote_lanternlighting",
+          "hash": "d3304fa27b6c13d3",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/epic_v23_backflip.json",
+          "name": "On the Flipside",
+          "locKey": "#crypto_ground_emote_backflip",
+          "hash": "e6e87660076f6698",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/epic_v23_resdopa_taunt.json",
+          "name": "Stare Down",
+          "locKey": "#emote_taunt",
+          "hash": "6d440923f72dc37d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/epic_sword.json",
+          "name": "Swordplay",
+          "locKey": "#CHAR_EMOTE_011",
+          "hash": "bc01703404a77473",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/epic_v22_dronesword.json",
+          "name": "Tiny Dancer",
+          "locKey": "#ground_emote_crypto_dronesword",
+          "hash": "c7d248805a06ce89",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Fuse": {
+      "slug": "fuse",
+      "displayName": "Fuse",
+      "counts": {
+        "total": 13
+      },
+      "items": [
+        {
+          "file": "fuse/legendary_bbq.json",
+          "name": "Burst of Flavor",
+          "locKey": "#CHAR_EMOTE_065",
+          "hash": "bc01703443d923b0",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/lgnd_v22_rootbeer.json",
+          "name": "Clear the Pipes",
+          "locKey": "#ground_emote_fuse_rootbeer",
+          "hash": "450399ff75b51b58",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/default.json",
+          "name": "Crowd Pleaser",
+          "locKey": "#CHAR_EMOTE_013",
+          "hash": "bc0170342418fe25",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/legendary_guitarjam.json",
+          "name": "Encore",
+          "locKey": "#CHAR_EMOTE_015",
+          "hash": "bc017034438a87d8",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v22_opmech_victorycelebration.json",
+          "name": "Fired Up",
+          "locKey": "#ground_emote_fuse_victorycelebration",
+          "hash": "f13f9f1cc36dfa7d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/lgnd_v22_flag.json",
+          "name": "Flourished Flag",
+          "locKey": "#ground_emote_fuse_flag",
+          "hash": "f64f9e1ad7f4afe7",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v25_aussiefootball.json",
+          "name": "Flying Footy",
+          "locKey": "#emote_fuse_aussiefootball",
+          "hash": "67ed3c3c6ea43794",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v23_cheerleading.json",
+          "name": "Oi, Oi, Oi!",
+          "locKey": "#emote_fuse_cheerleading",
+          "hash": "14faa58e0cb32471",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v23_giftgiving.json",
+          "name": "Prezzie Time",
+          "locKey": "#ground_emote_fuse_giftgiving_NAME",
+          "hash": "ee78431792087b17",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_repair.json",
+          "name": "Quick Fix",
+          "locKey": "#CHAR_EMOTE_014",
+          "hash": "bc01703433d1c2ff",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v23_trickster.json",
+          "name": "Switcheroo",
+          "locKey": "#emote_fuse_trickster",
+          "hash": "7fff94d65f0aed5d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v22_chillaxinggrenade.json",
+          "name": "Time Out",
+          "locKey": "#ground_emote_fuse_chillaxinggrenade",
+          "hash": "089d1f56af6f181d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/epic_v22_blade.json",
+          "name": "Uppercut",
+          "locKey": "#ground_emote_fuse_blade",
+          "hash": "a368ffcdc5ebc20d",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Gibraltar": {
+      "slug": "gibraltar",
+      "displayName": "Gibraltar",
+      "counts": {
+        "total": 10
+      },
+      "items": [
+        {
+          "file": "gibraltar/epic_v23_evilvoidwalker.json",
+          "name": "Badbraltar",
+          "locKey": "#ground_emote_gibraltar_epic_v23_evilvoidwalker",
+          "hash": "b70c51959a1e384c",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/epic_v23_frustration.json",
+          "name": "Big Shame",
+          "locKey": "#ground_emote_gibraltar_frustration",
+          "hash": "57aba95e5a055ef4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/default.json",
+          "name": "Bring It",
+          "locKey": "#CHAR_EMOTE_016",
+          "hash": "bc01703453434cb2",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/epic_v22_dancing.json",
+          "name": "Gibby With It",
+          "locKey": "#ground_emote_gibraltar_dancing",
+          "hash": "37f1bf8bb16b262c",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/legendary_haka.json",
+          "name": "Haka",
+          "locKey": "#CHAR_EMOTE_018",
+          "hash": "bc01703472b4d664",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/epic_kickflip.json",
+          "name": "Kickflip",
+          "locKey": "#CHAR_EMOTE_017",
+          "hash": "bc01703462fc118b",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/legendary_firestick.json",
+          "name": "Playing With Fire",
+          "locKey": "#ground_emote_gibraltar_legendary_firestick_NAME",
+          "hash": "dde0c9f19d1bfbe3",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/epic_signspinner.json",
+          "name": "Side Hustle",
+          "locKey": "#ground_emote_gibraltar_signspinner_NAME",
+          "hash": "dc45d442070b4137",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/legendary_v23_micdrop.json",
+          "name": "Stundrop",
+          "locKey": "#ground_emote_gibraltar_micdrop",
+          "hash": "342143347768cebe",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/epic_v25_shieldthrowandtaunt.json",
+          "name": "Throwdown",
+          "locKey": "#ground_emote_gibraltar_epic_v25_shieldthrowandtaunt",
+          "hash": "d150cbdba8ea5160",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Horizon": {
+      "slug": "horizon",
+      "displayName": "Horizon",
+      "counts": {
+        "total": 11
+      },
+      "items": [
+        {
+          "file": "horizon/epic_v22_thinking.json",
+          "name": "Great Minds Recline",
+          "locKey": "#ground_emote_horizon_thinking",
+          "hash": "bd2d122ac1813c62",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/epic_v25_cabertoss.json",
+          "name": "Highland Heave",
+          "locKey": "#ground_emote_horizon_cabertoss",
+          "hash": "e4cac26e7b451e1e",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/default.json",
+          "name": "Hover Pen",
+          "locKey": "#CHAR_EMOTE_019",
+          "hash": "bc017034826d9b3e",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/epic_v24_inhale.json",
+          "name": "Infectious Fight",
+          "locKey": "#ground_emote_horizon_inhale",
+          "hash": "cfe28afe2e8ca6d4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/epic_flag.json",
+          "name": "Inspiration",
+          "locKey": "#CHAR_EMOTE_020",
+          "hash": "bc017033f4fe685e",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/epic_v23_scottishdance.json",
+          "name": "Joyful Jig",
+          "locKey": "#ground_emote_horizon_scottishdance",
+          "hash": "de724dba98fcc027",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/legendary_skate.json",
+          "name": "Lighter Than Air",
+          "locKey": "#CHAR_EMOTE_058",
+          "hash": "bc01703472f3b978",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/legendary_momdance.json",
+          "name": "Mom Dance",
+          "locKey": "#CHAR_EMOTE_021",
+          "hash": "bc01703404b72d37",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/epic_v22_magicgoth_angry.json",
+          "name": "Oh Behave",
+          "locKey": "#ground_emote_horizon_angry",
+          "hash": "537e0504286e6ede",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/epic_v24_candyforall.json",
+          "name": "Sweet Generosity",
+          "locKey": "#ground_emote_horizon_candyforall",
+          "hash": "e82ced227ba479d1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/lgnd_v23_battlerest.json",
+          "name": "Zero Gun",
+          "locKey": "#ground_emote_horizon_battlerest",
+          "hash": "a226a7e12a2a3b8b",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Lifeline": {
+      "slug": "lifeline",
+      "displayName": "Lifeline",
+      "counts": {
+        "total": 12
+      },
+      "items": [
+        {
+          "file": "lifeline/epic_v23_evilvoidwalker.json",
+          "name": "Blighted Breakdown",
+          "locKey": "#ground_emote_lifeline_evilvoidwalker",
+          "hash": "875f4d681cd1d26e",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/epic_breakdancing.json",
+          "name": "Bust A Move",
+          "locKey": "#CHAR_EMOTE_023",
+          "hash": "bc0170342428b6ea",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/epic_v22_huntersafari_dancing.json",
+          "name": "Footwork",
+          "locKey": "#ground_emote_lifeline_dancing_NAME",
+          "hash": "147443ff2098ba0f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/legendary_v22_bounce.json",
+          "name": "Hip Hip Hooray",
+          "locKey": "#ground_emote_lifeline_bounce",
+          "hash": "ce23db5dbb72cc8c",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/legendary_dj.json",
+          "name": "It's Funky Enough",
+          "locKey": "#CHAR_EMOTE_055",
+          "hash": "bc01703443c96aec",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/default.json",
+          "name": "Jammin'",
+          "locKey": "#CHAR_EMOTE_022",
+          "hash": "bc017034146ff211",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/epic_v22_laughingpointing.json",
+          "name": "Last Laugh",
+          "locKey": "#ground_emote_lifeline_laughingpointing",
+          "hash": "25933ea5746fecfc",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/epic_dogtrainer.json",
+          "name": "Little Trickster",
+          "locKey": "#ground_emote_lifeline_dogtrainer_NAME",
+          "hash": "8cabe1ab55bc2daa",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/epic_v25_healingdoc.json",
+          "name": "Motor Massage",
+          "locKey": "#ground_emote_lifeline_healingdoc",
+          "hash": "0e4119c8f316ad06",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/legendary_waving.json",
+          "name": "Shout Outs",
+          "locKey": "#CHAR_EMOTE_024",
+          "hash": "bc01703433e17bc4",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/legendary_v24_docchargeup.json",
+          "name": "Start Me Up",
+          "locKey": "#ground_emote_lifeline_docchargeup",
+          "hash": "a2ba2a1d9baefb71",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/lgnd_v23_chillnightin.json",
+          "name": "Wind Down",
+          "locKey": "#ground_emote_lifeline_chillnightin",
+          "hash": "36da129666c0b6ad",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Loba": {
+      "slug": "loba",
+      "displayName": "Loba",
+      "counts": {
+        "total": 11
+      },
+      "items": [
+        {
+          "file": "loba/lgnd_v22_redsmoke.json",
+          "name": "Blowing Kisses",
+          "locKey": "#ground_emote_loba_redsmoke",
+          "hash": "80192caba5269e88",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/default.json",
+          "name": "Brush It Off",
+          "locKey": "#CHAR_EMOTE_025",
+          "hash": "bc017034439a409d",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/epic_v24_candyforall.json",
+          "name": "Candy Shop",
+          "locKey": "#ground_emote_loba_candyforall",
+          "hash": "84d843ff063a76f5",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/legendary_golf.json",
+          "name": "Crushed It",
+          "locKey": "#CHAR_EMOTE_027",
+          "hash": "bc017034630bca50",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/epic_v22_bow.json",
+          "name": "Curtsy",
+          "locKey": "#ground_emote_loba_bow",
+          "hash": "792e222a867ca20b",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/epic_treemonkey.json",
+          "name": "Fancy Footwork",
+          "locKey": "#CHAR_EMOTE_026",
+          "hash": "bc01703453530576",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/epic_v22_partymask_samba.json",
+          "name": "I'll Lead",
+          "locKey": "#ground_emote_loba_samba",
+          "hash": "17b564947a3335ce",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/epic_v22_opmech_tea.json",
+          "name": "In Hot Water",
+          "locKey": "#ground_emote_loba_tea",
+          "hash": "fb04985882e134e6",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/legendary_bostaff.json",
+          "name": "Righteous Staff",
+          "locKey": "#character_emote_loba_legendary_bostaff_NAME",
+          "hash": "52b2dbed8f9bfb62",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/epic_v24_staffskills.json",
+          "name": "Staff Spectacle",
+          "locKey": "#ground_emote_loba_staffskills",
+          "hash": "034db6a04ed6a039",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/lgnd_v22_magicwitch_freestyle.json",
+          "name": "Toying with the Enemy",
+          "locKey": "#loba_ground_emote_freestyle",
+          "hash": "49faf6dd0adfdda5",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Mad Maggie": {
+      "slug": "madmaggie",
+      "displayName": "Mad Maggie",
+      "counts": {
+        "total": 8
+      },
+      "items": [
+        {
+          "file": "madmaggie/rare_comegetsome.json",
+          "name": "Come Get Some",
+          "locKey": "#CHAR_EMOTE_071",
+          "hash": "bc0170340505c910",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/epic_v23_resdopa_tempertantrum.json",
+          "name": "Coping Skills",
+          "locKey": "#ground_emote_madmaggie_tempertantrum_NAME",
+          "hash": "14c033d7ea12f348",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/legendary_emote_firebreath.json",
+          "name": "Firestarter",
+          "locKey": "#CHAR_EMOTE_059",
+          "hash": "bc01703482ac7e51",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/legendary_guitarsmash.json",
+          "name": "Guitar Tuner",
+          "locKey": "#CHAR_EMOTE_060",
+          "hash": "bc017033f53d4b71",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/epic_chainswing.json",
+          "name": "New Whirl Order",
+          "locKey": "#CHAR_EMOTE_067",
+          "hash": "bc017034634aad63",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/epic_v22_chillaxingrugby.json",
+          "name": "Ruck and Roll",
+          "locKey": "#ground_emote_madmaggie_chillaxingrugby",
+          "hash": "ea62ce0263c511c4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/epic_v23_hooligandance.json",
+          "name": "Running Man Mags",
+          "locKey": "#madmaggie_ground_emote_hooligandance",
+          "hash": "efe462d9b3e599ee",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/epic_v23_trickster.json",
+          "name": "Salvo Special",
+          "locKey": "#madmaggie_ground_emote_trickster",
+          "hash": "2206149dc9845c53",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Mirage": {
+      "slug": "mirage",
+      "displayName": "Mirage",
+      "counts": {
+        "total": 12
+      },
+      "items": [
+        {
+          "file": "mirage/epic_v23_frustration.json",
+          "name": "Bad Attitude",
+          "locKey": "#ground_emote_mirage_frustration",
+          "hash": "17d2b1e05e54e13f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_jump.json",
+          "name": "Hype Man",
+          "locKey": "#CHAR_EMOTE_029",
+          "hash": "bc017034827d5403",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_stretches.json",
+          "name": "Loosen Up",
+          "locKey": "#ground_emote_mirage_stretches_NAME",
+          "hash": "713b5c3f0a4e17e3",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_v23_evilvoidwalker.json",
+          "name": "Mi-RAGE",
+          "locKey": "#CHAR_EMOTE_evilvoidwalker",
+          "hash": "6d7f18ea777aae7d",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_v22_massage.json",
+          "name": "Mirage Massage",
+          "locKey": "#ground_emote_mirage_massage",
+          "hash": "237161180522addd",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_v22_hunterpredator_clapping.json",
+          "name": "Ones and Threes",
+          "locKey": "#ground_emote_mirage_clapping",
+          "hash": "75515d98077c55be",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/legendary_pictures.json",
+          "name": "Selfie",
+          "locKey": "#CHAR_EMOTE_030",
+          "hash": "bc017033f50e2123",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/default.json",
+          "name": "Smooth Moves",
+          "locKey": "#CHAR_EMOTE_028",
+          "hash": "bc01703472c48f29",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_v24_workoutreveal.json",
+          "name": "Strongman",
+          "locKey": "#ground_emote_mirage_workoutreveal",
+          "hash": "102df95a97d93a42",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/legendary_jabbing.json",
+          "name": "Terrible Twos",
+          "locKey": "#CHAR_EMOTE_064",
+          "hash": "bc01703434205ed7",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/legendary_lift.json",
+          "name": "Time Of My Life",
+          "locKey": "#character_emote_mirage_legendary_lift_NAME",
+          "hash": "7801742038b42295",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/epic_v24_booscare.json",
+          "name": "Trick's on You",
+          "locKey": "#ground_emote_mirage_booscare",
+          "hash": "bfa18647bd43c638",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Newcastle": {
+      "slug": "newcastle",
+      "displayName": "Newcastle",
+      "counts": {
+        "total": 10
+      },
+      "items": [
+        {
+          "file": "newcastle/epic_v22_chillaxingdrink.json",
+          "name": "A Cold One",
+          "locKey": "#ground_emote_newcastle_chillaxingdrink",
+          "hash": "c275e94352ca1c5c",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_v23_resdopa_shieldslamfrustration.json",
+          "name": "Bad Daditude",
+          "locKey": "#ground_emote_newcastle_shieldslamfrustration_NAME",
+          "hash": "d4aabb2170179ab1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/legendary_smash.json",
+          "name": "Ground Pound",
+          "locKey": "#ground_emote_newcastle_smash",
+          "hash": "7d4ddf2a9b46f3db",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_v24_icanthearyou.json",
+          "name": "Hype Man",
+          "locKey": "#ground_emote_newcastle_icanthearyou",
+          "hash": "8045d8cf399ab791",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_v22_funnydance.json",
+          "name": "Keeping It Loose",
+          "locKey": "#ground_emote_newcastle_funnydance",
+          "hash": "33ff1f8286e75aad",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_v24_warmuptricks.json",
+          "name": "Pumped and Ready",
+          "locKey": "#ground_emote_newcastle_warmuptricks",
+          "hash": "66881002f3fb9087",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_dance.json",
+          "name": "Rhythm Machine",
+          "locKey": "#ground_emote_newcastle_dance",
+          "hash": "5853df7ed755acb6",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_v25_flurryoffists.json",
+          "name": "Shadowboxer",
+          "locKey": "#ground_emote_newcastle_flurryoffists",
+          "hash": "5ca396cda29e13c1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/rare_brandish.json",
+          "name": "Standing Guard",
+          "locKey": "#ground_emote_newcastle_brandish",
+          "hash": "2ead051d03b11671",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/epic_boxing.json",
+          "name": "Working the Angles",
+          "locKey": "#ground_emote_newcastle_boxing_NAME",
+          "hash": "2ed6aa2e7ab2782b",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Octane": {
+      "slug": "octane",
+      "displayName": "Octane",
+      "counts": {
+        "total": 15
+      },
+      "items": [
+        {
+          "file": "octane/s10bp_epic_headspin.json",
+          "name": "Cerebral Vortex",
+          "locKey": "#CHAR_EMOTE_052",
+          "hash": "bc017034149f1c5f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v22_footfan.json",
+          "name": "Cool Down",
+          "locKey": "#ground_emote_octane_footfan_NAME",
+          "hash": "87b235551ff7bf75",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v23_smokebomb.json",
+          "name": "Dramatic Entrance",
+          "locKey": "#ground_emote_octane_smokebomb",
+          "hash": "abd7f7cb693bb871",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/legendary_grenade.json",
+          "name": "Feet Don't Fail",
+          "locKey": "#character_emote_octane_legendary_grenade_NAME",
+          "hash": "5a6479a426793dac",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v25_upgrade.json",
+          "name": "Flipping Out",
+          "locKey": "#ground_emote_octane_upgrade",
+          "hash": "f8c7764418daedbf",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/legendary_trampoline.json",
+          "name": "Human Spring",
+          "locKey": "#CHAR_EMOTE_033",
+          "hash": "bc01703424386faf",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v24_stabbyleg.json",
+          "name": "Join the Club",
+          "locKey": "#ground_emote_octane_stabbyleg",
+          "hash": "a793231f8bfa62ba",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_selfieflip.json",
+          "name": "Livestream",
+          "locKey": "#CHAR_EMOTE_032",
+          "hash": "bc017034147faad6",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v22_partymask_maracas.json",
+          "name": "Maraca Madness",
+          "locKey": "#ground_emote_octane_maracas",
+          "hash": "7749df059a0c5548",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/default.json",
+          "name": "Nervous Energy",
+          "locKey": "#CHAR_EMOTE_031",
+          "hash": "bc01703404c6e5fc",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v22_leggun.json",
+          "name": "One Leg Army",
+          "locKey": "#ground_emote_octane_leggun",
+          "hash": "55a741f0feba75ed",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/lgnd_v22_partymask_batterup.json",
+          "name": "Out of the Park",
+          "locKey": "#ground_emote_octane_batterup",
+          "hash": "900131fd0bc17ffd",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/lgnd_v22_magicwitch_sparkler.json",
+          "name": "Sparkling Spin Cycle",
+          "locKey": "#ground_emote_octane_sparkler",
+          "hash": "854dbafc4b4fc1bf",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v25_fiestashuffle.json",
+          "name": "Stim Shuffle",
+          "locKey": "#ground_emote_octane_fiestashuffle",
+          "hash": "af90fe419fc059f1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/epic_v23_giftgiving.json",
+          "name": "TA DA!",
+          "locKey": "#ground_emote_octane_giftgiving",
+          "hash": "419ea95a498d289b",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Pathfinder": {
+      "slug": "pathfinder",
+      "displayName": "Pathfinder",
+      "counts": {
+        "total": 13
+      },
+      "items": [
+        {
+          "file": "pathfinder/epic_victoryclapping.json",
+          "name": "Crowd Pleaser",
+          "locKey": "#ground_emote_pathfinder_victoryclapping",
+          "hash": "2d92a596f3b23885",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/lgnd_v23_revenant_takeover.json",
+          "name": "Enraged Glitch",
+          "locKey": "#ground_emote_pathfinder_revenant_takeover",
+          "hash": "d6ec2369521c2ea4",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/epic_v22_opmech_shutdown.json",
+          "name": "Factory Reset",
+          "locKey": "#ground_emote_pathfinder_shutdown_NAME",
+          "hash": "9f21c8a382ab054a",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/epic_v22_thumbsdown.json",
+          "name": "Friendly Discouragement",
+          "locKey": "#ground_emote_pathfinder_thumbsdown",
+          "hash": "81feec0939abcad4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/epic_v23_giftgiving.json",
+          "name": "Giving Smiles",
+          "locKey": "#ground_emote_pathfinder_giftgiving_NAME",
+          "hash": "e3e37d8ab0840d45",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/epic_v24_warmupbot.json",
+          "name": "Hydraulics Test",
+          "locKey": "#pathfinder_ground_emote_warmupbot",
+          "hash": "6366d6333dc91743",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/legendary_jumprope.json",
+          "name": "Jump Rope Master",
+          "locKey": "#CHAR_EMOTE_036",
+          "hash": "bc0170345362be3b",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/s10e01_legendary_lasso.json",
+          "name": "Old Bot, New Trick",
+          "locKey": "#CHAR_EMOTE_053",
+          "hash": "bc0170342457e139",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/epic_v24_inhale.json",
+          "name": "Robotic Groove",
+          "locKey": "#ground_emote_pathfinder_inhale",
+          "hash": "73d00731ddfaa683",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/lgnd_v22_magicwitch_sparkler.json",
+          "name": "Sparks of Joy",
+          "locKey": "#ground_emote_pathfinder_sparkler",
+          "hash": "85a561db35d22090",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/epic_teabag.json",
+          "name": "Squats",
+          "locKey": "#CHAR_EMOTE_035",
+          "hash": "bc01703443a9f962",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/legendary_fitness.json",
+          "name": "Sweatin' to the Outlands",
+          "locKey": "#CHAR_EMOTE_057",
+          "hash": "bc017034633af49e",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/default.json",
+          "name": "Uppercut",
+          "locKey": "#CHAR_EMOTE_034",
+          "hash": "bc01703433f13489",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Rampart": {
+      "slug": "rampart",
+      "displayName": "Rampart",
+      "counts": {
+        "total": 10
+      },
+      "items": [
+        {
+          "file": "rampart/legendary_panicdance.json",
+          "name": "Loose Cannon",
+          "locKey": "#CHAR_EMOTE_039",
+          "hash": "bc017034828d0cc7",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/legendary_mechbull.json",
+          "name": "Rampart Rodeo",
+          "locKey": "#character_emote_rampart_legendary_mechbull_NAME",
+          "hash": "0da60a6f93adea43",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_v22_partymask_yoga.json",
+          "name": "Scorpion Sting",
+          "locKey": "#character_rampart_yoga",
+          "hash": "80297c9b750faddc",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_v24_boombox.json",
+          "name": "Sheila Shuffle",
+          "locKey": "#CHAR_EMOTE_BOOMBOX",
+          "hash": "4c22f53f0924f0c2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_v22_chillaxing.json",
+          "name": "Sheila-xing",
+          "locKey": "#ground_emote_rampart_chillaxing",
+          "hash": "5425f7f5f95a6254",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_v25_cricket.json",
+          "name": "Six Swing",
+          "locKey": "#CHAR_EMOTE_CRICKET",
+          "hash": "90eda53db64d5f2a",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_v23_smokebomb.json",
+          "name": "Sneak Attack",
+          "locKey": "#ground_emote_rampart_smokebomb",
+          "hash": "7c3a7db1c28097a1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_turretspin.json",
+          "name": "Spin Up",
+          "locKey": "#CHAR_EMOTE_038",
+          "hash": "bc01703472d447ee",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/epic_bollywood_dance.json",
+          "name": "The Light Bombastic",
+          "locKey": "#CHAR_EMOTE_061",
+          "hash": "bc01703404f6104b",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/default.json",
+          "name": "Throwdown",
+          "locKey": "#CHAR_EMOTE_037",
+          "hash": "bc017034631b8315",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Revenant": {
+      "slug": "revenant",
+      "displayName": "Revenant",
+      "counts": {
+        "total": 11
+      },
+      "items": [
+        {
+          "file": "revenant/epic_v24_glitchdance.json",
+          "name": "Brokedancing",
+          "locKey": "#ground_emote_revenant_glitchdance",
+          "hash": "004dc4b28b9e4f2c",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/epic_v23_powerup.json",
+          "name": "Core Release",
+          "locKey": "#ground_emote_revenant_powerup",
+          "hash": "e15a36c8c954388a",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/heirloom_v22_scythe.json",
+          "name": "Fight Your Demons",
+          "locKey": "#ground_emote_revenant_scythe",
+          "hash": "753e93e2e740093d",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/epic_v22_laughingtaunt.json",
+          "name": "Killer Joke",
+          "locKey": "#ground_emote_revenant_laughingtaunt",
+          "hash": "e6e073ea29f1b484",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/legendary_skullcrush.json",
+          "name": "Overload",
+          "locKey": "#CHAR_EMOTE_042",
+          "hash": "bc017034148f639b",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/epic_v23_balloonpop.json",
+          "name": "Party Pooper",
+          "locKey": "#ground_emote_revenant_balloonpop",
+          "hash": "98fba391e044f251",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/epic_v24_crushingvictory.json",
+          "name": "Revelry",
+          "locKey": "#ground_emote_revenant_crushingvictory",
+          "hash": "123e949eacd89b02",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/legendary_sparkingwhip.json",
+          "name": "Robotic Scourge",
+          "locKey": "#ground_emote_revenant_sparkingwhip_NAME",
+          "hash": "02720df4a36eae28",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/epic_v22_opmech_bladeattack.json",
+          "name": "Sharpened Reach",
+          "locKey": "#ground_emote_revenant_bladeattack_NAME",
+          "hash": "7172a33eaa8e5f8b",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/default.json",
+          "name": "Stay Sharp",
+          "locKey": "#CHAR_EMOTE_040",
+          "hash": "bc017033f51dd9e8",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/epic_silence.json",
+          "name": "Suffering Silence",
+          "locKey": "#CHAR_EMOTE_041",
+          "hash": "bc01703404d69ec1",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Seer": {
+      "slug": "seer",
+      "displayName": "Seer",
+      "counts": {
+        "total": 10
+      },
+      "items": [
+        {
+          "file": "seer/epic_v22_rose.json",
+          "name": "A Rose For You",
+          "locKey": "#ground_emote_seer_rose",
+          "hash": "cffd63987eb20f51",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/epic_v24_dj.json",
+          "name": "Heartbeat Remix",
+          "locKey": "#ground_emote_seer_dj",
+          "hash": "1d343c0a3add68fa",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/epic_dancingtaunt.json",
+          "name": "It's Funky Enough",
+          "locKey": "#CHAR_EMOTE_055",
+          "hash": "bc01703443c96aec",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/epic_v23_lanternlighting.json",
+          "name": "Lantern Lighting",
+          "locKey": "#ground_emote_seer_lanternlighting",
+          "hash": "5c7fde58b0fc8ab1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/legendary_trust.json",
+          "name": "Lean On Me",
+          "locKey": "#ground_emote_seer_trust_NAME",
+          "hash": "2cf921f4ead05dca",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/epic_v22_partymusic_fingerdrones.json",
+          "name": "Light Show",
+          "locKey": "#ground_emote_seer_fingerdrones",
+          "hash": "440119b50a9b4af4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/epic_v25_thumbsdown.json",
+          "name": "Not Entertained",
+          "locKey": "#ground_emote_seer_thumbsdown",
+          "hash": "3f9ec32f12438f9f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/epic_v22_partybeach_ngolo.json",
+          "name": "Performer at Heart",
+          "locKey": "#ground_emote_seer_ngolo",
+          "hash": "b00eafaebbc9c4d4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/default.json",
+          "name": "Play to the Crowd",
+          "locKey": "#CHAR_EMOTE_054",
+          "hash": "bc0170343410a612",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/legendary_ringofdrones.json",
+          "name": "Up In Lights",
+          "locKey": "#CHAR_EMOTE_056",
+          "hash": "bc01703453822fc5",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Sparrow": {
+      "slug": "sparrow",
+      "displayName": "Sparrow",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "sparrow/epic_v24_specialguest.json",
+          "name": "Festa Del Gatta",
+          "locKey": "#ground_emote_sparrow_specialguest",
+          "hash": "f5f8ea978948b209",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "sparrow/rare_v24_taunt.json",
+          "name": "Ma Ti Prego!",
+          "locKey": "#ground_emote_sparrow_taunt",
+          "hash": "b76cdea17b1f8201",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "sparrow/legendary_v24_confettitrick.json",
+          "name": "Trick Shot",
+          "locKey": "#ground_emote_sparrow_confettitrick",
+          "hash": "a20a9b08b432e25b",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Valkyrie": {
+      "slug": "valkyrie",
+      "displayName": "Valkyrie",
+      "counts": {
+        "total": 11
+      },
+      "items": [
+        {
+          "file": "valkyrie/epic_v24_onthecatwalk.json",
+          "name": "Airwalk",
+          "locKey": "#ground_emote_valkyrie_onthecatwalk",
+          "hash": "a7a808d1795f6d2f",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/epic_v23_resdopa_smashyou.json",
+          "name": "Ground Pound",
+          "locKey": "#emote_smashyou",
+          "hash": "09eee2d0a759a274",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/legendary_roasting.json",
+          "name": "In-Flight Meal",
+          "locKey": "#character_emote_valkyrie_legendary_roasting_NAME",
+          "hash": "5d0e079605293fcc",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/epic_v24_jackolantern.json",
+          "name": "Jetpack Jack-O-Lantern",
+          "locKey": "#valkyrie_ground_emote_jackolantern",
+          "hash": "e347e1e21a6af7db",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/lgnd_v22_redsmoke.json",
+          "name": "Modern Day Cupid",
+          "locKey": "#ground_emote_valkyrie_redsmoke",
+          "hash": "c429ec8602ed35f9",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/epic_v23_yoyo.json",
+          "name": "Off the Leash",
+          "locKey": "#valkyrie_ground_emote_yoyo",
+          "hash": "aede724a56b5b4c1",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/epic_v22_fightingmoves.json",
+          "name": "One Two Punch",
+          "locKey": "#ground_emote_valkyrie_fightingmoves",
+          "hash": "9528fef4d4838744",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/legendary_rootbeer.json",
+          "name": "Party Crasher",
+          "locKey": "#CHAR_EMOTE_045",
+          "hash": "bc01703443b9b227",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/epic_airdance.json",
+          "name": "Sky Shuffle",
+          "locKey": "#ground_emote_valkyrie_airdance_NAME",
+          "hash": "61943912362a33aa",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/default.json",
+          "name": "Take a Bow",
+          "locKey": "#CHAR_EMOTE_043",
+          "hash": "bc01703424482874",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/epic_chillout.json",
+          "name": "Trust Fall",
+          "locKey": "#CHAR_EMOTE_044",
+          "hash": "bc0170343400ed4d",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Vantage": {
+      "slug": "vantage",
+      "displayName": "Vantage",
+      "counts": {
+        "total": 9
+      },
+      "items": [
+        {
+          "file": "vantage/epic_v22_360noscope.json",
+          "name": "360 No Scope",
+          "locKey": "#ground_emote_vantage_360noscope",
+          "hash": "123428718f63db26",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/epic_v24_inhale.json",
+          "name": "Compelling Threat",
+          "locKey": "#ground_emote_vantage_inhale",
+          "hash": "ff46d34da555f1b4",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/epic_celebrating.json",
+          "name": "Dream Team",
+          "locKey": "#ground_emote_vantage_celebrating_NAME",
+          "hash": "632ba8df0458e492",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/epic_v24_80sdancing.json",
+          "name": "Jam Session",
+          "locKey": "#ground_emote_vantage_v24_80sdancing",
+          "hash": "406bb3d72d66971e",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/epic_v22_partymusic_chillaxing.json",
+          "name": "Jerky Break",
+          "locKey": "#ground_emote_vantage_chillaxing",
+          "hash": "19106836c65d49ce",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/rare_v22_brushoff.json",
+          "name": "Job Well Done",
+          "locKey": "#ground_emote_vantage_brushoff",
+          "hash": "bbb0cb1c4491d0e5",
+          "rarity": "rare",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/epic_v23_giftgiving.json",
+          "name": "Present Companion",
+          "locKey": "#ground_emote_vantage_giftgiving_NAME",
+          "hash": "673e85c32cc2e5c5",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/lgnd_v22_dancing.json",
+          "name": "Two to Tango",
+          "locKey": "#ground_emote_vantage_dancing",
+          "hash": "ff8578833e7a6054",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/legendary_v22_carving.json",
+          "name": "Whittle Break",
+          "locKey": "#ground_emote_vantage_carving",
+          "hash": "cab3f8a8f45125bf",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Wattson": {
+      "slug": "wattson",
+      "displayName": "Wattson",
+      "counts": {
+        "total": 11
+      },
+      "items": [
+        {
+          "file": "wattson/epic_nessie_drop.json",
+          "name": "Easter Egg",
+          "locKey": "#CHAR_EMOTE_047",
+          "hash": "bc017034632b3bda",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/epic_v22_magicwitch_dancenowatch.json",
+          "name": "Electric Boogie",
+          "locKey": "#ground_emote_wattson_dancenowatch",
+          "hash": "b649eef10b0d6bcf",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/legendary_orchestra.json",
+          "name": "Electric Conductor",
+          "locKey": "#ground_emote_wattson_orchestra_NAME",
+          "hash": "799a19970ce57135",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/epic_v22_hunterpredator_dancewithtrophy.json",
+          "name": "Joyful Gigawatts",
+          "locKey": "#ground_emote_wattson_danceWithTrophy",
+          "hash": "bad082a392d3f2e7",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/default.json",
+          "name": "Pirouette",
+          "locKey": "#CHAR_EMOTE_046",
+          "hash": "bc01703453727700",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/legendary_poprocks.json",
+          "name": "Static Discharge",
+          "locKey": "#CHAR_EMOTE_048",
+          "hash": "bc01703472e400b3",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/epic_v25_zapcorn.json",
+          "name": "Static Snack",
+          "locKey": "#ground_emote_wattson_zapcorn",
+          "hash": "b61bdf2fa5c6eeb5",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/lgnd_v22_partymask_funsparks.json",
+          "name": "Telekinetic Energy",
+          "locKey": "#ground_emote_wattson_funsparks",
+          "hash": "70f435aaee45dedf",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/epic_v24_zombiedance.json",
+          "name": "Thriller Killer",
+          "locKey": "#ground_emote_wattson_zombiedance",
+          "hash": "caaca5d35381f8fa",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/epic_v23_cheerleading.json",
+          "name": "Unbridled Enthusiasm",
+          "locKey": "#ground_emote_wattson_cheerleading",
+          "hash": "32931d5d01c5f02b",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/epic_v22_partymusic_hugherself.json",
+          "name": "XOXO",
+          "locKey": "#ground_emote_wattson_hugherself",
+          "hash": "9920a733d05c1c13",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Wraith": {
+      "slug": "wraith",
+      "displayName": "Wraith",
+      "counts": {
+        "total": 14
+      },
+      "items": [
+        {
+          "file": "wraith/legendary_energy.json",
+          "name": "Acrobat",
+          "locKey": "#CHAR_EMOTE_051",
+          "hash": "bc01703404e65786",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/legendary_aggressiveposes.json",
+          "name": "Can't Touch This",
+          "locKey": "#ground_emote_wraith_aggressiveposes_NAME",
+          "hash": "d1314fb864b8f995",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/default.json",
+          "name": "Cut Throat",
+          "locKey": "#CHAR_EMOTE_049",
+          "hash": "bc017034829cc58c",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v24_howlingvictory.json",
+          "name": "Flipping Out",
+          "locKey": "#wraith_ground_emote_howlingvictory",
+          "hash": "7c88fc66cb8c9e45",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v22_frustrated.json",
+          "name": "Get it Together",
+          "locKey": "#ground_emote_wraith_frustrated",
+          "hash": "01a5ac4bcaa52dfa",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v24_assaultandbattery.json",
+          "name": "Hitting the Cell",
+          "locKey": "#ground_emote_wraith_assaultandbattery",
+          "hash": "b104a6e4b99eba26",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v24_gothicdance.json",
+          "name": "Parting the Void",
+          "locKey": "#ground_emote_wraith_gothicdance",
+          "hash": "b919b5a2abe4cf60",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_voices.json",
+          "name": "Possessed",
+          "locKey": "#CHAR_EMOTE_050",
+          "hash": "bc017033f52d92ad",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/legendary_v24_atomicreaction.json",
+          "name": "Powers Combined",
+          "locKey": "#wraith_ground_emote_atomicreaction",
+          "hash": "42bac7ec5bb1e959",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/heirloom_v22_partybeach_kunai.json",
+          "name": "Practice Makes Perfect",
+          "locKey": "#ground_emote_wraith_kunai",
+          "hash": "702647ca119ba9d7",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v23_slowclap.json",
+          "name": "Slow Clap",
+          "locKey": "#ground_emote_wraith_slowclap",
+          "hash": "c065e14aad0e00b2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v23_paddleball.json",
+          "name": "Solo Match",
+          "locKey": "#ground_emote_wraith_paddleball",
+          "hash": "a6a0351310f995b3",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v22_magicgoth_towel.json",
+          "name": "Sweaty",
+          "locKey": "#ground_emote_wraith_towel",
+          "hash": "f443d0443b4d8fd2",
+          "rarity": "epic",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/epic_v23_victory_yell.json",
+          "name": "Winning Attitude",
+          "locKey": "#ground_emote_wraith_victory_yell",
+          "hash": "73c18ca4752e4558",
+          "rarity": "epic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Shared": {
+      "slug": "shared",
+      "displayName": "Shared",
+      "counts": {
+        "total": 1
+      },
+      "items": [
+        {
+          "file": "shared/lgnd_v23_ragold.json",
+          "name": "Victory Pose",
+          "locKey": "#character_emote_shared_lgnd_v23_ragold",
+          "hash": "eecd3d19122fa2da",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    }
+  }
+}

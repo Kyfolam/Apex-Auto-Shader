@@ -1,0 +1,4040 @@
+{
+  "type": "banner_poses",
+  "note": "Banner Poses (gcard stances). Common/Rare = static, Epic/Legendary/Heirloom/Mythic = animated. Nicht Banner Frames. Slug overdrive → Axle.",
+  "stats": {
+    "static": 270,
+    "animated": 188,
+    "unnamed": 2,
+    "legends": 28
+  },
+  "legends": {
+    "Alter": {
+      "slug": "alter",
+      "displayName": "Alter",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "alter/rare_07.json",
+          "name": "Big Shot",
+          "locKey": "#gcard_stance_alter_rare_07",
+          "hash": "1b9a90a4866fd9d9",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_02.json",
+          "name": "Carefree",
+          "locKey": "#gcard_stance_alter_rare_02",
+          "hash": "1b9a90a437d4019a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_04.json",
+          "name": "Floored",
+          "locKey": "#gcard_stance_alter_rare_04",
+          "hash": "1b9a90a457458b4d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_09.json",
+          "name": "Free Runner",
+          "locKey": "#gcard_stance_alter_rare_09",
+          "hash": "1b9a90a4a5e1638c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_03.json",
+          "name": "Heads or Tails",
+          "locKey": "#gcard_stance_alter_rare_03",
+          "hash": "1b9a90a4478cc674",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_05.json",
+          "name": "Next Scheme",
+          "locKey": "#gcard_stance_alter_rare_05",
+          "hash": "1b9a90a466fe5026",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_01.json",
+          "name": "Perfect Balance",
+          "locKey": "#gcard_stance_alter_rare_01",
+          "hash": "1b9a90a4281b3cc1",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/common_01.json",
+          "name": "Pointed Walk",
+          "locKey": "#gcard_stance_alter_common_01",
+          "hash": "47c772f645dff530",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_08.json",
+          "name": "Scrap Nap",
+          "locKey": "#gcard_stance_alter_rare_08",
+          "hash": "1b9a90a496289eb3",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "alter/rare_06.json",
+          "name": "Watcher",
+          "locKey": "#gcard_stance_alter_rare_06",
+          "hash": "1b9a90a476b71500",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "alter/epic_03.json",
+          "name": "Bon Voyage",
+          "locKey": "#gcard_animated_alter_epic_03_stare",
+          "hash": "9da49c6eb550487d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "alter/epic_01.json",
+          "name": "Next In Line",
+          "locKey": "#gcard_animated_alter_epic_01_stare",
+          "hash": "c45571c04450c689",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "alter/epic_05.json",
+          "name": "Special Delivery",
+          "locKey": "#gcard_animated_alter_epic_05_knockknock",
+          "hash": "acaca1e12237d067",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "alter/epic_02.json",
+          "name": "Take a Peek",
+          "locKey": "#gcard_animated_alter_epic_02_stare",
+          "hash": "983fb3659c7cf66c",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "alter/epic_04.json",
+          "name": "Voided License",
+          "locKey": "#gcard_animated_alter_epic_04_stare",
+          "hash": "a0a1fd140114cc7e",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Ash": {
+      "slug": "ash",
+      "displayName": "Ash",
+      "counts": {
+        "static": 10,
+        "animated": 9,
+        "total": 19
+      },
+      "static": [
+        {
+          "file": "ash/rare_04.json",
+          "name": "Blade Runner",
+          "locKey": "#gcard_stance_ash_rare_04_NAME",
+          "hash": "2b1fd28d2f4cae78",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_01.json",
+          "name": "Close and Personal",
+          "locKey": "#gcard_stance_ash_rare_01_NAME",
+          "hash": "5187c0aa100f0383",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_03.json",
+          "name": "On Guard",
+          "locKey": "#gcard_stance_ash_rare_03_NAME",
+          "hash": "27d580db764dfc97",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_02.json",
+          "name": "One Step Ahead",
+          "locKey": "#gcard_stance_ash_rare_02_NAME",
+          "hash": "25bef35bbca60982",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_06.json",
+          "name": "Past and Present",
+          "locKey": "#gcard_stance_ash_rare_06_NAME",
+          "hash": "02a156f0adb1be1c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_07.json",
+          "name": "Perfectly Balanced",
+          "locKey": "#gcard_stance_ash_rare_07_NAME",
+          "hash": "071f6cd434687f41",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_05.json",
+          "name": "Ready to Strike",
+          "locKey": "#gcard_stance_ash_rare_05_NAME",
+          "hash": "2e6a243ee84b6059",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_08.json",
+          "name": "Respect",
+          "locKey": "#gcard_stance_ash_rare_08_NAME",
+          "hash": "0a69be860c6a5ed7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/rare_09.json",
+          "name": "Silent Strike",
+          "locKey": "#gcard_stance_ash_rare_09_NAME",
+          "hash": "0db41037d1d0bc9a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ash/common_01.json",
+          "name": "The Unlikely Pair",
+          "locKey": "#gcard_stance_ash_common_01_NAME",
+          "hash": "c86b7f04c43d0e0c",
+          "rarity": "common",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "ash/s11e02_epic_01.json",
+          "name": "Canopy Camouflage",
+          "locKey": "#gcard_stance_ash_s11e02_epic_01_NAME",
+          "hash": "85854563b6cbaeeb",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/epic_04.json",
+          "name": "Combat Ready",
+          "locKey": "#gcard_stance_ash_epic_04_NAME",
+          "hash": "78641634803ab4fc",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/epic_v22_opneon_bullets.json",
+          "name": "Jumping Into Action",
+          "locKey": "#gcard_stance_ash_epic_v22_opneon_bullets",
+          "hash": "8bbce088daf520d0",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/heirloom.json",
+          "name": "Killer Skill",
+          "locKey": "#gcard_stance_ash_epic_heirloom",
+          "hash": "94f07b2fa5d03a7a",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/epic_05.json",
+          "name": "Let's Play",
+          "locKey": "#gcard_stance_ash_epic_05_NAME",
+          "hash": "7bfb58f2bf42ec81",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/epic_01.json",
+          "name": "Palm Pilot",
+          "locKey": "#gcard_stance_ash_epic_01_NAME",
+          "hash": "9de5312bcee0791b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/s11e01_epic_01.json",
+          "name": "Sliced and Diced",
+          "locKey": "#gcard_stance_ash_s11e01_epic_01_NAME",
+          "hash": "75777f3fc99cdcca",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/epic_02.json",
+          "name": "Superiority",
+          "locKey": "#gcard_stance_ash_epic_02_NAME",
+          "hash": "71cf72d1270ca8fe",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ash/epic_03.json",
+          "name": "Where You Belong",
+          "locKey": "#gcard_stance_ash_epic_03_NAME",
+          "hash": "7566b58f1ba6d937",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Axle": {
+      "slug": "overdrive",
+      "displayName": "Axle",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "overdrive/rare_09.json",
+          "name": "Bring It On",
+          "locKey": "#gcard_stance_overdrive_rare_09_NAME",
+          "hash": "ec44ebbc07b502f7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_08.json",
+          "name": "Curb Stomp",
+          "locKey": "#gcard_stance_overdrive_rare_08_NAME",
+          "hash": "ebe3682c31c025ae",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_07.json",
+          "name": "Feel the Beat",
+          "locKey": "#gcard_stance_overdrive_rare_07_NAME",
+          "hash": "eb81e49c749aa029",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_02.json",
+          "name": "Flip the Switch",
+          "locKey": "#gcard_stance_overdrive_rare_02_NAME",
+          "hash": "e99a52cd219b4a16",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_06.json",
+          "name": "Heavy Weight",
+          "locKey": "#gcard_stance_overdrive_rare_06_NAME",
+          "hash": "eb20610c7fa2952b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_03.json",
+          "name": "Kick in the Head",
+          "locKey": "#gcard_stance_overdrive_rare_03_NAME",
+          "hash": "e9fbd65cf790275f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_04.json",
+          "name": "Ring Toss",
+          "locKey": "#gcard_stance_overdrive_rare_04_NAME",
+          "hash": "ea5d59ece6545c6c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_01.json",
+          "name": "Stand Tall",
+          "locKey": "#gcard_stance_overdrive_rare_01_NAME",
+          "hash": "e938cf3d5e41eea0",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/common_01.json",
+          "name": "Start Your Engines",
+          "locKey": "#gcard_stance_overdrive_common_01_NAME",
+          "hash": "940dfee79127768f",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "overdrive/rare_05.json",
+          "name": "Throne Room",
+          "locKey": "#gcard_stance_overdrive_rare_05_NAME",
+          "hash": "eabedd7ca9adb7e2",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "overdrive/epic_03.json",
+          "name": "Beat Down",
+          "locKey": "#gcard_stance_overdrive_epic_03_NAME",
+          "hash": "6c2238ae897c2531",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "overdrive/epic_02.json",
+          "name": "Idle Threat",
+          "locKey": "#gcard_stance_overdrive_epic_02_NAME",
+          "hash": "6bc0b51ebfeef3ca",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "overdrive/epic_01.json",
+          "name": "Muscle Up",
+          "locKey": "#gcard_stance_overdrive_epic_01_NAME",
+          "hash": "6b5f318efc959854",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "overdrive/epic_05.json",
+          "name": "Speed Bumps",
+          "locKey": "#gcard_stance_overdrive_epic_05_NAME",
+          "hash": "6ce53fce1662b20e",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "overdrive/epic_04.json",
+          "name": "Third Wheel",
+          "locKey": "#gcard_stance_overdrive_epic_04_NAME",
+          "hash": "6c83bc3e53095698",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Ballistic": {
+      "slug": "ballistic",
+      "displayName": "Ballistic",
+      "counts": {
+        "static": 9,
+        "animated": 6,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "ballistic/rare_08.json",
+          "name": "A Steep Price",
+          "locKey": "#gcard_stance_ballistic_rare_08",
+          "hash": "f16c95a7663673e6",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_06.json",
+          "name": "Always Alert",
+          "locKey": "#gcard_stance_ballistic_rare_06",
+          "hash": "f16c95a746c4ea33",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_04.json",
+          "name": "Commanding Presence",
+          "locKey": "#gcard_stance_ballistic_rare_04",
+          "hash": "f16c95a727536080",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_09.json",
+          "name": "Dual Wield",
+          "locKey": "#gcard_stance_ballistic_rare_09",
+          "hash": "f16c95a775ef38bf",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/common_01.json",
+          "name": "Elegance",
+          "locKey": "#gcard_stance_ballistic_common_01",
+          "hash": "ed95ce07eaa2a3e6",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_01.json",
+          "name": "Going Ballistic",
+          "locKey": "#gcard_stance_ballistic_rare_01",
+          "hash": "f16c95a6f82911f4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_02.json",
+          "name": "Keeping Time",
+          "locKey": "#gcard_stance_ballistic_rare_02",
+          "hash": "f16c95a707e1d6cd",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_03.json",
+          "name": "Looking SMRT",
+          "locKey": "#gcard_stance_ballistic_rare_03",
+          "hash": "f16c95a7179a9ba7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "ballistic/rare_07.json",
+          "name": "On a Mission",
+          "locKey": "#gcard_stance_ballistic_rare_07",
+          "hash": "f16c95a7567daf0c",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "ballistic/epic_04.json",
+          "name": "A Cracking Display",
+          "locKey": "#gcard_stance_ballistic_epic_04",
+          "hash": "8c89f071832b43de",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ballistic/epic_05.json",
+          "name": "Ambidextrous",
+          "locKey": "#gcard_stance_ballistic_epic_05",
+          "hash": "8c89f07192e408b7",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ballistic/epic_02.json",
+          "name": "Down to Business",
+          "locKey": "#gcard_stance_ballistic_epic_02",
+          "hash": "8c89f07163b9ba2b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ballistic/epic_03.json",
+          "name": "Eye for Detail",
+          "locKey": "#gcard_stance_ballistic_epic_03",
+          "hash": "8c89f07173727f05",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ballistic/epic_01.json",
+          "name": "Quickdraw",
+          "locKey": "#gcard_stance_ballistic_epic_01",
+          "hash": "8c89f0715400f552",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "ballistic/epic_06.json",
+          "name": null,
+          "locKey": "#gcard_stance_ballistic_epic_06",
+          "hash": "8c89f071a29ccd91",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Bangalore": {
+      "slug": "bangalore",
+      "displayName": "Bangalore",
+      "counts": {
+        "static": 8,
+        "animated": 4,
+        "total": 12
+      },
+      "static": [
+        {
+          "file": "bangalore/rare_08.json",
+          "name": "Armed",
+          "locKey": "#gcard_stance_bangalore_rare_08_NAME",
+          "hash": "e5498e2ea9802e6f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/common_01.json",
+          "name": "At Ease",
+          "locKey": "#gcard_stance_bangalore_common_01_NAME",
+          "hash": "d79271739e35d590",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/rare_06.json",
+          "name": "Composed",
+          "locKey": "#gcard_stance_bangalore_rare_06_NAME",
+          "hash": "e486870f1031f5b0",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/rare_03.json",
+          "name": "Dead to Rights",
+          "locKey": "#gcard_stance_bangalore_rare_03_NAME",
+          "hash": "e361fc5fb9be376c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/rare_07.json",
+          "name": "Locked and Loaded",
+          "locKey": "#gcard_stance_bangalore_rare_07_NAME",
+          "hash": "e4e80a9ed38b5126",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/rare_09.json",
+          "name": "On Patrol",
+          "locKey": "#gcard_stance_bangalore_rare_09_NAME",
+          "hash": "e5ab11bec9e31304",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/rare_01.json",
+          "name": "Smoke Out!",
+          "locKey": "#gcard_stance_bangalore_rare_01_NAME",
+          "hash": "e29ef53fd601f761",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bangalore/rare_02.json",
+          "name": "With Pride",
+          "locKey": "#gcard_stance_bangalore_rare_02_NAME",
+          "hash": "e30078cf995b52d7",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "bangalore/epic_03.json",
+          "name": "Cool Under Pressure",
+          "locKey": "#gcard_stance_bangalore_epic_03_NAME",
+          "hash": "9efd431572509dd4",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bangalore/epic_01.json",
+          "name": "Drill Sergeant",
+          "locKey": "#gcard_stance_bangalore_epic_01_NAME",
+          "hash": "9e3a3bf5b3cb616f",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bangalore/heirloom_01.json",
+          "name": "No Gun, No Problem",
+          "locKey": "#POSE_039",
+          "hash": "f2626097a1fb78a4",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "bangalore/epic_02.json",
+          "name": "Self Defense",
+          "locKey": "#gcard_stance_bangalore_epic_02_NAME",
+          "hash": "9e9bbf85a8c36c6d",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Bloodhound": {
+      "slug": "bloodhound",
+      "displayName": "Bloodhound",
+      "counts": {
+        "static": 11,
+        "animated": 7,
+        "total": 18
+      },
+      "static": [
+        {
+          "file": "bloodhound/rare_03.json",
+          "name": "Coming at You",
+          "locKey": "#gcard_stance_bloodhound_rare_03_NAME",
+          "hash": "5617006a0b80a476",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_07.json",
+          "name": "Dead to Rights",
+          "locKey": "#gcard_stance_bloodhound_rare_07_NAME",
+          "hash": "4e5ec80ed240b34e",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_05.json",
+          "name": "Downtime",
+          "locKey": "#gcard_stance_bloodhound_rare_05_NAME",
+          "hash": "51a10223946c5022",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_08.json",
+          "name": "Existential",
+          "locKey": "#gcard_stance_bloodhound_rare_08_NAME",
+          "hash": "7ae9f6df0445579e",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/common_01.json",
+          "name": "Guarded",
+          "locKey": "#gcard_stance_bloodhound_common_01_NAME",
+          "hash": "6115aafd5374aa20",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_04.json",
+          "name": "One with Nature",
+          "locKey": "#gcard_stance_bloodhound_rare_04_NAME",
+          "hash": "538f103a311d9ce4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_02.json",
+          "name": "Respectful",
+          "locKey": "#gcard_stance_bloodhound_rare_02_NAME",
+          "hash": "58050e80f29ff884",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_01.json",
+          "name": "Shot Caller",
+          "locKey": "#gcard_stance_bloodhound_rare_01_NAME",
+          "hash": "59593a7eff4af0d2",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_06.json",
+          "name": "Stalk",
+          "locKey": "#gcard_stance_bloodhound_rare_06_NAME",
+          "hash": "504cd62587c157d4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/rare_09.json",
+          "name": "Stern",
+          "locKey": "#gcard_stance_bloodhound_rare_09_NAME",
+          "hash": "78fbe8c84ec4b318",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "bloodhound/s04e02_rare_01.json",
+          "name": "Til Valhalla",
+          "locKey": "#POSE_013",
+          "hash": "56609d7ac9fc94d4",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "bloodhound/epic_03.json",
+          "name": "Blademaster",
+          "locKey": "#gcard_stance_bloodhound_epic_03_NAME",
+          "hash": "22686f288b202891",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bloodhound/epic_02.json",
+          "name": "Bring It",
+          "locKey": "#gcard_stance_bloodhound_epic_02_NAME",
+          "hash": "236faa19c75393ef",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bloodhound/heirloom_01.json",
+          "name": "Glory Hound",
+          "locKey": "#POSE_003",
+          "hash": "f4dd0da23d74e019",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "bloodhound/epic_05.json",
+          "name": "On Target",
+          "locKey": "#gcard_stance_bloodhound_epic_05_NAME",
+          "hash": "1df270e1fb3c7c79",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bloodhound/epic_04.json",
+          "name": "Personal Touch",
+          "locKey": "#gcard_stance_bloodhound_epic_04_NAME",
+          "hash": "202d700536c6a6a3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bloodhound/s10e02_epic_v21_monsters_01.json",
+          "name": "Slumber Disturbed",
+          "locKey": "#POSE_048",
+          "hash": "0db5280880c88f40",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "bloodhound/epic_01.json",
+          "name": "Unbreakable Bond",
+          "locKey": "#gcard_stance_bloodhound_epic_01_NAME",
+          "hash": "25aaa93d347c6da1",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Catalyst": {
+      "slug": "catalyst",
+      "displayName": "Catalyst",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "catalyst/rare_05.json",
+          "name": "Aggressive Negotiation",
+          "locKey": "#gcard_stance_catalyst_rare_05",
+          "hash": "a4fd04b880bbc796",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_09.json",
+          "name": "Divination",
+          "locKey": "#gcard_stance_catalyst_rare_09",
+          "hash": "a4fd04b880faaaaa",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_06.json",
+          "name": "I Arise",
+          "locKey": "#gcard_stance_catalyst_rare_06",
+          "hash": "a4fd04b880cb805b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_07.json",
+          "name": "Misfortune Awaits",
+          "locKey": "#gcard_stance_catalyst_rare_07",
+          "hash": "a4fd04b880db3920",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_01.json",
+          "name": "Mystic Crystals",
+          "locKey": "#gcard_stance_catalyst_rare_01",
+          "hash": "a4fd04b8807ce483",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/common_01.json",
+          "name": "Regal",
+          "locKey": "#gcard_stance_catalyst_common_01",
+          "hash": "c203e5f0bd2ce5f7",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_04.json",
+          "name": "Resistance",
+          "locKey": "#gcard_stance_catalyst_rare_04",
+          "hash": "a4fd04b880ac0ed1",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_02.json",
+          "name": "Star Gazing",
+          "locKey": "#gcard_stance_catalyst_rare_02",
+          "hash": "a4fd04b8808c9d48",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_08.json",
+          "name": "Surprising Read",
+          "locKey": "#gcard_stance_catalyst_rare_08",
+          "hash": "a4fd04b880eaf1e5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "catalyst/rare_03.json",
+          "name": "Tea Time",
+          "locKey": "#gcard_stance_catalyst_rare_03",
+          "hash": "a4fd04b8809c560d",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "catalyst/epic_03.json",
+          "name": "Child's Play",
+          "locKey": "#gcard_stance_catalyst_epic_03",
+          "hash": "31c1b2726c065308",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "catalyst/epic_05.json",
+          "name": "Empath",
+          "locKey": "#gcard_stance_catalyst_epic_05",
+          "hash": "31c1b2726c25c491",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "catalyst/epic_01.json",
+          "name": "Not Today",
+          "locKey": "#gcard_stance_catalyst_epic_01",
+          "hash": "31c1b2726be6e17e",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "catalyst/epic_04.json",
+          "name": "Play It Cool",
+          "locKey": "#gcard_stance_catalyst_epic_04",
+          "hash": "31c1b2726c160bcc",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "catalyst/epic_02.json",
+          "name": "Transfixed",
+          "locKey": "#gcard_stance_catalyst_epic_02",
+          "hash": "31c1b2726bf69a43",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Caustic": {
+      "slug": "caustic",
+      "displayName": "Caustic",
+      "counts": {
+        "static": 8,
+        "animated": 5,
+        "total": 13
+      },
+      "static": [
+        {
+          "file": "caustic/rare_03.json",
+          "name": "Bad Listener",
+          "locKey": "#gcard_stance_caustic_rare_03_NAME",
+          "hash": "0602ab2d93c22f44",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/rare_09.json",
+          "name": "Bad Medicine",
+          "locKey": "#gcard_stance_caustic_rare_09_NAME",
+          "hash": "eaad7657fc55dc5d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/rare_08.json",
+          "name": "Last Rites",
+          "locKey": "#gcard_stance_caustic_rare_08_NAME",
+          "hash": "e76324a636ef7e9a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/rare_02.json",
+          "name": "Mad Scientist",
+          "locKey": "#gcard_stance_caustic_rare_02_NAME",
+          "hash": "02b8597bdac37d63",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/rare_06.json",
+          "name": "Nevermore",
+          "locKey": "#gcard_stance_caustic_rare_06_NAME",
+          "hash": "df9abd10e49e89c1",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/rare_01.json",
+          "name": "Not to Be",
+          "locKey": "#gcard_stance_caustic_rare_01_NAME",
+          "hash": "2e8126ca46fbcf28",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/common_01.json",
+          "name": "Surgical",
+          "locKey": "#gcard_stance_caustic_common_01_NAME",
+          "hash": "1a694544cd824eb3",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "caustic/rare_07.json",
+          "name": "Unstable Genius",
+          "locKey": "#gcard_stance_caustic_rare_07_NAME",
+          "hash": "e2e50ec284cde3de",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "caustic/heirloom_01.json",
+          "name": "Hammer Time",
+          "locKey": "#POSE_034",
+          "hash": "5f988592ca4bde49",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "caustic/s10e02_epic_v21_monsters_01.json",
+          "name": "Hard Reset",
+          "locKey": "#POSE_047",
+          "hash": "c7845fa1364b5031",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "caustic/epic_03.json",
+          "name": "Morning Brew",
+          "locKey": "#gcard_stance_caustic_epic_03_NAME",
+          "hash": "52132aa2fe28cec0",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "caustic/epic_02.json",
+          "name": "Peacekiller",
+          "locKey": "#gcard_stance_caustic_epic_02_NAME",
+          "hash": "4f15c9fd9994f2fb",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "caustic/epic_01.json",
+          "name": "Think Tank",
+          "locKey": "#gcard_stance_caustic_epic_01_NAME",
+          "hash": "7a91a63f7fc3bf1c",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Conduit": {
+      "slug": "conduit",
+      "displayName": "Conduit",
+      "counts": {
+        "static": 10,
+        "animated": 6,
+        "total": 16
+      },
+      "static": [
+        {
+          "file": "conduit/rare_03.json",
+          "name": "Get Pumped",
+          "locKey": "#gcard_stance_conduit_rare_03_NAME",
+          "hash": "20161bcfc98f3cf4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_01.json",
+          "name": "Helping Hand",
+          "locKey": "#gcard_stance_conduit_rare_01_NAME",
+          "hash": "4894976c7cc8dcd8",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_09.json",
+          "name": "Into The Fray",
+          "locKey": "#gcard_stance_conduit_rare_09_NAME",
+          "hash": "04c0e6fa3222ea0d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/common_01.json",
+          "name": "Musta",
+          "locKey": "#gcard_stance_conduit_common_01_NAME",
+          "hash": "34a32e6d33b89d62",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_06.json",
+          "name": "Picture Perfect",
+          "locKey": "#gcard_stance_conduit_rare_06_NAME",
+          "hash": "fa9500d86e81ccf3",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_08.json",
+          "name": "Pleasant Perch",
+          "locKey": "#gcard_stance_conduit_rare_08_NAME",
+          "hash": "0129a43bf31ab288",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_02.json",
+          "name": "Ring Light",
+          "locKey": "#gcard_stance_conduit_rare_02_NAME",
+          "hash": "1c7ed91196eeb151",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_04.json",
+          "name": "Shadow Boxing",
+          "locKey": "#gcard_stance_conduit_boxing_NAME",
+          "hash": "b10301bdf92a576b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_05.json",
+          "name": "Sweet Fragrance",
+          "locKey": "#gcard_stance_conduit_rare_05_NAME",
+          "hash": "26aabf333b8ca0b6",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "conduit/rare_07.json",
+          "name": "Trick Shooter",
+          "locKey": "#gcard_stance_conduit_rare_07_NAME",
+          "hash": "fe2c4396a1225896",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "conduit/epic_02.json",
+          "name": "Evasive Autograph",
+          "locKey": "#gcard_animated_conduit_epic_02_bigfan",
+          "hash": "84f92cb8fe428618",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "conduit/epic_03.json",
+          "name": "Highlight Reel",
+          "locKey": "#gcard_animated_conduit_epic_03_proleague",
+          "hash": "2b7d54d188b235e3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "conduit/epic_06.json",
+          "name": "Legendary Transformation",
+          "locKey": "#gcard_animated_conduit_epic_06",
+          "hash": "3f13352c0d43eace",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "conduit/epic_01.json",
+          "name": "Monarch's Blessing",
+          "locKey": "#gcard_animated_conduit_epic_01_blessed",
+          "hash": "224de43d43e10497",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "conduit/epic_04.json",
+          "name": "Rise and Shine",
+          "locKey": "#gcard_animated_conduit_epic_04_povrevive",
+          "hash": "3a4e07e43d623c62",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "conduit/epic_05.json",
+          "name": "Showdown",
+          "locKey": "#gcard_animated_conduit_epic_05",
+          "hash": "3f13352bfd8b25f4",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Crypto": {
+      "slug": "crypto",
+      "displayName": "Crypto",
+      "counts": {
+        "static": 8,
+        "animated": 7,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "crypto/rare_07.json",
+          "name": "Eavesdrop",
+          "locKey": "#gcard_stance_crypto_common_05_NAME",
+          "hash": "a6a8f4ece4dec6d7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/rare_03.json",
+          "name": "Escape Artist",
+          "locKey": "#gcard_stance_crypto_rare_03_NAME",
+          "hash": "d5b78ac8e98e5456",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/common_01.json",
+          "name": "Idle",
+          "locKey": "#gcard_stance_crypto_common_01_NAME",
+          "hash": "a6a76eded991e27c",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/rare_05.json",
+          "name": "Incognito",
+          "locKey": "#gcard_stance_crypto_common_03_NAME",
+          "hash": "a6a831e5f4edc175",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/rare_02.json",
+          "name": "Jailbroken",
+          "locKey": "#gcard_stance_crypto_rare_02_NAME",
+          "hash": "d7a598df863fa118",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/rare_04.json",
+          "name": "Prekill",
+          "locKey": "#gcard_stance_crypto_common_02_NAME",
+          "hash": "a6a7d06238bb0d69",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/rare_01.json",
+          "name": "Smooth Operator",
+          "locKey": "#gcard_stance_crypto_rare_01_NAME",
+          "hash": "da2d890f60a2a8aa",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "crypto/rare_06.json",
+          "name": "Wallflower",
+          "locKey": "#gcard_stance_crypto_common_04_NAME",
+          "hash": "a6a893695416ec62",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "crypto/epic_03.json",
+          "name": "Buddy System",
+          "locKey": "#gcard_stance_crypto_epic_03_NAME",
+          "hash": "6739d86ad4c114a6",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "crypto/epic_01.json",
+          "name": "Charging D.O.C",
+          "locKey": "#gcard_stance_crypto_epic_01_NAME",
+          "hash": "6bafd6b14bd568fa",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "crypto/s03e01_epic_01.json",
+          "name": "Creature of the Night",
+          "locKey": "#POSE_005",
+          "hash": "813e9e70eb3eb5fb",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "crypto/s09e01_epic_01.json",
+          "name": "Decrypted",
+          "locKey": "#POSE_041",
+          "hash": "bab3cb352cedce8b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "crypto/epic_02.json",
+          "name": "Defragged",
+          "locKey": "#gcard_stance_crypto_epic_02_NAME",
+          "hash": "69c1c89a7d856cb0",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "crypto/s12e01_epic_01.json",
+          "name": "Let Me Ride",
+          "locKey": "#gcard_stance_crypto_s12e01_epic_01_NAME",
+          "hash": "6682e1af0c5e6264",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "crypto/heirloom_01.json",
+          "name": "No Escape",
+          "locKey": "#POSE_042",
+          "hash": "00e4939c776b0d9a",
+          "rarity": "mythic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Fuse": {
+      "slug": "fuse",
+      "displayName": "Fuse",
+      "counts": {
+        "static": 10,
+        "animated": 8,
+        "total": 18
+      },
+      "static": [
+        {
+          "file": "fuse/rare_08.json",
+          "name": "Alright Mate",
+          "locKey": "#gcard_stance_fuse_rare_08_NAME",
+          "hash": "87da3219618ddf73",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_04.json",
+          "name": "Bomb's Away",
+          "locKey": "#gcard_stance_fuse_rare_04_NAME",
+          "hash": "87d8ac0b1e6e759f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_05.json",
+          "name": "Bonecage Brawler",
+          "locKey": "#gcard_stance_fuse_rare_05_NAME",
+          "hash": "87d90d8eaf365014",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_03.json",
+          "name": "Boomstick!",
+          "locKey": "#gcard_stance_fuse_rare_03_NAME",
+          "hash": "87d84a87a675f2ee",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_02.json",
+          "name": "Gun Show",
+          "locKey": "#gcard_stance_fuse_rare_02_NAME",
+          "hash": "87d7e9041be1ee6a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_01.json",
+          "name": "Rock 'n Load",
+          "locKey": "#gcard_stance_fuse_rare_01_NAME",
+          "hash": "87d787808b1a13f5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_07.json",
+          "name": "Tall Tales",
+          "locKey": "#gcard_stance_fuse_rare_07_NAME",
+          "hash": "87d9d095e9955cc2",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_06.json",
+          "name": "Toss Up",
+          "locKey": "#gcard_stance_fuse_rare_06_NAME",
+          "hash": "87d96f1258cd824d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/common_01.json",
+          "name": "True Blue",
+          "locKey": "#gcard_stance_fuse_common_01_NAME",
+          "hash": "1add1783e82ef649",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "fuse/rare_09.json",
+          "name": "Your Move",
+          "locKey": "#gcard_stance_fuse_rare_09_NAME",
+          "hash": "87da939cf255b9e8",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "fuse/epic_05.json",
+          "name": "Bad Apple",
+          "locKey": "#gcard_stance_fuse_epic_05_NAME",
+          "hash": "e32972fcf200ed4c",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/s11e02_epic_01.json",
+          "name": "Clever Girl",
+          "locKey": "#gcard_stance_fuse_s11e02_epic_01_NAME",
+          "hash": "fcd51997d4a621e7",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/epic_02.json",
+          "name": "Drop Kick",
+          "locKey": "#gcard_stance_fuse_epic_02_NAME",
+          "hash": "e3284e72904b3b2a",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/epic_01.json",
+          "name": "Five Finger Fillet",
+          "locKey": "#gcard_stance_fuse_epic_01_NAME",
+          "hash": "e327eceeda4c5d0f",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/s08e01_epic_01.json",
+          "name": "Hail to the King",
+          "locKey": "#gcard_stance_fuse_epic_06_CONAN",
+          "hash": "57d7107cfef12383",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/mythic_23_resdopa.json",
+          "name": "Power Chord",
+          "locKey": "#gcard_stance_fuse_mythic_23_resdopa_NAME",
+          "hash": "1c0589f6859b08df",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/epic_03.json",
+          "name": "Pull!",
+          "locKey": "#gcard_stance_fuse_epic_03_NAME",
+          "hash": "e328aff5e9409026",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "fuse/epic_04.json",
+          "name": "This is a Knife",
+          "locKey": "#gcard_stance_fuse_epic_04_NAME",
+          "hash": "e32911799f3f6e41",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Gibraltar": {
+      "slug": "gibraltar",
+      "displayName": "Gibraltar",
+      "counts": {
+        "static": 8,
+        "animated": 9,
+        "total": 17
+      },
+      "static": [
+        {
+          "file": "gibraltar/rare_03.json",
+          "name": "Come On",
+          "locKey": "#gcard_stance_gibraltar_rare_03_NAME",
+          "hash": "121b6266ed147631",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/rare_06.json",
+          "name": "Fired Up",
+          "locKey": "#gcard_stance_gibraltar_rare_06_NAME",
+          "hash": "133fed167526e3fd",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/rare_09.json",
+          "name": "Humble",
+          "locKey": "#gcard_stance_gibraltar_rare_09_NAME",
+          "hash": "146477c5fd3951c9",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/common_01.json",
+          "name": "Incoming",
+          "locKey": "#gcard_stance_gibraltar_common_01_NAME",
+          "hash": "d22126f5794b4b5b",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/rare_08.json",
+          "name": "Intense Focus",
+          "locKey": "#gcard_stance_gibraltar_rare_08_NAME",
+          "hash": "1402f43627447480",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/rare_02.json",
+          "name": "Sky Show",
+          "locKey": "#gcard_stance_gibraltar_rare_02_NAME",
+          "hash": "11b9ded7171f98e8",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/rare_07.json",
+          "name": "Teamwork",
+          "locKey": "#gcard_stance_gibraltar_rare_07_NAME",
+          "hash": "13a170a6514f9737",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "gibraltar/rare_01.json",
+          "name": "Victorious",
+          "locKey": "#gcard_stance_gibraltar_rare_01_NAME",
+          "hash": "11585b473af6e5ae",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "gibraltar/epic_v22_colossus.json",
+          "name": "Big Bruddah",
+          "locKey": "#gcard_stance_gibraltar_epic_v22_colossus_name",
+          "hash": "fc2b7fb3f475dca4",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/epic_v22_opneon_gunshield.json",
+          "name": "Blocked",
+          "locKey": "#gcard_stance_gibraltar_epic_v22_opneon_gunshield",
+          "hash": "e51e88c7a9564898",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/epic_01.json",
+          "name": "Fight Mode",
+          "locKey": "#gcard_stance_gibraltar_epic_01_NAME",
+          "hash": "42b85cbc4ccc14ab",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/epic_02.json",
+          "name": "Good Company",
+          "locKey": "#gcard_stance_gibraltar_epic_02_NAME",
+          "hash": "4319e04c28f4c7e5",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/epic_03.json",
+          "name": "Just Kidding",
+          "locKey": "#gcard_stance_gibraltar_epic_03_NAME",
+          "hash": "437b63dbf281f94c",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/s06e01_epic_01.json",
+          "name": "Keeper of the Peace",
+          "locKey": "#POSE_032",
+          "hash": "9f6103c44e20b7ef",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/heirloom_01.json",
+          "name": "Like a Rock",
+          "locKey": "#POSE_038",
+          "hash": "ac319830577e3995",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/s03e01_epic_01.json",
+          "name": "Re-Galvanized",
+          "locKey": "#POSE_006",
+          "hash": "fb4557d835bbf50a",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "gibraltar/s04e01_epic_01.json",
+          "name": "Roll Out",
+          "locKey": "#POSE_011",
+          "hash": "96291babea940f6a",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Horizon": {
+      "slug": "horizon",
+      "displayName": "Horizon",
+      "counts": {
+        "static": 10,
+        "animated": 6,
+        "total": 16
+      },
+      "static": [
+        {
+          "file": "horizon/rare_04.json",
+          "name": "Dream Catcher",
+          "locKey": "#gcard_stance_horizon_rare_04_NAME",
+          "hash": "335fdf33155eaf08",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_01.json",
+          "name": "Epiphany",
+          "locKey": "#gcard_stance_horizon_rare_01_NAME",
+          "hash": "5894091e0331f129",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_07.json",
+          "name": "Head In The Clouds",
+          "locKey": "#gcard_stance_horizon_rare_07_NAME",
+          "hash": "0ec59761339e782f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_08.json",
+          "name": "Hyperfixated",
+          "locKey": "#gcard_stance_horizon_rare_08_NAME",
+          "hash": "117606f9ecf1caaa",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_02.json",
+          "name": "Little Newtie",
+          "locKey": "#gcard_stance_horizon_rare_02_NAME",
+          "hash": "2d651de884097cf7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_05.json",
+          "name": "Perfect Partnership",
+          "locKey": "#gcard_stance_horizon_rare_05_NAME",
+          "hash": "36aa30e4c1f5b507",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_03.json",
+          "name": "Projectile Accelerator",
+          "locKey": "#gcard_stance_horizon_rare_03_NAME",
+          "hash": "30af6f9a2a6cad05",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/common_01.json",
+          "name": "Ready For Launch",
+          "locKey": "#gcard_stance_horizon_common_01_NAME",
+          "hash": "b9f3f14b18b7824a",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_06.json",
+          "name": "To The Stars",
+          "locKey": "#gcard_stance_horizon_rare_06_NAME",
+          "hash": "0b7b45af87077230",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "horizon/rare_09.json",
+          "name": "Uplifting Experience",
+          "locKey": "#gcard_stance_horizon_rare_09_NAME",
+          "hash": "14c058abb258286d",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "horizon/epic_04.json",
+          "name": "Agent NV5A",
+          "locKey": "#gcard_stance_horizon_epic_04_NAME",
+          "hash": "818af5ffba62eb0e",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "horizon/epic_03.json",
+          "name": "Nailed It",
+          "locKey": "#gcard_stance_horizon_epic_03_NAME",
+          "hash": "7c260cf6b42b1ad0",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "horizon/epic_01.json",
+          "name": "One Small Step",
+          "locKey": "#gcard_stance_horizon_epic_01_NAME",
+          "hash": "a53e6aac2909beb0",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "horizon/s17_1_ophitman_mythic_01.json",
+          "name": "Scientific Method",
+          "locKey": "#gcard_stance_horizon_s17_1_ophitman_mythic_01",
+          "hash": "554a23e541ef665c",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "horizon/s11e02_epic_01.json",
+          "name": "Tropical Menagerie",
+          "locKey": "#gcard_stance_horizon_s11e02_epic_01_NAME",
+          "hash": "87f8349baf3b31b7",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "horizon/epic_02.json",
+          "name": "Working Together",
+          "locKey": "#gcard_stance_horizon_epic_02_NAME",
+          "hash": "7928ac514f973f0b",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Lifeline": {
+      "slug": "lifeline",
+      "displayName": "Lifeline",
+      "counts": {
+        "static": 10,
+        "animated": 9,
+        "total": 19
+      },
+      "static": [
+        {
+          "file": "lifeline/rare_05.json",
+          "name": "BFF",
+          "locKey": "#gcard_stance_lifeline_rare_05_NAME",
+          "hash": "ae079b7d1a50acd6",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_07.json",
+          "name": "Connected",
+          "locKey": "#gcard_stance_lifeline_rare_07_NAME",
+          "hash": "ae085e84231109fc",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_01.json",
+          "name": "Daydreamer",
+          "locKey": "#gcard_stance_lifeline_rare_01_NAME",
+          "hash": "ae06156ec495c12f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_03.json",
+          "name": "Encore",
+          "locKey": "#gcard_stance_lifeline_rare_03_NAME",
+          "hash": "ae06d875dff1a028",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_09.json",
+          "name": "Healer",
+          "locKey": "#gcard_stance_lifeline_rare_09_NAME",
+          "hash": "ae09218b5d7016aa",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_04.json",
+          "name": "Let's Go!",
+          "locKey": "#gcard_stance_lifeline_rare_04_NAME",
+          "hash": "ae0739f98988d261",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_06.json",
+          "name": "Lounging",
+          "locKey": "#gcard_stance_lifeline_rare_06_NAME",
+          "hash": "ae07fd0092492f87",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/common_01.json",
+          "name": "Peace",
+          "locKey": "#gcard_stance_lifeline_common_01_NAME",
+          "hash": "5469e14b85fc2822",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_08.json",
+          "name": "Relaxed",
+          "locKey": "#gcard_stance_lifeline_rare_08_NAME",
+          "hash": "ae08c007cca83c35",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "lifeline/rare_02.json",
+          "name": "Talking Game",
+          "locKey": "#gcard_stance_lifeline_rare_02_NAME",
+          "hash": "ae0676f2555d9ba4",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "lifeline/epic_04.json",
+          "name": "Bad D.O.C.",
+          "locKey": "#gcard_stance_lifeline_epic_04_NAME",
+          "hash": "0a3e728d64a3d676",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/epic_03.json",
+          "name": "Drumroll Please",
+          "locKey": "#gcard_stance_lifeline_epic_03_NAME",
+          "hash": "0a3e1109a23d4c79",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/epic_01.json",
+          "name": "Funslinger",
+          "locKey": "#gcard_stance_lifeline_epic_01_NAME",
+          "hash": "0a3d4e029fb0c544",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/epic_05.json",
+          "name": "Good Vibes",
+          "locKey": "#gcard_stance_lifeline_epic_05_NAME",
+          "hash": "0a3ed410aafda99f",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/s11e02_epic_01.json",
+          "name": "Head on a Swivel",
+          "locKey": "#gcard_stance_lifeline_s11e02_epic_01_NAME",
+          "hash": "cc5b9f7b2506ccc3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/epic_02.json",
+          "name": "Joy Ride",
+          "locKey": "#gcard_stance_lifeline_epic_02_NAME",
+          "hash": "0a3daf864947f77d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/s10e01_epic_01.json",
+          "name": "Preventative Measures",
+          "locKey": "#gcard_stance_lifeline_s10e01_epic_01_NAME",
+          "hash": "88360de6ff563fc2",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/heirloom_01.json",
+          "name": "Shock Sticks",
+          "locKey": "#gcard_stance_lifeline_heirloom_01_NAME",
+          "hash": "d332e9106896eabd",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "lifeline/epic_06.json",
+          "name": "Wardrobe Change",
+          "locKey": "#gcard_stance_lifeline_epic_06_drummerscooltrick",
+          "hash": "c95b356b88f1de26",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Loba": {
+      "slug": "loba",
+      "displayName": "Loba",
+      "counts": {
+        "static": 10,
+        "animated": 10,
+        "total": 20
+      },
+      "static": [
+        {
+          "file": "loba/rare_05.json",
+          "name": "Accessorize",
+          "locKey": "#gcard_stance_loba_rare_05_NAME",
+          "hash": "0c938e3162235a7e",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_08.json",
+          "name": "All Business",
+          "locKey": "#gcard_stance_loba_rare_08_NAME",
+          "hash": "0c94b2bc147ae9dd",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_01.json",
+          "name": "Claws Out",
+          "locKey": "#gcard_stance_loba_rare_01_NAME",
+          "hash": "0c9208232537c69b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_06.json",
+          "name": "Deadly Grace",
+          "locKey": "#gcard_stance_loba_rare_06_NAME",
+          "hash": "0c93efb4f2eb34f3",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/common_01.json",
+          "name": "Fashion Forward",
+          "locKey": "#gcard_stance_loba_common_01_NAME",
+          "hash": "dec71767c9cd6dd0",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_07.json",
+          "name": "Perfect View",
+          "locKey": "#gcard_stance_loba_rare_07_NAME",
+          "hash": "0c94513883b30f68",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_03.json",
+          "name": "Precious Gift",
+          "locKey": "#gcard_stance_loba_rare_03_NAME",
+          "hash": "0c92cb2a4093a594",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_04.json",
+          "name": "Proper Form",
+          "locKey": "#gcard_stance_loba_rare_04_NAME",
+          "hash": "0c932cadd15b8009",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_09.json",
+          "name": "The Finer Things",
+          "locKey": "#gcard_stance_loba_rare_09_NAME",
+          "hash": "0c95143fa542c452",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "loba/rare_02.json",
+          "name": "Try Me",
+          "locKey": "#gcard_stance_loba_rare_02_NAME",
+          "hash": "0c9269a6b5ffa110",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "loba/s09e01_epic_01.json",
+          "name": "Almost Too Easy",
+          "locKey": "#POSE_043",
+          "hash": "7aeb4d040c5653f5",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/epic_02.json",
+          "name": "Catwalk",
+          "locKey": "#gcard_stance_loba_epic_02_NAME",
+          "hash": "de8ffc5965370fca",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/epic_01.json",
+          "name": "Charmed",
+          "locKey": "#gcard_stance_loba_epic_01_NAME",
+          "hash": "de8f9ad5a2d085cd",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/s07e02_epic_01.json",
+          "name": "Charming",
+          "locKey": "#POSE_036",
+          "hash": "ebfa16617815b42b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/epic_03.json",
+          "name": "Hard to Get",
+          "locKey": "#gcard_stance_loba_epic_03_NAME",
+          "hash": "de905ddcbe2c64c6",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/epic_05.json",
+          "name": "Jumping to Judgement",
+          "locKey": "#gcard_stance_loba_epic_05_NAME",
+          "hash": "de9120e4115ac938",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/epic_04.json",
+          "name": "Mission Accomplished",
+          "locKey": "#gcard_stance_loba_epic_04_NAME",
+          "hash": "de90bf604ef43f3b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/s08e01_epic_01.json",
+          "name": "Queen of Flyers",
+          "locKey": "#POSE_040",
+          "hash": "748302cdc9a137b8",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/s05e01_epic_01.json",
+          "name": "Quick Change Artist",
+          "locKey": "#POSE_014",
+          "hash": "9c9165e22d492ba7",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "loba/heirloom_01.json",
+          "name": "Trazer de Volta",
+          "locKey": "#gcard_stance_loba_heirloom_01_NAME",
+          "hash": "30943e502eae535c",
+          "rarity": "mythic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Mad Maggie": {
+      "slug": "madmaggie",
+      "displayName": "Mad Maggie",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "madmaggie/common_01.json",
+          "name": "Bring Your Best",
+          "locKey": "#gcard_stance_madmaggie_common_01_NAME",
+          "hash": "3b5f0d24fc1bd9a3",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_01.json",
+          "name": "Eat This",
+          "locKey": "#gcard_stance_madmaggie_rare_01_NAME",
+          "hash": "5841f878d48b47d2",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_02.json",
+          "name": "Hell Akimbo",
+          "locKey": "#gcard_stance_madmaggie_rare_02_NAME",
+          "hash": "58a37c08b0b3fb0c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_05.json",
+          "name": "Out Of My Way",
+          "locKey": "#gcard_stance_madmaggie_rare_05_NAME",
+          "hash": "59c806b80727b950",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_04.json",
+          "name": "Primal Scream",
+          "locKey": "#gcard_stance_madmaggie_rare_04_NAME",
+          "hash": "596683282aff0616",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_06.json",
+          "name": "Resolute Leader",
+          "locKey": "#gcard_stance_madmaggie_rare_06_NAME",
+          "hash": "5a298a481b22f203",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_09.json",
+          "name": "Ripping The Cord",
+          "locKey": "#gcard_stance_madmaggie_rare_09_NAME",
+          "hash": "5b4e14f77196b047",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_08.json",
+          "name": "Salvo Stomp",
+          "locKey": "#gcard_stance_madmaggie_rare_08_NAME",
+          "hash": "5aec9167c0d8d6a4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_03.json",
+          "name": "Taste My Steel",
+          "locKey": "#gcard_stance_madmaggie_rare_03_NAME",
+          "hash": "5904ff986171d4af",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "madmaggie/rare_07.json",
+          "name": "Whiplashed",
+          "locKey": "#gcard_stance_madmaggie_rare_07_NAME",
+          "hash": "5a8b0dd7f74ba53d",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "madmaggie/epic_04.json",
+          "name": "Armed And Dangerous",
+          "locKey": "#gcard_stance_madmaggie_epic_04_NAME",
+          "hash": "15c2247d4544bc6b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "madmaggie/epic_03.json",
+          "name": "Fearless Leader",
+          "locKey": "#gcard_stance_madmaggie_epic_03_NAME",
+          "hash": "1560a0ed6f4fdf22",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "madmaggie/epic_02.json",
+          "name": "For Salvo",
+          "locKey": "#gcard_stance_madmaggie_epic_02_NAME",
+          "hash": "14ff1d5db22a599d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "madmaggie/epic_01.json",
+          "name": "Good As Gold",
+          "locKey": "#gcard_stance_madmaggie_epic_01_NAME",
+          "hash": "149d99cdbd324e9f",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "madmaggie/epic_05.json",
+          "name": "Settle The Score",
+          "locKey": "#gcard_stance_madmaggie_epic_05_NAME",
+          "hash": "1623a80d3a3cc769",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Mirage": {
+      "slug": "mirage",
+      "displayName": "Mirage",
+      "counts": {
+        "static": 9,
+        "animated": 9,
+        "total": 18
+      },
+      "static": [
+        {
+          "file": "mirage/rare_07.json",
+          "name": "Abracadabra!",
+          "locKey": "#gcard_stance_mirage_rare_07_NAME",
+          "hash": "67617ad3fb74ea60",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/rare_02.json",
+          "name": "Baller",
+          "locKey": "#gcard_stance_mirage_rare_02_NAME",
+          "hash": "7154b25295760958",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/common_01.json",
+          "name": "Big Brother",
+          "locKey": "#gcard_stance_mirage_common_01_NAME",
+          "hash": "7a185dc289108d14",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/rare_03.json",
+          "name": "Bunny Ears",
+          "locKey": "#gcard_stance_mirage_rare_03_NAME",
+          "hash": "6f19b32f34b4db88",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/rare_01.json",
+          "name": "I Got You",
+          "locKey": "#gcard_stance_mirage_rare_01_NAME",
+          "hash": "725bed43de112098",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/twitch04_rare_01.json",
+          "name": "Number One",
+          "locKey": "#POSE_035",
+          "hash": "a5c94dfa14c91d58",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/rare_06.json",
+          "name": "Superiority Complex",
+          "locKey": "#gcard_stance_mirage_rare_06_NAME",
+          "hash": "699c79f72a9768a8",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/rare_08.json",
+          "name": "Ta-da!",
+          "locKey": "#gcard_stance_mirage_rare_08_NAME",
+          "hash": "94399ab0bfeac036",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "mirage/rare_09.json",
+          "name": "Triple Threat",
+          "locKey": "#gcard_stance_mirage_rare_09_NAME",
+          "hash": "91fe9b8d465a3aa2",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "mirage/s03e02_epic_01.json",
+          "name": "Ballet-Boozle",
+          "locKey": "#POSE_009",
+          "hash": "cdd7b10e78711147",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/s13e02_epic_01.json",
+          "name": "Boomtown Smash",
+          "locKey": "#gcard_stance_mirage_s13e02_epic_01_NAME",
+          "hash": "4c52dbf37d09f6e2",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/epic_02.json",
+          "name": "Fowl Play",
+          "locKey": "#gcard_stance_mirage_epic_02_NAME",
+          "hash": "3c98d5652d58b7e2",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/s09e02_epic_01.json",
+          "name": "Grand Performance",
+          "locKey": "#POSE_044",
+          "hash": "c11c156b56d39304",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/epic_03.json",
+          "name": "Looking Fierce",
+          "locKey": "#gcard_stance_mirage_epic_03_NAME",
+          "hash": "3b919a73e4bda0a2",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/epic_01.json",
+          "name": "Solid Wingman",
+          "locKey": "#gcard_stance_mirage_epic_01_NAME",
+          "hash": "3ed3d488a6e93d76",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/season02_event01_epic_01.json",
+          "name": "Target Practice",
+          "locKey": "#POSE_001",
+          "hash": "34a58bd3c149b9bf",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/heirloom_01.json",
+          "name": "You Really Love Me",
+          "locKey": "#POSE_015",
+          "hash": "e2c22e4977c66ab6",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "mirage/s19_epic_04.json",
+          "name": null,
+          "locKey": "#s19_epic_04",
+          "hash": "c25eb1fae1f63d6f",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Newcastle": {
+      "slug": "newcastle",
+      "displayName": "Newcastle",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "newcastle/rare_07.json",
+          "name": "Brace for Impact",
+          "locKey": "#gcard_stance_newcastle_rare_07_NAME",
+          "hash": "a545d6c0ae75ea75",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_06.json",
+          "name": "Family Matters",
+          "locKey": "#gcard_stance_newcastle_rare_06_NAME",
+          "hash": "a4e45330d24d373b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_08.json",
+          "name": "Heavy Crown",
+          "locKey": "#gcard_stance_newcastle_rare_08_NAME",
+          "hash": "a5a75a50846ac7be",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_01.json",
+          "name": "Heavy Toll",
+          "locKey": "#gcard_stance_newcastle_rare_01_NAME",
+          "hash": "a2fcc161981d38ec",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_09.json",
+          "name": "I See You!",
+          "locKey": "#gcard_stance_newcastle_rare_09_NAME",
+          "hash": "a608dde05a5fa507",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/common_01.json",
+          "name": "No Sweat",
+          "locKey": "#gcard_stance_newcastle_common_01_NAME",
+          "hash": "1a4592a89a04dc52",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_03.json",
+          "name": "Play for the Endzone",
+          "locKey": "#gcard_stance_newcastle_rare_03_NAME",
+          "hash": "a3bfc8814a3ac96f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_02.json",
+          "name": "Profile Style",
+          "locKey": "#gcard_stance_newcastle_rare_02_NAME",
+          "hash": "a35e44f17445ec26",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_05.json",
+          "name": "Rescue Me",
+          "locKey": "#gcard_stance_newcastle_rare_05_NAME",
+          "hash": "a482cfa0fc5859f2",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "newcastle/rare_04.json",
+          "name": "Respect",
+          "locKey": "#gcard_stance_newcastle_rare_04_NAME",
+          "hash": "a4214c11202fa6b8",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "newcastle/epic_03.json",
+          "name": "Apex Assemble",
+          "locKey": "#gcard_stance_newcastle_epic_03_NAME",
+          "hash": "886b5e0160ec6d18",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "newcastle/epic_01.json",
+          "name": "Gimme Some",
+          "locKey": "#gcard_stance_newcastle_epic_01_NAME",
+          "hash": "87a856e1bb368877",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "newcastle/epic_02.json",
+          "name": "Lean on Me",
+          "locKey": "#gcard_stance_newcastle_epic_02_NAME",
+          "hash": "8809da71975f3bb1",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "newcastle/epic_05.json",
+          "name": "Stylish Arrival",
+          "locKey": "#gcard_stance_newcastle_epic_05_NAME",
+          "hash": "892e652151105905",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "newcastle/epic_04.json",
+          "name": "Ultimate Throwdown",
+          "locKey": "#gcard_stance_newcastle_epic_04_NAME",
+          "hash": "88cce19174e7a5cb",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Octane": {
+      "slug": "octane",
+      "displayName": "Octane",
+      "counts": {
+        "static": 10,
+        "animated": 7,
+        "total": 17
+      },
+      "static": [
+        {
+          "file": "octane/rare_05.json",
+          "name": "All. Day.",
+          "locKey": "#gcard_stance_octane_rare_05_NAME",
+          "hash": "af4b9cde63eec459",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "octane/rare_02.json",
+          "name": "Double Down",
+          "locKey": "#gcard_stance_octane_rare_02_NAME",
+          "hash": "b4c8d61693433adf",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "octane/common_05.json",
+          "name": "Explosive Personality",
+          "locKey": "#gcard_stance_octane_common_05_NAME",
+          "hash": "d3abbfdaf8abf64b",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "octane/common_02.json",
+          "name": "Hot Mess",
+          "locKey": "#gcard_stance_octane_common_02_NAME",
+          "hash": "d3aa9b504c883cdd",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "octane/rare_03.json",
+          "name": "Leg Work",
+          "locKey": "#gcard_stance_octane_rare_03_NAME",
+          "hash": "b15a12c126c3a261",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "octane/common_03.json",
+          "name": "Lens Flair",
+          "locKey": "#gcard_stance_octane_common_03_NAME",
+          "hash": "d3aafcd3a57d91d9",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "octane/common_04.json",
+          "name": "Mad Props",
+          "locKey": "#gcard_stance_octane_common_04_NAME",
+          "hash": "d3ab5e5767e41bd6",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "octane/common_01.json",
+          "name": "Marathon",
+          "locKey": "#gcard_stance_octane_common_01_NAME",
+          "hash": "d3aa39cc8a21b2e0",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "octane/rare_01.json",
+          "name": "Reckless Abandon",
+          "locKey": "#gcard_stance_octane_rare_01_NAME",
+          "hash": "b5d01107b6a74e79",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "octane/rare_04.json",
+          "name": "Showtime!",
+          "locKey": "#gcard_stance_octane_rare_04_NAME",
+          "hash": "b052d7cfb8f1877b",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "octane/s03e02_epic_01.json",
+          "name": "Dashing Through the Snow",
+          "locKey": "#POSE_008",
+          "hash": "87a6e8a715247a74",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "octane/epic_03.json",
+          "name": "Epic Fail",
+          "locKey": "#gcard_stance_octane_epic_03_NAME",
+          "hash": "e24b4c05a3ccc447",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "octane/epic_01.json",
+          "name": "Headrush",
+          "locKey": "#gcard_stance_octane_epic_01_NAME",
+          "hash": "e459c1e84dd24a8b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "octane/season02_event01_epic_01.json",
+          "name": "Lucky Headshot",
+          "locKey": "#POSE_002",
+          "hash": "aeac453b0bc6f8ce",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "octane/epic_02.json",
+          "name": "Smash Like",
+          "locKey": "#gcard_stance_octane_epic_02_NAME",
+          "hash": "e35286f6e0002fa5",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "octane/s13e02_epic_01.json",
+          "name": "Speedbagged",
+          "locKey": "#gcard_stance_octane_s13e02_epic_01_NAME",
+          "hash": "c81c489b9ed046d1",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "octane/heirloom_01.json",
+          "name": "Spin and Flick",
+          "locKey": "#POSE_012",
+          "hash": "dc59e4137f7f55c5",
+          "rarity": "mythic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Pathfinder": {
+      "slug": "pathfinder",
+      "displayName": "Pathfinder",
+      "counts": {
+        "static": 10,
+        "animated": 8,
+        "total": 18
+      },
+      "static": [
+        {
+          "file": "pathfinder/rare_05.json",
+          "name": "And Beyond",
+          "locKey": "#gcard_stance_pathfinder_rare_05_NAME",
+          "hash": "89f6e5a72fec989d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_07.json",
+          "name": "Born to Dance",
+          "locKey": "#gcard_stance_pathfinder_rare_07_NAME",
+          "hash": "861ac979934ca009",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_08.json",
+          "name": "Fight Mode",
+          "locKey": "#gcard_stance_pathfinder_rare_08_NAME",
+          "hash": "b33fda62a5f9760a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_06.json",
+          "name": "KO!",
+          "locKey": "#gcard_stance_pathfinder_rare_06_NAME",
+          "hash": "8808d7903c6598ad",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_04.json",
+          "name": "Malfunction",
+          "locKey": "#gcard_stance_pathfinder_rare_04_NAME",
+          "hash": "8be4f3be0aa440c9",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_02.json",
+          "name": "Mondays",
+          "locKey": "#gcard_stance_pathfinder_rare_02_NAME",
+          "hash": "8fc10feba744395d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_01.json",
+          "name": "Proud Machine",
+          "locKey": "#gcard_stance_pathfinder_rare_01_NAME",
+          "hash": "91af1e02692c89c5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_03.json",
+          "name": "Pumping Iron",
+          "locKey": "#gcard_stance_pathfinder_rare_03_NAME",
+          "hash": "8dd301d4cc8c9131",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/common_01.json",
+          "name": "Thumbs Up",
+          "locKey": "#gcard_stance_pathfinder_common_01_NAME",
+          "hash": "e97194be642e24b1",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "pathfinder/rare_09.json",
+          "name": "XOXO",
+          "locKey": "#gcard_stance_pathfinder_rare_09_NAME",
+          "hash": "b151cc4bbeda21fc",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "pathfinder/epic_03.json",
+          "name": "Close Up",
+          "locKey": "#gcard_stance_pathfinder_epic_03_NAME",
+          "hash": "bca9a3c1abbab77d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/epic_04.json",
+          "name": "Dropping In",
+          "locKey": "#gcard_stance_pathfinder_epic_04_NAME",
+          "hash": "babb95ab02a1bed9",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/epic_01.json",
+          "name": "For the Birds",
+          "locKey": "#gcard_stance_pathfinder_epic_01_NAME",
+          "hash": "c085bfef79f95f99",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/heirloom_01.json",
+          "name": "Lights Out",
+          "locKey": "#POSE_007",
+          "hash": "4176203fcaa73b65",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/s04e01_epic_01.json",
+          "name": "Our Powers Combined",
+          "locKey": "#POSE_010",
+          "hash": "4ff85344a016d05b",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/epic_02.json",
+          "name": "Pep Talk",
+          "locKey": "#gcard_stance_pathfinder_epic_02_NAME",
+          "hash": "be97b1d89f41b76d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/s12e01_epic_01.json",
+          "name": "Usual Suspect",
+          "locKey": "#gcard_stance_pathfinder_s12e01_epic_01_NAME",
+          "hash": "592dd6aba39e16ab",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "pathfinder/epic_05.json",
+          "name": "Winning Combination",
+          "locKey": "#gcard_stance_pathfinder_epic_05_NAME",
+          "hash": "b8cd879440b96e71",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Rampart": {
+      "slug": "rampart",
+      "displayName": "Rampart",
+      "counts": {
+        "static": 10,
+        "animated": 6,
+        "total": 16
+      },
+      "static": [
+        {
+          "file": "rampart/rare_08.json",
+          "name": "Blind Fire",
+          "locKey": "#POSE_025",
+          "hash": "4445be21eb7ec7ad",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_05.json",
+          "name": "Bubbly",
+          "locKey": "#POSE_022",
+          "hash": "3ddd73eba8c9ab70",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/common_01.json",
+          "name": "Built Not Bought",
+          "locKey": "#POSE_017",
+          "hash": "a2f9b017f3f19110",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_02.json",
+          "name": "Business End",
+          "locKey": "#POSE_019",
+          "hash": "2f5b40e6a1bb66f2",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_06.json",
+          "name": "Doctor's Orders",
+          "locKey": "#POSE_023",
+          "hash": "b7e42d530c164243",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_04.json",
+          "name": "Get Dunked",
+          "locKey": "#POSE_021",
+          "hash": "f7acab845e4c6c61",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_07.json",
+          "name": "Loyalty",
+          "locKey": "#POSE_024",
+          "hash": "fe14f5ba56938152",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_03.json",
+          "name": "Meet Sheila",
+          "locKey": "#POSE_020",
+          "hash": "b17be31d2c9e8516",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_09.json",
+          "name": "Ready To Go",
+          "locKey": "#POSE_026",
+          "hash": "be4c778935fc06bc",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "rampart/rare_01.json",
+          "name": "Warm Hug",
+          "locKey": "#POSE_018",
+          "hash": "e92a787f573e27e3",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "rampart/epic_04.json",
+          "name": "ABC",
+          "locKey": "#POSE_030",
+          "hash": "12ff72f5a056e20d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "rampart/epic_03.json",
+          "name": "My Little Friend",
+          "locKey": "#POSE_029",
+          "hash": "90ded0bf1573c3e9",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "rampart/epic_01.json",
+          "name": "Pride and Joy",
+          "locKey": "#POSE_027",
+          "hash": "047d3ff099489d8f",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "rampart/epic_05.json",
+          "name": "Singing in the Storm",
+          "locKey": "#POSE_031",
+          "hash": "59303b5cead4211c",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "rampart/epic_02.json",
+          "name": "Won't Hurt A Bit",
+          "locKey": "#POSE_028",
+          "hash": "4aae0857e3c5dc9e",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "rampart/heirloom_01.json",
+          "name": "Wrench In Your Plan",
+          "locKey": "#POSE_049",
+          "hash": "53e5f06fe4152613",
+          "rarity": "mythic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Revenant": {
+      "slug": "revenant",
+      "displayName": "Revenant",
+      "counts": {
+        "static": 10,
+        "animated": 9,
+        "total": 19
+      },
+      "static": [
+        {
+          "file": "revenant/rare_02.json",
+          "name": "A Day's Work",
+          "locKey": "#gcard_stance_revenant_rare_02_NAME",
+          "hash": "64ff03ac32cfcdfc",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_04.json",
+          "name": "Reach",
+          "locKey": "#gcard_stance_revenant_rare_04_NAME",
+          "hash": "64ffc6b341c40113",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_03.json",
+          "name": "Rebirth",
+          "locKey": "#gcard_stance_revenant_rare_03_NAME",
+          "hash": "64ff652f8bc522f8",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_07.json",
+          "name": "Silencio",
+          "locKey": "#gcard_stance_revenant_rare_07_NAME",
+          "hash": "6500eb3e00833c54",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/common_01.json",
+          "name": "Simulacrum",
+          "locKey": "#gcard_stance_revenant_common_01_NAME",
+          "hash": "281a55ab3dd3efde",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_05.json",
+          "name": "Stalker",
+          "locKey": "#gcard_stance_revenant_rare_05_NAME",
+          "hash": "65002836ad54d7e2",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_09.json",
+          "name": "Supernatural",
+          "locKey": "#gcard_stance_revenant_rare_09_NAME",
+          "hash": "6501ae452212f13e",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_06.json",
+          "name": "System Error",
+          "locKey": "#gcard_stance_revenant_rare_06_NAME",
+          "hash": "650089ba6353b5fd",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_01.json",
+          "name": "The Collection",
+          "locKey": "#gcard_stance_revenant_rare_01_NAME",
+          "hash": "64fea22895a047a5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "revenant/rare_08.json",
+          "name": "Victory",
+          "locKey": "#gcard_stance_revenant_rare_08_NAME",
+          "hash": "65014cc15344bb5f",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "revenant/s05e01_epic_01.json",
+          "name": "Fully Assimilated",
+          "locKey": "#POSE_016",
+          "hash": "5cc8e7b0a9745201",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/epic_01.json",
+          "name": "Last Rites",
+          "locKey": "#gcard_stance_revenant_epic_01_NAME",
+          "hash": "10c877670416dd96",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/heirloom_01.json",
+          "name": "No Escape",
+          "locKey": "#POSE_042",
+          "hash": "00e4939c776b0d9a",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/epic_03.json",
+          "name": "Off Switch",
+          "locKey": "#gcard_stance_revenant_epic_03_NAME",
+          "hash": "10c93a6e06a364cb",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/epic_04.json",
+          "name": "Off The Beaten Path",
+          "locKey": "#gcard_stance_revenant_epic_04_NAME",
+          "hash": "10c99bf1976b3f40",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/s10e02_epic_v21_monsters_01.json",
+          "name": "Ravenous",
+          "locKey": "#POSE_046",
+          "hash": "4d7da63a049d68e6",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/s13e02_epic_01.json",
+          "name": "ReRun",
+          "locKey": "#gcard_stance_revenant_s13e02_epic_01_NAME",
+          "hash": "bf96953a99fc9749",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/s07e02_epic_01.json",
+          "name": "Stalker",
+          "locKey": "#POSE_037",
+          "hash": "6600cfc8c292f33a",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "revenant/epic_02.json",
+          "name": "The Equalizer",
+          "locKey": "#gcard_stance_revenant_epic_02_NAME",
+          "hash": "10c8d8ea7c0f6047",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Seer": {
+      "slug": "seer",
+      "displayName": "Seer",
+      "counts": {
+        "static": 10,
+        "animated": 8,
+        "total": 18
+      },
+      "static": [
+        {
+          "file": "seer/rare_08.json",
+          "name": "Curtain Call",
+          "locKey": "#gcard_stance_seer_rare_08_NAME",
+          "hash": "c8cc9a92e8089447",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_01.json",
+          "name": "Eye of the Beholder",
+          "locKey": "#gcard_stance_seer_rare_01_NAME",
+          "hash": "c8c9eff9c726c17d",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_06.json",
+          "name": "Face the World",
+          "locKey": "#gcard_stance_seer_rare_06_NAME",
+          "hash": "c8cbd78b94da2fd5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/common_01.json",
+          "name": "Iconic Look",
+          "locKey": "#gcard_stance_seer_common_01_NAME",
+          "hash": "bd2c9dbf03c13b73",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_04.json",
+          "name": "Inspiration",
+          "locKey": "#gcard_stance_seer_rare_04_NAME",
+          "hash": "c8cb1484734a7aeb",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_09.json",
+          "name": "Inspiration Strikes",
+          "locKey": "#gcard_stance_seer_rare_09_NAME",
+          "hash": "c8ccfc1653996b16",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_05.json",
+          "name": "Leap of Faith",
+          "locKey": "#gcard_stance_seer_rare_05_NAME",
+          "hash": "c8cb76084218b0ca",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_07.json",
+          "name": "Outcast",
+          "locKey": "#gcard_stance_seer_rare_07_NAME",
+          "hash": "c8cc390f3209b62c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_03.json",
+          "name": "Ready To Pounce",
+          "locKey": "#gcard_stance_seer_rare_03_NAME",
+          "hash": "c8cab3012088fbe0",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "seer/rare_02.json",
+          "name": "Vogue",
+          "locKey": "#gcard_stance_seer_rare_02_NAME",
+          "hash": "c8ca517d645647d4",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "seer/epic_02.json",
+          "name": "Ambush Artist",
+          "locKey": "#gcard_stance_seer_epic_02_NAME",
+          "hash": "24b49904b967c645",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/epic_01.json",
+          "name": "From The Heart",
+          "locKey": "#gcard_stance_seer_epic_01_NAME",
+          "hash": "24b43781350797b2",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/heirloom_01.json",
+          "name": "Grand Finale",
+          "locKey": "#gcard_stance_seer_heirloom_01",
+          "hash": "a60d765cdeb5a8b1",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/s11e01_epic_01.json",
+          "name": "Misdirection",
+          "locKey": "#gcard_stance_seer_s11e01_epic_01_NAME",
+          "hash": "8dda747a2f03fe23",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/epic_05.json",
+          "name": "Not So Fast",
+          "locKey": "#gcard_stance_seer_epic_05_NAME",
+          "hash": "24b5bd8f658b7fb3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/epic_04.json",
+          "name": "Now You See Me",
+          "locKey": "#gcard_stance_seer_epic_04_NAME",
+          "hash": "24b55c0be12b5120",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/epic_03.json",
+          "name": "Signature Look",
+          "locKey": "#gcard_stance_seer_epic_03_NAME",
+          "hash": "24b4fa8843fbcac9",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "seer/s10e02_epic_v21_monsters_01.json",
+          "name": "To Your Health",
+          "locKey": "#POSE_045",
+          "hash": "074cddd2ba2029d7",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Sparrow": {
+      "slug": "sparrow",
+      "displayName": "Sparrow",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "sparrow/rare_09.json",
+          "name": "Above The Fray",
+          "locKey": "#gcard_stance_sparrow_rare_09",
+          "hash": "c9d067a77797a75c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_05.json",
+          "name": "Aim Assist",
+          "locKey": "#gcard_stance_sparrow_rare_05",
+          "hash": "7d37550a4da2ab20",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/common_01.json",
+          "name": "Ciao",
+          "locKey": "#gcard_stance_sparrow_common_01",
+          "hash": "e5ecbc8c32972c4f",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_07.json",
+          "name": "Espresso Break",
+          "locKey": "#gcard_stance_sparrow_rare_07",
+          "hash": "3d6ed6d8fb6c8102",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_04.json",
+          "name": "If The Shoe Fits",
+          "locKey": "#gcard_stance_sparrow_rare_04",
+          "hash": "37068ca2c51f10a7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_08.json",
+          "name": "Passerotto",
+          "locKey": "#gcard_stance_sparrow_rare_08",
+          "hash": "839f9f4052516bf3",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_03.json",
+          "name": "Pile On",
+          "locKey": "#gcard_stance_sparrow_rare_03",
+          "hash": "f0d5c43b6e3a25b6",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_01.json",
+          "name": "Strike From Above",
+          "locKey": "#gcard_stance_sparrow_rare_01",
+          "hash": "309e426cc0704fd4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_02.json",
+          "name": "Total Possession",
+          "locKey": "#gcard_stance_sparrow_rare_02",
+          "hash": "aaa4fbd417553ac5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "sparrow/rare_06.json",
+          "name": "Victory!",
+          "locKey": "#gcard_stance_sparrow_rare_06",
+          "hash": "f73e0e71a4879611",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "sparrow/epic_03.json",
+          "name": "Bicycle Kick",
+          "locKey": "#gcard_animated_sparrow_epic_03_football",
+          "hash": "b01428ef48d93e88",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "sparrow/epic_05.json",
+          "name": "Bravissimo",
+          "locKey": "#gcard_animated_sparrow_epic_05_shoes_celebration",
+          "hash": "a07e8522d8925020",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "sparrow/epic_04.json",
+          "name": "Cool Cats",
+          "locKey": "#gcard_animated_sparrow_epic_04_artemis_come_back_here",
+          "hash": "b78f9834a43d34a5",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "sparrow/epic_01.json",
+          "name": "Slings and Arrows",
+          "locKey": "#gcard_animated_sparrow_epic_01_spectre_kill",
+          "hash": "e6b6bfa7caec48d1",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "sparrow/epic_02.json",
+          "name": "Work Hard, Play Hard",
+          "locKey": "#gcard_animated_sparrow_epic_02_artemis_walk",
+          "hash": "e68af1b8b777fd05",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Valkyrie": {
+      "slug": "valkyrie",
+      "displayName": "Valkyrie",
+      "counts": {
+        "static": 10,
+        "animated": 7,
+        "total": 17
+      },
+      "static": [
+        {
+          "file": "valkyrie/rare_06.json",
+          "name": "After Hours",
+          "locKey": "#gcard_stance_valkyrie_rare_06_NAME",
+          "hash": "35453e6400a99481",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_02.json",
+          "name": "Down Time",
+          "locKey": "#gcard_stance_valkyrie_rare_02_NAME",
+          "hash": "3543b855c3be009e",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_03.json",
+          "name": "Enemy Spotted",
+          "locKey": "#gcard_stance_valkyrie_rare_03_NAME",
+          "hash": "354419d94e520522",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_05.json",
+          "name": "Evasive Maneuvers",
+          "locKey": "#gcard_stance_valkyrie_rare_05_NAME",
+          "hash": "3544dce06fe1ba0c",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/common_01.json",
+          "name": "Onward and Upward",
+          "locKey": "#gcard_stance_valkyrie_common_01_NAME",
+          "hash": "f8f05559cd850195",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_04.json",
+          "name": "Own the Sky",
+          "locKey": "#gcard_stance_valkyrie_rare_04_NAME",
+          "hash": "35447b5cdf19df97",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_08.json",
+          "name": "Stand Your Ground",
+          "locKey": "#gcard_stance_valkyrie_rare_08_NAME",
+          "hash": "3546016b2239496b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_07.json",
+          "name": "Suit Up",
+          "locKey": "#gcard_stance_valkyrie_rare_07_NAME",
+          "hash": "35459fe791716ef6",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_01.json",
+          "name": "Vantage Point",
+          "locKey": "#gcard_stance_valkyrie_rare_01_NAME",
+          "hash": "354356d232f62629",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "valkyrie/rare_09.json",
+          "name": "Winning Hand",
+          "locKey": "#gcard_stance_valkyrie_rare_09_NAME",
+          "hash": "354662eeb30123e0",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "valkyrie/epic_02.json",
+          "name": "A Father Found",
+          "locKey": "#gcard_stance_valkyrie_epic_02_NAME",
+          "hash": "917af0e99ed904b3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "valkyrie/heirloom_01.json",
+          "name": "Angel's Arrival",
+          "locKey": "#gcard_stance_valkyrie_heirloom_01_NAME",
+          "hash": "76108ffaa4b3a057",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "valkyrie/epic_04.json",
+          "name": "Barrel Roll",
+          "locKey": "#gcard_stance_valkyrie_epic_04_NAME",
+          "hash": "917bb3f0ba34e3ac",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "valkyrie/s12e01_epic_01.json",
+          "name": "I'm Outta Here",
+          "locKey": "#gcard_stance_valkyrie_s12e01_epic_01_NAME",
+          "hash": "68d4c9e042a34e53",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "valkyrie/epic_01.json",
+          "name": "Let's Fly",
+          "locKey": "#gcard_stance_valkyrie_epic_01_NAME",
+          "hash": "917a8f660e112a3e",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "valkyrie/epic_05.json",
+          "name": "Runway",
+          "locKey": "#gcard_stance_valkyrie_epic_05_NAME",
+          "hash": "917c1574195e0e99",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "valkyrie/epic_03.json",
+          "name": "Your Move",
+          "locKey": "#gcard_stance_valkyrie_epic_03_NAME",
+          "hash": "917b526cf7ce59af",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Vantage": {
+      "slug": "vantage",
+      "displayName": "Vantage",
+      "counts": {
+        "static": 10,
+        "animated": 5,
+        "total": 15
+      },
+      "static": [
+        {
+          "file": "vantage/rare_08.json",
+          "name": "Aim True",
+          "locKey": "#gcard_stance_vantage_rare_08",
+          "hash": "184c0aefb24b58e5",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_06.json",
+          "name": "Brand New Funk",
+          "locKey": "#gcard_stance_vantage_rare_06",
+          "hash": "8bea7a213620328b",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_09.json",
+          "name": "Bring It",
+          "locKey": "#gcard_stance_vantage_rare_09",
+          "hash": "5e7cd357093043d6",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_04.json",
+          "name": "NomNom",
+          "locKey": "#gcard_stance_vantage_rare_04",
+          "hash": "cbb2f85288565ca9",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_01.json",
+          "name": "Sharp Sight",
+          "locKey": "#gcard_stance_vantage_rare_01",
+          "hash": "c54aae1c5208ec4e",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_05.json",
+          "name": "Shot Caller",
+          "locKey": "#gcard_stance_vantage_rare_05",
+          "hash": "11e3c0b9df3b479a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_02.json",
+          "name": "Study Session",
+          "locKey": "#gcard_stance_vantage_rare_02",
+          "hash": "3f516783a8edd73f",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/common_01.json",
+          "name": "Survive",
+          "locKey": "#gcard_stance_vantage_common_01",
+          "hash": "7a99283bc42fc8c9",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_07.json",
+          "name": "Whistler",
+          "locKey": "#gcard_stance_vantage_rare_07",
+          "hash": "d21b42885b666df4",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "vantage/rare_03.json",
+          "name": "Wild Call",
+          "locKey": "#gcard_stance_vantage_rare_03",
+          "hash": "85822feb317171b8",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "vantage/epic_01.json",
+          "name": "Advanced Tactics",
+          "locKey": "#gcard_stance_vantage_epic_01",
+          "hash": "2111a1bfd17072f1",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "vantage/epic_02.json",
+          "name": "Dancing Queen",
+          "locKey": "#gcard_stance_vantage_epic_02",
+          "hash": "9b185b271bedb200",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "vantage/epic_03.json",
+          "name": "Field Study",
+          "locKey": "#gcard_stance_vantage_epic_03",
+          "hash": "e149238e7f3a48d3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "vantage/epic_04.json",
+          "name": "Snuggle Buddy",
+          "locKey": "#gcard_stance_vantage_epic_04",
+          "hash": "2779ebf5c9b787e2",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "vantage/epic_05.json",
+          "name": "The Assist",
+          "locKey": "#gcard_stance_vantage_epic_05",
+          "hash": "6daab45d2d041eb5",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Wattson": {
+      "slug": "wattson",
+      "displayName": "Wattson",
+      "counts": {
+        "static": 8,
+        "animated": 6,
+        "total": 14
+      },
+      "static": [
+        {
+          "file": "wattson/rare_05.json",
+          "name": "Comms Check",
+          "locKey": "#gcard_stance_wattson_rare_05_NAME",
+          "hash": "568f1e101ad0ecac",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/common_01.json",
+          "name": "Curiosity",
+          "locKey": "#gcard_stance_wattson_common_01_NAME",
+          "hash": "64878d4a4acf6ed1",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/rare_01.json",
+          "name": "Eureka!",
+          "locKey": "#gcard_stance_wattson_rare_01_NAME",
+          "hash": "774532178e55198a",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/rare_06.json",
+          "name": "On Break",
+          "locKey": "#gcard_stance_wattson_rare_06_NAME",
+          "hash": "2ac650c2056e4e15",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/rare_04.json",
+          "name": "Sorry!",
+          "locKey": "#gcard_stance_wattson_rare_04_NAME",
+          "hash": "53deae77931c49b9",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/rare_07.json",
+          "name": "Stargazer",
+          "locKey": "#gcard_stance_wattson_rare_07_NAME",
+          "hash": "2d76c05aa5f248cc",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/rare_02.json",
+          "name": "Stingin' in the Rain",
+          "locKey": "#gcard_stance_wattson_rare_02_NAME",
+          "hash": "4b7c64c92e8473a7",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wattson/rare_03.json",
+          "name": "Strong Force",
+          "locKey": "#gcard_stance_wattson_rare_03_NAME",
+          "hash": "50945cc5cdb5ebf6",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "wattson/heirloom_01.json",
+          "name": "Handled With Care",
+          "locKey": "#gcard_stance_wattson_heirloom_01_NAME",
+          "hash": "5c6093a77129fb39",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "wattson/s06e01_epic_01.json",
+          "name": "Hotwired",
+          "locKey": "#POSE_033",
+          "hash": "1967bd2b989df6fe",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wattson/s13e02_epic_01.json",
+          "name": "Inquisitive Impulse",
+          "locKey": "#gcard_stance_wattson_s13e02_epic_01_NAME",
+          "hash": "f5c6f737cdc415a7",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wattson/epic_02.json",
+          "name": "Inside Voice",
+          "locKey": "#gcard_stance_wattson_epic_02_NAME",
+          "hash": "9981030f9083ecdb",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wattson/epic_01.json",
+          "name": "Load Imbalance",
+          "locKey": "#gcard_stance_wattson_epic_01_NAME",
+          "hash": "c549d05e02f01491",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wattson/epic_03.json",
+          "name": "Quantum Mechanic",
+          "locKey": "#gcard_stance_wattson_epic_03_NAME",
+          "hash": "9c3172a843a36965",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    },
+    "Wraith": {
+      "slug": "wraith",
+      "displayName": "Wraith",
+      "counts": {
+        "static": 11,
+        "animated": 7,
+        "total": 18
+      },
+      "static": [
+        {
+          "file": "wraith/rare_05.json",
+          "name": "At the Ready",
+          "locKey": "#gcard_stance_wraith_rare_05_NAME",
+          "hash": "d5b079d424410e18",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_03.json",
+          "name": "Before the Rift",
+          "locKey": "#gcard_stance_wraith_rare_03_NAME",
+          "hash": "d98c9601f27fb634",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_02.json",
+          "name": "Blink of an Eye",
+          "locKey": "#gcard_stance_wraith_rare_02_NAME",
+          "hash": "db7aa418a8005aba",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_08.json",
+          "name": "Calm Before",
+          "locKey": "#gcard_stance_wraith_rare_08_NAME",
+          "hash": "fef96e8face96d58",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_09.json",
+          "name": "Come at Me",
+          "locKey": "#gcard_stance_wraith_rare_09_NAME",
+          "hash": "fd0b607910382096",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/season02_event02_rare_01.json",
+          "name": "Guarded",
+          "locKey": "#POSE_004",
+          "hash": "3b0dd60987f21f28",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_01.json",
+          "name": "Mind Games",
+          "locKey": "#gcard_stance_wraith_rare_01_NAME",
+          "hash": "dd68b22f8f1faec8",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/common_01.json",
+          "name": "Out of Nowhere",
+          "locKey": "#gcard_stance_wraith_common_01_NAME",
+          "hash": "35c50b046495a574",
+          "rarity": "common",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_07.json",
+          "name": "Small Victory",
+          "locKey": "#gcard_stance_wraith_rare_07_NAME",
+          "hash": "d1d45da687a11584",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_06.json",
+          "name": "Strapped",
+          "locKey": "#gcard_stance_wraith_rare_06_NAME",
+          "hash": "d3c26bbd6ec06992",
+          "rarity": "rare",
+          "kind": "static"
+        },
+        {
+          "file": "wraith/rare_04.json",
+          "name": "The Struggle",
+          "locKey": "#gcard_stance_wraith_rare_04_NAME",
+          "hash": "d79e87eb242fb9ea",
+          "rarity": "rare",
+          "kind": "static"
+        }
+      ],
+      "animated": [
+        {
+          "file": "wraith/epic_04.json",
+          "name": "Channeled Energy",
+          "locKey": "#gcard_stance_wraith_epic_04_NAME",
+          "hash": "cbf2f9c80dc9f9d3",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wraith/heirloom_01.json",
+          "name": "Fearless",
+          "locKey": "#gcard_stance_wraith_heirloom_01_NAME",
+          "hash": "817c72f83d6f255f",
+          "rarity": "mythic",
+          "kind": "animated"
+        },
+        {
+          "file": "wraith/s12e01_epic_01.json",
+          "name": "Leap of Wraith",
+          "locKey": "#gcard_stance_wraith_s12e01_epic_01_NAME",
+          "hash": "aeb23197ce323d29",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wraith/epic_03.json",
+          "name": "Multidimensional",
+          "locKey": "#gcard_stance_wraith_epic_03_NAME",
+          "hash": "cd9416d26edfc83d",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wraith/s10e01_epic_01.json",
+          "name": "No Surprises",
+          "locKey": "#gcard_stance_wraith_s10e01_epic_01_NAME",
+          "hash": "711f3fc6aacfa910",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wraith/epic_05.json",
+          "name": "Power From Within",
+          "locKey": "#gcard_stance_wraith_epic_05_NAME",
+          "hash": "c9b7faa4d23fcfa9",
+          "rarity": "epic",
+          "kind": "animated"
+        },
+        {
+          "file": "wraith/epic_02.json",
+          "name": "Window to the Soul",
+          "locKey": "#gcard_stance_wraith_epic_02_NAME",
+          "hash": "cfcf15f5c3394a2b",
+          "rarity": "epic",
+          "kind": "animated"
+        }
+      ]
+    }
+  }
+}

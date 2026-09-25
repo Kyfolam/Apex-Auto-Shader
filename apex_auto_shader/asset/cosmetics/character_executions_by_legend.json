@@ -1,0 +1,992 @@
+{
+  "type": "character_executions",
+  "note": "Finishers. Dummy und unbenannte Einträge separat gelistet. Slug overdrive → Axle.",
+  "stats": {
+    "total": 90,
+    "unnamed": 2,
+    "legends": 29
+  },
+  "legends": {
+    "Alter": {
+      "slug": "alter",
+      "displayName": "Alter",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "alter/mythic.json",
+          "name": "Crystal Corruption",
+          "locKey": "#ALTER_MYTHIC_FINISHER",
+          "hash": "708c3d8489199356",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/default.json",
+          "name": "Dynamic Exit",
+          "locKey": "#character_execution_alter_default",
+          "hash": "a88f2cf1cc8c45d3",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "alter/tail_whip.json",
+          "name": "Tail End",
+          "locKey": "#character_execution_alter_tail_whip",
+          "hash": "7b519bf95c50f13c",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Ash": {
+      "slug": "ash",
+      "displayName": "Ash",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "ash/mythic.json",
+          "name": "Perdition",
+          "locKey": "#ASH_MYTHIC_FINISHER",
+          "hash": "9596e48851357fa0",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/base.json",
+          "name": "Ratted Out",
+          "locKey": "#character_execution_ash_base_NAME",
+          "hash": "15e2088812f45d25",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "ash/slash.json",
+          "name": "Sight Unseen",
+          "locKey": "#character_execution_ash_slash_NAME",
+          "hash": "42164ce862c6d839",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Axle": {
+      "slug": "overdrive",
+      "displayName": "Axle",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "overdrive/lgnd_knee_wheel.json",
+          "name": "Face First",
+          "locKey": "#overdrive_execution_lgnd",
+          "hash": "d11f3a90c763c2f7",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "overdrive/base.json",
+          "name": "Heavy Handed",
+          "locKey": "#overdrive_execution_base",
+          "hash": "fc94edaf5e811345",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Ballistic": {
+      "slug": "ballistic",
+      "displayName": "Ballistic",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "ballistic/com_v22_homingknockout.json",
+          "name": "Fake Out",
+          "locKey": "#character_execution_ballistic_homingknockout",
+          "hash": "1ed81c5fab96dca3",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "ballistic/lgnd_v22_intimidation.json",
+          "name": "The Last Word",
+          "locKey": "#character_execution_ballistic_intimidation",
+          "hash": "5751756f58fece13",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Bangalore": {
+      "slug": "bangalore",
+      "displayName": "Bangalore",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "bangalore/tactical_blade.json",
+          "name": "Close Quarters Combat",
+          "locKey": "#character_execution_bangalore_tactical_blade_NAME",
+          "hash": "9d0377ac88fb6804",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/default.json",
+          "name": "Recycle",
+          "locKey": "#FINISHER_001",
+          "hash": "511e21c136af7cbe",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/heirloom.json",
+          "name": "Reveille",
+          "locKey": "#BANGALORE_heirloom_FINISHER",
+          "hash": "304ff59bd6660773",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "bangalore/prototype1.json",
+          "name": "Reversal of Fortune",
+          "locKey": "#FINISHER_005",
+          "hash": "9db7345ec3e1d80a",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Bloodhound": {
+      "slug": "bloodhound",
+      "displayName": "Bloodhound",
+      "counts": {
+        "total": 5
+      },
+      "items": [
+        {
+          "file": "bloodhound/default.json",
+          "name": "Bullseye",
+          "locKey": "#FINISHER_004",
+          "hash": "57866bf76cfced19",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/the_raven.json",
+          "name": "Clean Kill",
+          "locKey": "#FINISHER_007",
+          "hash": "5deeb62d400cfe64",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/heirloom.json",
+          "name": "Fury of the Gods",
+          "locKey": "#BLOODHOUND_heirloom_FINISHER",
+          "hash": "863b5198843099bb",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/blaster.json",
+          "name": "Piercing Plasma",
+          "locKey": "#character_execution_bloodhound_blaster_NAME",
+          "hash": "5c79786683643f2d",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "bloodhound/respect.json",
+          "name": "With Honor",
+          "locKey": "#FINISHER_008",
+          "hash": "a41f7e9496f1e955",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Catalyst": {
+      "slug": "catalyst",
+      "displayName": "Catalyst",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "catalyst/lgnd_v22_crusher.json",
+          "name": "Ferro Fury",
+          "locKey": "#character_execution_catalyst_crusher",
+          "hash": "eb6bfcc1a31892d9",
+          "rarity": "legendary",
+          "kind": "animation"
+        },
+        {
+          "file": "catalyst/common_v22_choking.json",
+          "name": "Witch's Wrath",
+          "locKey": "#character_execution_catalyst_base",
+          "hash": "4268a46d74f1a9ae",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Caustic": {
+      "slug": "caustic",
+      "displayName": "Caustic",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "caustic/gas.json",
+          "name": "Last Breath",
+          "locKey": "#FINISHER_010",
+          "hash": "6c70e93278b9f26a",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/default.json",
+          "name": "Parting Gift",
+          "locKey": "#FINISHER_009",
+          "hash": "ea5046fbedd6d446",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/brutal.json",
+          "name": "Strike Three",
+          "locKey": "#FINISHER_011",
+          "hash": "b2a1b199cf9edd5b",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "caustic/mythic.json",
+          "name": "Toxic Scream",
+          "locKey": "#CAUSTIC_MYTHIC_FINISHER",
+          "hash": "fa2484f005140537",
+          "rarity": "mythic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Conduit": {
+      "slug": "conduit",
+      "displayName": "Conduit",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "conduit/default.json",
+          "name": "Meet and Greet",
+          "locKey": "#character_execution_conduit_default",
+          "hash": "c76595dd75e679a4",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "conduit/legendary.json",
+          "name": "Overcharged",
+          "locKey": "#character_execution_conduit_legendary_01",
+          "hash": "c1f6abbe0cbe1e8e",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Crypto": {
+      "slug": "crypto",
+      "displayName": "Crypto",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "crypto/default.json",
+          "name": "Asset Procurement",
+          "locKey": "#FINISHER_012",
+          "hash": "f8d27a00f4e518c4",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/dronescan.json",
+          "name": "Drone Scan",
+          "locKey": "#FINISHER_013",
+          "hash": "72d933684bca03b5",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "crypto/biwon.json",
+          "name": "Fatal Error",
+          "locKey": "#character_execution_crypto_biwon",
+          "hash": "1546c3cc315ad980",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Fuse": {
+      "slug": "fuse",
+      "displayName": "Fuse",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "fuse/clothesline.json",
+          "name": "Against the Ropes",
+          "locKey": "#FINISHER_043",
+          "hash": "9763e2f181bc16f4",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/bodyslam.json",
+          "name": "Ground Breaking",
+          "locKey": "#FINISHER_044",
+          "hash": "dd94ab58d8a101e5",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/headbutt.json",
+          "name": "Helping Hand",
+          "locKey": "#FINISHER_042",
+          "hash": "1d5d298a5c75db8b",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "fuse/mythic.json",
+          "name": "Light It Up",
+          "locKey": "#FUSE_MYTHIC_FINISHER",
+          "hash": "10a8eff2b543242f",
+          "rarity": "mythic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Gibraltar": {
+      "slug": "gibraltar",
+      "displayName": "Gibraltar",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "gibraltar/mythic.json",
+          "name": "Dance Of Death",
+          "locKey": "#GIBRALTAR_MYTHIC_FINISHER",
+          "hash": "41b955bdb7450d51",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/slam.json",
+          "name": "Force of Gravity",
+          "locKey": "#FINISHER_017",
+          "hash": "bf724605d8fc5f01",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/shield_bash.json",
+          "name": "Warcry",
+          "locKey": "#FINISHER_016",
+          "hash": "79417d9e82177410",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "gibraltar/default.json",
+          "name": "Warrior Spirit",
+          "locKey": "#FINISHER_015",
+          "hash": "ff3ac436f993d997",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Horizon": {
+      "slug": "horizon",
+      "displayName": "Horizon",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "horizon/repulsorpush.json",
+          "name": "All Charged Up",
+          "locKey": "#FINISHER_041",
+          "hash": "d72c61230590f09a",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/mythic.json",
+          "name": "Dark Matter",
+          "locKey": "#HORIZON_MYTHIC_FINISHER",
+          "hash": "956282a03bc91c93",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/blackhole.json",
+          "name": "Event Horizon",
+          "locKey": "#FINISHER_039",
+          "hash": "0edaf68523c8e785",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "horizon/grenadesupdown.json",
+          "name": "First Law",
+          "locKey": "#FINISHER_040",
+          "hash": "90fb98bbaeac05a9",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Lifeline": {
+      "slug": "lifeline",
+      "displayName": "Lifeline",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "lifeline/syringe.json",
+          "name": "Ajay's Lullaby",
+          "locKey": "#FINISHER_019",
+          "hash": "4bd3d6d486c634e3",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/drone_shock.json",
+          "name": "D.O.C.'s Shock",
+          "locKey": "#FINISHER_020",
+          "hash": "cdf4790aae6bf3f7",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/default.json",
+          "name": "Peace Out",
+          "locKey": "#FINISHER_018",
+          "hash": "05a30e6d2fe149f2",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "lifeline/mythic.json",
+          "name": "RidDOCulous",
+          "locKey": "#LIFELINE_MYTHIC_FINISHER",
+          "hash": "4d7e46337bf09ac7",
+          "rarity": "mythic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Loba": {
+      "slug": "loba",
+      "displayName": "Loba",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "loba/mythic.json",
+          "name": "Enraged Claws",
+          "locKey": "#LOBA_MYTHIC_FINISHER",
+          "hash": "ab7439b1e92c2a65",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/stomp.json",
+          "name": "Femme Fatale",
+          "locKey": "#FINISHER_003",
+          "hash": "1155a39016180228",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "loba/pointblank.json",
+          "name": "Last Request",
+          "locKey": "#FINISHER_002",
+          "hash": "cb24db288d9467af",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Mad Maggie": {
+      "slug": "madmaggie",
+      "displayName": "Mad Maggie",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "madmaggie/mythic.json",
+          "name": "Ball Buster",
+          "locKey": "#MADMAGGIE_MYTHIC_FINISHER",
+          "hash": "72d626d61a06bb00",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/barrage.json",
+          "name": "Hello From Salvo",
+          "locKey": "#character_execution_madmaggie_barrage_NAME",
+          "hash": "78c27555d4a37dc0",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "madmaggie/whipcord.json",
+          "name": "Renewed Hostility",
+          "locKey": "#character_execution_madmaggie_whipcord_NAME",
+          "hash": "d0bf91b5b4bc4a4f",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Mirage": {
+      "slug": "mirage",
+      "displayName": "Mirage",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "mirage/mythic.json",
+          "name": "Divine Mercy",
+          "locKey": "#MIRAGE_MYTHIC_FINISHER",
+          "hash": "b89b9f79d98eccd4",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/trickster.json",
+          "name": "Pound It, Bro",
+          "locKey": "#FINISHER_022",
+          "hash": "5a5609d98dd47961",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/default.json",
+          "name": "Smooth Moves",
+          "locKey": "#FINISHER_021",
+          "hash": "1425417236ef8e70",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "mirage/joker.json",
+          "name": "Strike a Pose",
+          "locKey": "#FINISHER_023",
+          "hash": "d45cc340e4b96452",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Newcastle": {
+      "slug": "newcastle",
+      "displayName": "Newcastle",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "newcastle/hero.json",
+          "name": "Crushing It",
+          "locKey": "#character_execution_newcastle_hero_NAME",
+          "hash": "250f728191091fa4",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/armshield.json",
+          "name": "Franchise Player",
+          "locKey": "#character_execution_newcastle_armshield_NAME",
+          "hash": "949ff120cecf8361",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "newcastle/sibling.json",
+          "name": null,
+          "locKey": "#character_execution_newcastle_sibling_NAME",
+          "hash": "1cb06818dc901a5c",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Octane": {
+      "slug": "octane",
+      "displayName": "Octane",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "octane/mythic.json",
+          "name": "Death Dive",
+          "locKey": "#OCTANE_MYTHIC_FINISHER",
+          "hash": "2734fefe7610915f",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/prototype1.json",
+          "name": "Full Throttled",
+          "locKey": "#FINISHER_025",
+          "hash": "60be540f60e48aac",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/default.json",
+          "name": "Hot Drop",
+          "locKey": "#FINISHER_024",
+          "hash": "1a8d8ba83b9e4f43",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "octane/heirloom.json",
+          "name": "Over Stimulated",
+          "locKey": "#OCTANE_heirloom_FINISHER",
+          "hash": "cc474ac08efd4fda",
+          "rarity": "mythic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Pathfinder": {
+      "slug": "pathfinder",
+      "displayName": "Pathfinder",
+      "counts": {
+        "total": 5
+      },
+      "items": [
+        {
+          "file": "pathfinder/mythic.json",
+          "name": "A Blast from Path",
+          "locKey": "#PATHFINDER_MYTHIC_FINISHER",
+          "hash": "9aa67502a9507953",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/default.json",
+          "name": "Friendly Introduction",
+          "locKey": "#FINISHER_026",
+          "hash": "dac50d76b7c9759d",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/highfive.json",
+          "name": "Hi-5",
+          "locKey": "#FINISHER_027",
+          "hash": "20f5d5de0eae608e",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/punch.json",
+          "name": "Iron Haymaker",
+          "locKey": "#FINISHER_028",
+          "hash": "67269e4565934b7f",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "pathfinder/heirloom.json",
+          "name": "Top Drop Bop",
+          "locKey": "#PATHFINDER_HEIRLOOM_FINISHER",
+          "hash": "8863b9500f9baf30",
+          "rarity": "mythic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Rampart": {
+      "slug": "rampart",
+      "displayName": "Rampart",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "rampart/overkill.json",
+          "name": "No Mercy",
+          "locKey": "#FINISHER_037",
+          "hash": "827965b6a79dc12b",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "rampart/begging.json",
+          "name": "Wound Up",
+          "locKey": "#FINISHER_036",
+          "hash": "0872ac4f50b8d63a",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Revenant": {
+      "slug": "revenant",
+      "displayName": "Revenant",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "revenant/impale.json",
+          "name": "Imminent Shutdown",
+          "locKey": "#FINISHER_030",
+          "hash": "2f7808e315bca50c",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/default.json",
+          "name": "Snap Decision",
+          "locKey": "#FINISHER_029",
+          "hash": "ad5766acee16e5f8",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "revenant/chestopen_prestige.json",
+          "name": "Soul Eater",
+          "locKey": "#character_execution_revenant_openchest_prestige",
+          "hash": "d04d76d63ec981a8",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Seer": {
+      "slug": "seer",
+      "displayName": "Seer",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "seer/hypnostrike.json",
+          "name": "Follow The Light",
+          "locKey": "#FINISHER_047",
+          "hash": "e3fcf58f0eee7240",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "seer/droneslinger.json",
+          "name": "Quickdraw",
+          "locKey": "#FINISHER_048",
+          "hash": "2a2dbdf665d35d31",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Sparrow": {
+      "slug": "sparrow",
+      "displayName": "Sparrow",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "sparrow/execution_arrowflip.json",
+          "name": "Aerial Agility",
+          "locKey": "#character_execution_sparrow_arrowflip",
+          "hash": "9d145395655fff6d",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "sparrow/execution_soccer.json",
+          "name": "Watch the Ball",
+          "locKey": "#character_execution_sparrow_soccer",
+          "hash": "bdba7caf222e71b2",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Valkyrie": {
+      "slug": "valkyrie",
+      "displayName": "Valkyrie",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "valkyrie/mythic_v22_angelofdeath.json",
+          "name": "Blade Barrage",
+          "locKey": "#character_execution_valkyrie_mythic_v22_angelofdeath",
+          "hash": "dade4987425d636b",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/crash.json",
+          "name": "Hard Landing",
+          "locKey": "#FINISHER_046",
+          "hash": "69f63c27866ad7c7",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "valkyrie/afterburner.json",
+          "name": "Turn and Burn",
+          "locKey": "#FINISHER_045",
+          "hash": "23c573c02f85ecd6",
+          "rarity": "other",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Vantage": {
+      "slug": "vantage",
+      "displayName": "Vantage",
+      "counts": {
+        "total": 2
+      },
+      "items": [
+        {
+          "file": "vantage/common_v22_boost.json",
+          "name": "Final Flight",
+          "locKey": "#character_execution_vantage_boost",
+          "hash": "8210c27387d71eb9",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "vantage/legendary_v22_echodistraction.json",
+          "name": "How Dare You",
+          "locKey": "#character_execution_vantage_echodistraction",
+          "hash": "a63dacafe3deb6e3",
+          "rarity": "legendary",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Wattson": {
+      "slug": "wattson",
+      "displayName": "Wattson",
+      "counts": {
+        "total": 3
+      },
+      "items": [
+        {
+          "file": "wattson/mythic.json",
+          "name": "Dance Dance Electrocution",
+          "locKey": "#WATTSON_MYTHIC_FINISHER",
+          "hash": "7e0774af6ded0eea",
+          "rarity": "mythic",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/zap.json",
+          "name": "Electrical Contact",
+          "locKey": "#FINISHER_032",
+          "hash": "bbd999b1c3867aee",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "wattson/default.json",
+          "name": "Shocking Outcome",
+          "locKey": "#FINISHER_031",
+          "hash": "75a8d14a6ca18ffd",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Wraith": {
+      "slug": "wraith",
+      "displayName": "Wraith",
+      "counts": {
+        "total": 4
+      },
+      "items": [
+        {
+          "file": "wraith/ninja.json",
+          "name": "Existential Crisis",
+          "locKey": "#FINISHER_034",
+          "hash": "7c111b80a2ef0058",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/portal.json",
+          "name": "Into the Light",
+          "locKey": "#FINISHER_035",
+          "hash": "c241e3e7f9d3eb49",
+          "rarity": "other",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/default.json",
+          "name": "Now You See Me",
+          "locKey": "#FINISHER_033",
+          "hash": "35e053191a6b65df",
+          "rarity": "common",
+          "kind": "animation"
+        },
+        {
+          "file": "wraith/heirloom_v22_magicsnowbeast_prestige.json",
+          "name": "Whiplash",
+          "locKey": "#character_execution_wraith_prestige",
+          "hash": "ae32642b5fdb6ff4",
+          "rarity": "mythic",
+          "kind": "animation"
+        }
+      ]
+    },
+    "Dummy": {
+      "slug": "dummie",
+      "displayName": "Dummy",
+      "counts": {
+        "total": 1
+      },
+      "items": [
+        {
+          "file": "dummie/default.json",
+          "name": null,
+          "locKey": "#FINISHER_014",
+          "hash": "b909fbcfa2aeeea6",
+          "rarity": "common",
+          "kind": "animation"
+        }
+      ]
+    }
+  }
+}

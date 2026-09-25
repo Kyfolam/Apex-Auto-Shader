@@ -1,0 +1,37 @@
+schema_version = "1.0.0"
+
+id = "apex_auto_shader"
+version = "2.0.0"
+name = "Apex Auto Shader"
+tagline = "Auto-shade Apex Legends CAST models"
+maintainer = "Kyfolam"
+type = "add-on"
+
+website = "https://github.com/Kyfolam/Apex-Auto-Shader"
+tags = ["Material", "Import-Export"]
+
+blender_version_min = "5.2.0"
+
+license = [
+  "SPDX:MIT",
+]
+
+copyright = [
+  "2023 Kaiserouo",
+  "2026 Kyfolam",
+]
+
+# CAST importer required for Import CAST Model / Lazy Import.
+# Install: https://github.com/dtzxporter/cast
+[permissions]
+files = "Read CAST models and Apex texture folders from disk"
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "/.git/",
+  "/*.zip",
+  "/tests/",
+  "/.github/",
+  "/scripts/",
+]
