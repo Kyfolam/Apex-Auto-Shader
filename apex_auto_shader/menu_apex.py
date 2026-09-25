@@ -4,7 +4,13 @@ import bpy
 
 from . import utils
 from .naming import SLOT_LABELS
-from .node_adder import CoresNodeAdder, ObjectNodeAdder, PlusNodeAdder, current_node_adder
+from .node_adder import (
+    CoresNodeAdder,
+    ObjectNodeAdder,
+    PlusNodeAdder,
+    PlusSENodeAdder,
+    current_node_adder,
+)
 
 
 def makeRemoveTextureSelectedClass(texture_type: str):
@@ -61,19 +67,21 @@ def makeChooseShaderOptionOperator(idname, display_name, node_adder_cls_arg, des
 
         def execute(self, context):
             mapping = {
+                PlusSENodeAdder: "plus_se",
                 CoresNodeAdder: "cores",
                 PlusNodeAdder: "plus",
                 ObjectNodeAdder: "object",
             }
-            context.scene.apex_shader = mapping.get(self.node_adder_cls, "cores")
+            context.scene.apex_shader = mapping.get(self.node_adder_cls, "plus_se")
             return {"FINISHED"}
 
     return ApexChooseShaderOptionOp
 
 
 available_shaders = [
+    ("plus_se", "se Apex Shader Plus", PlusSENodeAdder, "se_Apex Shader Plus (default)"),
+    ("plus", "Apex Shader+", PlusNodeAdder, "ovlack Apex Shader+ (Plus 1)"),
     ("cores", "Cores Apex Shader", CoresNodeAdder, "CoReArtZz Cores shader"),
-    ("plus", "Apex Shader+", PlusNodeAdder, "ovlack Apex Shader+"),
     ("object", "Object Shader", ObjectNodeAdder, "Props / non-legend models"),
 ]
 
