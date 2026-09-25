@@ -6,10 +6,12 @@ from bpy.props import BoolProperty, EnumProperty, FloatProperty
 from .log import log
 
 SHADER_ITEMS = (
-    ("plus", "Apex Shader+", "ovlack Apex Shader+"),
+    ("plus_se", "se Apex Shader Plus", "se_Apex Shader Plus (default)"),
+    ("plus", "Apex Shader+", "ovlack Apex Shader+ (Plus 1)"),
     ("cores", "Cores Apex Shader", "CoReArtZz Cores shader"),
     ("object", "Object Shader", "Props / non-legend models — textures from the model folder"),
 )
+SHADER_KEYS = {item[0] for item in SHADER_ITEMS}
 
 CAST_URL = "https://github.com/dtzxporter/cast"
 OPTIC_URL = "https://github.com/Kyfolam/Optic-Enhancer"
@@ -61,8 +63,8 @@ def auto_load_anims() -> bool:
 
 
 def default_shader() -> str:
-    key = str(pref("default_shader", "plus") or "plus")
-    return key if key in {"plus", "cores", "object"} else "plus"
+    key = str(pref("default_shader", "plus_se") or "plus_se")
+    return key if key in SHADER_KEYS else "plus_se"
 
 
 def anim_loop_default() -> bool:
@@ -172,7 +174,7 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
     default_shader: EnumProperty(
         name="Default Shader",
         items=SHADER_ITEMS,
-        default="plus",
+        default="plus_se",
     )
     model_scale: FloatProperty(
         name="Model Scale",
