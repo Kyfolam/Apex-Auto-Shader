@@ -40,10 +40,19 @@ In the Search-Tab you can look for a specific Skin.
 
 ---
 
+## Preferences
+
+<img width="983" height="349" alt="image" src="https://github.com/user-attachments/assets/123ddf23-1dea-4382-baa5-e8541e679b18" />
+
+You can edit your preferences on the Preferences Tab (where you import the Add-On). Different Shader included.
+
+---
+
 ## Additional feature: Optic Enhancer (UPCOMING)
 
 Optional companion addon for crease, wear, mythic glow and portrait shading.
 
 ---
 
-Shaders: CoReArtZz (Cores), ovlack (Apex Shader+). 
+Shaders: CoReArtZz (Cores), ovlack (Apex Shader+).
+Thanks to YOROTSUKI for helping with the Skinlist
