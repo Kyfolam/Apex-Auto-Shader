@@ -4,16 +4,21 @@ These `.blend` files are node-group libraries. The add-on appends a group on fir
 
 | File | Shader | Node group name | Author | Notes |
 |---|---|---|---|---|
-| `Apex Shader.blend` | Cores Apex Shader | `Cores Apex Shader` | CoReArtZz | Community default, many tutorials |
-| `Apex_Shader_Plus1.blend` | Apex Shader+ | `Apex Shader+` | ovlack | Better skin/guns in many cases; our default |
+| `se_Apex Shader Plus.blend` | se Apex Shader Plus | `Apex Shader+` | se / community | Default. Sockets differ from Plus 1 |
+| `Apex_Shader_Plus1.blend` | Apex Shader+ | `Apex Shader+` | ovlack | Plus 1, still available |
+| `Apex Shader.blend` | Cores Apex Shader | `Cores Apex Shader` | CoReArtZz | Community classic, many tutorials |
 
 Do **not** rename the node groups. `node_adder.py` looks up those exact names and socket labels.
 
-## Newer “Shader Plus”?
+## se Apex Shader Plus
 
-[rroarings/apex-info](https://github.com/rroarings/apex-info) (formerly ovlack/apex-info) ships `se_Apex Shader Plus.blend` with node group `Apex_Shader`. That is a **different** tree (sockets and name). Swapping it in would break Auto-Shade until every input is remapped and retested on Blender 5.1.
+`se_Apex Shader Plus.blend` is bundled as an extra option and the addon default.
 
-We keep **Plus 1** as the wired default. A future optional third shader can be added once sockets are documented.
+Inspected group inputs: Albedo, Subsurface / Scatter Thickness, Specular, Glossiness, Anis-Spec Dir, Emission, Alpha (Opacity Multiply), Cavity, Normal Map.
+
+There is no dedicated AO socket (AO is multiplied with cavity inside the graph). Plus 1 remains selectable for the older wiring (`AO (Ambient Occlussion)`, `SSS (Subsurface Scattering)`, `Anis-SpecDir`).
+
+Place the `.blend` next to this README (same filename). If only `se_Apex Shader Plus.blend.b64` is present, the add-on decodes it on first shade.
 
 ## Updating a blend
 
