@@ -302,7 +302,10 @@ class ObjectNodeAdder(PlusNodeAdder):
     """Apex Shader+ wired with folder-local object/prop texture matching."""
 
 
+from .node_se import PlusSENodeAdder
+
 SHADER_ADDERS = {
+    "plus_se": PlusSENodeAdder,
     "cores": CoresNodeAdder,
     "plus": PlusNodeAdder,
     "object": ObjectNodeAdder,
@@ -316,7 +319,7 @@ def current_shader_key(scene=None) -> str:
         from .prefs import default_shader
 
         key = default_shader()
-    return key if key in SHADER_ADDERS else "plus"
+    return key if key in SHADER_ADDERS else "plus_se"
 
 
 def is_object_shader(scene=None, node_adder_cls=None) -> bool:
@@ -326,4 +329,4 @@ def is_object_shader(scene=None, node_adder_cls=None) -> bool:
 
 
 def current_node_adder(scene=None):
-    return SHADER_ADDERS.get(current_shader_key(scene), PlusNodeAdder)
+    return SHADER_ADDERS.get(current_shader_key(scene), PlusSENodeAdder)
