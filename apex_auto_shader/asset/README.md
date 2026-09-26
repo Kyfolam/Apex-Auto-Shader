@@ -4,21 +4,19 @@ These `.blend` files are node-group libraries. The add-on appends a group on fir
 
 | File | Shader | Node group name | Author | Notes |
 |---|---|---|---|---|
-| `se_Apex Shader Plus.blend` | se Apex Shader Plus | `Apex Shader+` | se / community | Default. Sockets differ from Plus 1 |
-| `Apex_Shader_Plus1.blend` | Apex Shader+ | `Apex Shader+` | ovlack | Plus 1, still available |
-| `Apex Shader.blend` | Cores Apex Shader | `Cores Apex Shader` | CoReArtZz | Community classic, many tutorials |
+| `se_Apex Shader Plus.blend` | se Apex Shader Plus | `Apex Shader+ [APPEND]` | se / community | Default |
+| `Apex_Shader_Plus1.blend` | Apex Shader+ | `Apex Shader+` | ovlack | Plus 1 |
+| `Apex Shader.blend` | Cores Apex Shader | `Cores Apex Shader` | CoReArtZz | Community classic |
 
 Do **not** rename the node groups. `node_adder.py` looks up those exact names and socket labels.
 
 ## se Apex Shader Plus
 
-`se_Apex Shader Plus.blend` is bundled as an extra option and the addon default.
+Default. The node group is exactly `Apex Shader+ [APPEND]`.
 
-Inspected group inputs: Albedo, Subsurface / Scatter Thickness, Specular, Glossiness, Anis-Spec Dir, Emission, Alpha (Opacity Multiply), Cavity, Normal Map.
+Scatter color goes to Scatter Thickness (Radius), the image alpha to Scatter Thickness Alpha. Subsurface is set to 1 when a scatter map is linked, because the file default 0 turns SSS off. Opacity uses the image alpha on `Alpha (Opacity Multiply)`. There is no EHL input. Subsurface Color, Glossiness Controller and Bump Strength stay at the file defaults.
 
-There is no dedicated AO socket (AO is multiplied with cavity inside the graph). Plus 1 remains selectable for the older wiring (`AO (Ambient Occlussion)`, `SSS (Subsurface Scattering)`, `Anis-SpecDir`).
-
-Place the `.blend` next to this README (same filename). If only `se_Apex Shader Plus.blend.b64` is present, the add-on decodes it on first shade.
+Color spaces match the other shaders: Non-Color for AO, cavity, gloss, normal, scatter, alpha and spec-dir. sRGB for albedo, emission and specular.
 
 ## Updating a blend
 

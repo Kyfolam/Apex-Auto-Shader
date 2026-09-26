@@ -225,7 +225,16 @@ SLOT_LABELS: dict[str, str] = {
     "transmittance": "Transmittance Tint",
 }
 
-NONCOLOR_SLOTS = frozenset({"ao", "cavity", "gloss", "normal", "aniso"})
+# Data maps stay linear. Albedo, emission and specular stay sRGB (see node_adder._tex).
+NONCOLOR_SLOTS = frozenset({
+    "ao",
+    "cavity",
+    "gloss",
+    "normal",
+    "scatter",
+    "opacity",
+    "aniso",
+})
 EXPECTED_SLOTS = ("albedo", "normal", "gloss")
 SLOT_SHORT = {
     "albedo": "col",

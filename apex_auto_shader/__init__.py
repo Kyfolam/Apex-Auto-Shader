@@ -2,7 +2,7 @@ bl_info = {
     "name": "Apex Auto Shader",
     "description": "Auto-shade Apex Legends CAST models (requires CAST importer)",
     "author": "Kyfolam (original: Kaiserouo)",
-    "version": (2, 1, 0),
+    "version": (2, 0, 1),
     "blender": (5, 2, 0),
     "location": "View3D > Sidebar > Apex Shader / Object Context Menu",
     "doc_url": "https://github.com/Kyfolam/Apex-Auto-Shader",

@@ -473,7 +473,7 @@ def _wire_plus_eye_normal(tree, nodes, group, nrm) -> None:
 
 def apply_alter_plus_eye(mesh: bpy.types.Object, mat: bpy.types.Material) -> bool:
     from ..blender_compat import find_socket, link, new_tex_image
-    from ..node_adder import PlusNodeAdder
+    from ..node_adder import current_node_adder
 
     kind = _eye_kind(mesh)
     albedo = _find_wraith_eye_image(kind, "albedo") or _find_wraith_eye_image(kind, "col")
@@ -491,7 +491,7 @@ def apply_alter_plus_eye(mesh: bpy.types.Object, mat: bpy.types.Material) -> boo
     nodes = tree.nodes
     nodes.clear()
     group = nodes.new("ShaderNodeGroup")
-    group.node_tree = PlusNodeAdder.getShaderNodeGroup()
+    group.node_tree = current_node_adder().getShaderNodeGroup()
     group.location = (360.0, 0.0)
     output = nodes.new("ShaderNodeOutputMaterial")
     output.location = (620.0, 0.0)

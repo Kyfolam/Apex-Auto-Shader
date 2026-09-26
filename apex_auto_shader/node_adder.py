@@ -45,11 +45,16 @@ def fetchNodeGroupFromCacheOrFile(name: str, blend_fpath, contain_name: str):
     with bpy.data.libraries.load(str(path)) as (data_from, data_to):
         data_to.node_groups = data_from.node_groups
 
-    for group in data_to.node_groups:
-        if group is not None and contain_name in group.name:
+    groups = [group for group in data_to.node_groups if group is not None]
+    exact = next((group for group in groups if group.name == contain_name), None)
+    if exact is not None:
+        shader_cache[name] = exact
+        return exact
+    for group in groups:
+        if contain_name in group.name:
             shader_cache[name] = group
             return group
-    available = [g.name for g in data_to.node_groups if g is not None]
+    available = [group.name for group in groups]
     raise RuntimeError(
         f'No "{contain_name}" node tree in {path.name}. Found: {", ".join(available) or "(none)"}.'
     )
@@ -85,13 +90,15 @@ class NodeAdder:
 
 
 def _tex(mat, img_path, location, noncolor=False):
+    # Non-Color: ao, cavity, gloss, normal, scatter, opacity, aniso.
+    # sRGB: albedo, emissive, spec, ehl.
     slot = None
     stem = Path(img_path).stem
     if "_" in stem:
         slot = canonical_slot(stem[stem.rindex("_") + 1 :])
     if slot in NONCOLOR_SLOTS:
         noncolor = True
-    elif slot in {"spec", "ehl"}:
+    elif slot in {"albedo", "emissive", "spec", "ehl"}:
         noncolor = False
     return new_tex_image(mat.node_tree.nodes, img_path, location, noncolor=noncolor)
 
@@ -101,6 +108,13 @@ def _link_named(mat, img_node, cas_node_group, names):
     if sock is None:
         return False
     return link(mat.node_tree, img_node.outputs["Color"], sock)
+
+
+def _link_float(mat, img_node, cas_node_group, names):
+    sock = find_socket(cas_node_group, *names)
+    if sock is None:
+        return False
+    return link(mat.node_tree, img_node.outputs["Alpha"], sock)
 
 
 class CoresNodeAdder(NodeAdder):
@@ -142,7 +156,7 @@ class CoresNodeAdder(NodeAdder):
 
     @staticmethod
     def _addSubsurface(img_path, mat, cas_node_group, location):
-        img_node = _tex(mat, img_path, location)
+        img_node = _tex(mat, img_path, location, noncolor=True)
         link(mat.node_tree, img_node.outputs["Color"], socket(cas_node_group, "Subsurface"))
         link(mat.node_tree, img_node.outputs["Color"], socket(cas_node_group, "Subsurface Color"))
 
@@ -241,7 +255,7 @@ class PlusNodeAdder(NodeAdder):
 
     @staticmethod
     def _addSubsurface(img_path, mat, cas_node_group, location):
-        img_node = _tex(mat, img_path, location)
+        img_node = _tex(mat, img_path, location, noncolor=True)
         link(
             mat.node_tree,
             img_node.outputs["Color"],
@@ -302,7 +316,94 @@ class ObjectNodeAdder(PlusNodeAdder):
     """Apex Shader+ wired with folder-local object/prop texture matching."""
 
 
-from .node_se import PlusSENodeAdder
+class PlusSENodeAdder(NodeAdder):
+    """se_Apex Shader Plus. Group name is exactly ``Apex Shader+ [APPEND]``."""
+
+    @staticmethod
+    def _addAlbedo(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location)
+        _link_named(mat, img_node, cas_node_group, ("Albedo",))
+
+    @staticmethod
+    def _addNormal(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_named(mat, img_node, cas_node_group, ("Normal Map",))
+
+    @staticmethod
+    def _addAO(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_named(mat, img_node, cas_node_group, ("Ambient Occlusion",))
+
+    @staticmethod
+    def _addGlossy(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_named(mat, img_node, cas_node_group, ("Glossiness",))
+
+    @staticmethod
+    def _addEmissive(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location)
+        _link_named(mat, img_node, cas_node_group, ("Emission",))
+
+    @staticmethod
+    def _addCavity(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_named(mat, img_node, cas_node_group, ("Cavity",))
+
+    @staticmethod
+    def _addSpec(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location)
+        _link_named(mat, img_node, cas_node_group, ("Specular",))
+
+    @staticmethod
+    def _addSubsurface(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_named(mat, img_node, cas_node_group, ("Scatter Thickness (Radius)",))
+        _link_float(mat, img_node, cas_node_group, ("Scatter Thickness Alpha",))
+        # File default is 0, and the group does Subsurface * (1 - alpha).
+        sock = find_socket(cas_node_group, "Subsurface")
+        if sock is not None and not getattr(sock, "is_linked", False):
+            try:
+                sock.default_value = 1.0
+            except Exception:
+                pass
+
+    @staticmethod
+    def _addAnisoSpecDir(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_named(mat, img_node, cas_node_group, ("Anis-Spec Dir",))
+
+    @staticmethod
+    def _addOpacityMultiply(img_path, mat, cas_node_group, location):
+        img_node = _tex(mat, img_path, location, noncolor=True)
+        _link_float(mat, img_node, cas_node_group, ("Alpha (Opacity Multiply)",))
+        set_alpha_clip(mat)
+
+    @staticmethod
+    def _addEhl(img_path, mat, cas_node_group, location):
+        return False
+
+    method = {
+        "albedo": _addAlbedo,
+        "ao": _addAO,
+        "cavity": _addCavity,
+        "emissive": _addEmissive,
+        "gloss": _addGlossy,
+        "normal": _addNormal,
+        "spec": _addSpec,
+        "opacity": _addOpacityMultiply,
+        "scatter": _addSubsurface,
+        "aniso": _addAnisoSpecDir,
+        "ehl": _addEhl,
+    }
+
+    @staticmethod
+    def getShaderNodeGroup():
+        return fetchNodeGroupFromCacheOrFile(
+            "PlusSENodeAdder_cache",
+            config.PLUS_SE_APEX_SHADER_BLENDER_FILE,
+            "Apex Shader+ [APPEND]",
+        )
+
 
 SHADER_ADDERS = {
     "plus_se": PlusSENodeAdder,

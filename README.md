@@ -46,8 +46,6 @@ In the Search-Tab you can look for a specific Skin.
 
 You can edit your preferences on the Preferences Tab (where you import the Add-On). Different Shader included.
 
-Default shader is **se Apex Shader Plus**. Apex Shader+ (Plus 1), Cores, and Object Shader stay available under Choose Shader / Preferences.
-
 ---
 
 ## Additional feature: Optic Enhancer (UPCOMING)
