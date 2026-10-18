@@ -7,7 +7,6 @@ from .naming import SLOT_LABELS
 from .cinematic import CinematicNodeAdder
 from .node_adder import (
     CoresNodeAdder,
-    ObjectNodeAdder,
     PlusNodeAdder,
     PlusSENodeAdder,
     current_node_adder,
@@ -79,7 +78,6 @@ available_shaders = [
     ("plus", "Apex Shader+", PlusNodeAdder, "ovlack Apex Shader+ (Plus 1)"),
     ("cores", "Cores Apex Shader", CoresNodeAdder, "CoReArtZz Cores shader"),
     ("cinematic", "Cinematic Shader", CinematicNodeAdder, "Illustrated hard light, ink edge, cool rim"),
-    ("object", "Object Shader", ObjectNodeAdder, "Props / non-legend models"),
 ]
 
 shader_op_ls = [

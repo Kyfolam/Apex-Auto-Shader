@@ -250,8 +250,9 @@ class APEX_OT_install_zip(bpy.types.Operator):
             self.report({"ERROR"}, "Dieses ZIP ist nicht Apex Auto Shader")
             return {"CANCELLED"}
         existing = find_installs()
-        if existing and not self.replace:
-            have = ", ".join(sorted({item["version"] or "?" for item in existing}))
+        others = other_copies(existing)
+        if others and not self.replace:
+            have = ", ".join(sorted({item["version"] or "?" for item in others}))
             self.line_a = f"{ADDON_NAME} {have} ist bereits installiert."
             self.line_b = f"Alte Version entfernen und {meta['version']} installieren?"
             self.replace = True

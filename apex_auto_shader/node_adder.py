@@ -562,6 +562,8 @@ def current_shader_key(scene=None) -> str:
         except Exception:
             shown = ""
         raw = shown
+    if raw == "object":
+        return "plus"
     return raw if raw in SHADER_ADDERS else pref
 
 

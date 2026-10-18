@@ -37,6 +37,7 @@ from ..naming import (
     missing_slots,
     is_eye_material,
     identity_level,
+    iter_texture_files,
     model_dir_name,
     parse_skin_identity,
     overlay_match,
@@ -44,10 +45,21 @@ from ..naming import (
     scan_folder,
     scan_object_folder,
     scan_recolor_stack,
+    season_prefix_aliases,
     should_hide_base_hair,
     skin_prefix,
     split_mesh_variant,
     split_recolor_prefix,
+    suggest_prefixes_from_names,
+    prefixes_compatible,
+    prefixes_for_pilot_model,
+    pilot_slot_model,
+    mesh_texture_prefixes,
+    candidate_matches_mesh,
+    mesh_requests_head,
+    prefixes_for_short_season,
+    texture_set_prefix,
+    texture_prefix_from_source,
     texture_dir_name_from_cast,
     texture_folder_candidates,
 )
@@ -98,13 +110,33 @@ def detect_prefix(obj: bpy.types.Object | None, scene=None) -> str:
         if not source:
             continue
         raw = Path(str(source)).name
-        if object_mode or not is_legend_character_name(raw):
-            pref = model_dir_name(raw) or skin_prefix(raw)
-        else:
-            pref = skin_prefix(raw)
+        pref = texture_prefix_from_source(raw, object_mode)
         if pref:
             return pref
     return ""
+
+
+def _candidate_prefixes(prefix: str, folder: Path | None, mesh_names: Iterable[str]) -> list[str]:
+    """Pilot slot models use the PNG name, not the folder name. Every legend."""
+    found: list[str] = []
+
+    def add(value: str) -> None:
+        value = (value or "").strip("_")
+        if value and value not in found:
+            found.append(value)
+
+    if folder is not None:
+        slot = pilot_slot_model(prefix) or pilot_slot_model(folder.name)
+        if slot:
+            names = [path.name for path in iter_texture_files(folder)]
+            ranked = prefixes_for_pilot_model(prefix or folder.name, names)
+            own_folder = pilot_slot_model(folder.name) is not None
+            if own_folder or len(ranked) == 1:
+                for item in ranked[:1]:
+                    add(item)
+    for item in season_prefix_aliases(prefix, mesh_names):
+        add(item)
+    return found
 
 
 def _unique_slot_textures(textures: Iterable[TextureRef]) -> list[TextureRef]:
@@ -699,6 +731,9 @@ def shade_mesh(
     folder: Path | None = None,
     prefix: str | None = None,
     match: object | None = None,
+    known_sets: Iterable[str] | None = None,
+    discovered: str = "",
+    scan_cache: dict | None = None,
 ) -> dict:
     log.info("Shade mesh %s", mesh.name)
     from .extras import adder_for_bodypart, prefix_conflict_message, should_skip_lod
@@ -751,14 +786,92 @@ def shade_mesh(
     select_level = _scan_target_level(prefix, *extra)
     object_mode = is_object_shader(scene, node_adder_cls)
     recolor = _armature_recolor(mesh)
-    if match is None or not getattr(match, "textures", None):
-        match = _scan_shade_match(
-            folder, prefix, extra, select_level, object_mode, recolor_code=recolor
-        )
-    if not match.textures:
-        raise RuntimeError(prefix_conflict_message(folder, prefix))
+    cache = scan_cache if scan_cache is not None else {}
 
-    bodypart = guess_bodypart(mesh_match_names(mesh), match.bodyparts())
+    def _scanned(cand: str):
+        if cand not in cache:
+            cache[cand] = _scan_shade_match(
+                folder, cand, extra, select_level, object_mode, recolor_code=recolor
+            )
+        return cache[cand]
+
+    def _fits(trial):
+        if not trial or not getattr(trial, "textures", None):
+            return None
+        return guess_bodypart(mesh_match_names(mesh), trial.bodyparts())
+
+    chosen = None
+    chosen_prefix = prefix or ""
+    bodypart = None
+    recolor_locked = bool(getattr(match, "recolor_code", "") or "")
+    if match is not None and getattr(match, "textures", None):
+        bodypart = _fits(match)
+        if bodypart or recolor_locked:
+            chosen = match
+    if chosen is None and not recolor_locked:
+        order = mesh_texture_prefixes(prefix or "", mesh.name, known_sets or [], discovered)
+        mesh_pref = skin_prefix(mesh.name)
+        wants_head = mesh_requests_head(mesh.name)
+        own = None
+        own_prefix = ""
+        for cand in order:
+            if not candidate_matches_mesh(mesh.name, cand):
+                continue
+            trial = _scanned(cand)
+            hit = _fits(trial)
+            if wants_head and hit and hit.split("_")[-1] not in {"head", "helmet", "face"}:
+                hit = None
+            if hit:
+                chosen = trial
+                chosen_prefix = cand
+                bodypart = hit
+                break
+            if (
+                own is None
+                and mesh_pref
+                and cand == mesh_pref
+                and getattr(trial, "textures", None)
+            ):
+                own = trial
+                own_prefix = cand
+        if chosen is None and own is not None:
+            chosen = own
+            chosen_prefix = own_prefix
+            bodypart = _fits(own)
+            if wants_head and bodypart and bodypart.split("_")[-1] not in {"head", "helmet", "face"}:
+                head_part = next(
+                    (
+                        part
+                        for part in own.bodyparts()
+                        if part.split("_")[-1] in {"head", "helmet", "face"}
+                    ),
+                    "",
+                )
+                bodypart = head_part or bodypart
+    if chosen is None or not getattr(chosen, "textures", None):
+        raise RuntimeError(prefix_conflict_message(folder, prefix or mesh.name))
+    match = chosen
+    prefix = chosen_prefix or prefix
+
+    mesh_prefix = skin_prefix(mesh.name)
+    if mesh_prefix and mesh_prefix != prefix and not bodypart:
+        narrowed = [
+            tex
+            for tex in match.textures
+            if prefixes_compatible(Path(tex.filename).name, mesh_prefix)
+        ]
+        if narrowed:
+            match = type(match)(
+                source_name=match.source_name,
+                prefix=mesh_prefix,
+                textures=narrowed,
+                recolor_code=getattr(match, "recolor_code", "") or "",
+            )
+            prefix = mesh_prefix
+            bodypart = guess_bodypart(mesh_match_names(mesh), match.bodyparts())
+
+    if bodypart is None:
+        bodypart = guess_bodypart(mesh_match_names(mesh), match.bodyparts())
     named_level = mesh_level(mesh.name)
 
     def _pick(bp: str) -> list:
@@ -861,8 +974,6 @@ def shade_armature(
     if not prefix:
         hint = ""
         if folder is not None:
-            from ..naming import iter_texture_files, suggest_prefixes_from_names
-
             found = suggest_prefixes_from_names(p.name for p in iter_texture_files(folder))
             if found:
                 hint = f" Folder looks like: {', '.join(found[:4])}."
@@ -871,24 +982,48 @@ def shade_armature(
         )
 
     extra = _cast_identity_names(armature)
-    select_level = _scan_target_level(prefix, *extra)
-    object_mode = is_object_shader(scene, node_adder_cls)
-    recolor = _armature_recolor(armature)
-    if match is None:
-        match = _scan_shade_match(
-            folder, prefix, extra, select_level, object_mode, recolor_code=recolor
-        )
+    known: list[str] = []
+    discovered = ""
+    if match is None and folder is not None:
+        file_names: list[str] = []
+        counts: dict[str, int] = {}
+        for path in iter_texture_files(folder):
+            file_names.append(path.name)
+            pref = texture_set_prefix(path.name)
+            if pref:
+                counts[pref] = counts.get(pref, 0) + 1
+        known = [key for key, _n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+        if pilot_slot_model(prefix) or pilot_slot_model(folder.name):
+            ranked = prefixes_for_pilot_model(prefix or folder.name, file_names)
+            own_folder = pilot_slot_model(folder.name) is not None
+            if ranked and (own_folder or len(ranked) == 1):
+                discovered = ranked[0]
+        if not discovered:
+            mesh_names = [mesh.name for mesh in material_meshes(armature)]
+            ranked = prefixes_for_short_season(prefix or folder.name, file_names, mesh_names)
+            if ranked:
+                discovered = ranked[0]
     reports = []
     meshes = material_meshes(armature)
     from .extras import hide_higher_lods
 
     hide_higher_lods(armature)
     hide_duplicate_hair(armature)
+    cache: dict = {}
     for i, mesh in enumerate(meshes):
         log.info("Shade %s (%s/%s)", mesh.name, i, len(meshes))
         try:
             reports.append(
-                shade_mesh(mesh, node_adder_cls, folder=folder, prefix=prefix, match=match)
+                shade_mesh(
+                    mesh,
+                    node_adder_cls,
+                    folder=folder,
+                    prefix=prefix,
+                    match=match,
+                    known_sets=known,
+                    discovered=discovered,
+                    scan_cache=cache,
+                )
             )
         except Exception as exc:
             log.warning("Skip %s: %s", mesh.name, exc)
@@ -1039,21 +1174,44 @@ def recolorSelected(
         raise RuntimeError("Could not read a CAST prefix from the model name.")
     from .extras import CHAR_RECOLOR, CHAR_TAG
 
-    available = list_folder_recolors(folder, prefix)
+    mesh_names = [mesh.name for mesh in material_meshes(arm)]
+    ordered: list[str] = []
+
+    def _add_cand(value: str) -> None:
+        value = (value or "").strip("_")
+        if value and value not in ordered and candidate_matches_mesh(arm.name, value):
+            ordered.append(value)
+
+    _add_cand(prefix)
+    for mesh_name in mesh_names:
+        _add_cand(skin_prefix(mesh_name))
+    for cand in _candidate_prefixes(prefix, folder, mesh_names):
+        _add_cand(cand)
+    if not ordered:
+        ordered = [prefix]
     current = str(arm.get(CHAR_RECOLOR, "") or "")
-    nxt = cycle_recolor_code(available, current)
-    if not available and nxt == "":
-        raise RuntimeError(f"No recolors (rt/rc) found for '{prefix}'.")
     extra = _cast_identity_names(arm)
-    merged = scan_recolor_stack(
-        folder,
-        prefix,
-        apply_recolor=bool(nxt),
-        recolor_code=nxt,
-        target_level=_scan_target_level(prefix, *extra),
-        source_name=extra[0] if extra else "",
-    )
-    if not merged.textures:
+    merged = None
+    nxt = ""
+    for cand in ordered:
+        available = list_folder_recolors(folder, cand)
+        nxt_try = cycle_recolor_code(available, current)
+        if not nxt_try:
+            continue
+        trial = scan_recolor_stack(
+            folder,
+            cand,
+            apply_recolor=True,
+            recolor_code=nxt_try,
+            target_level=_scan_target_level(cand, *extra),
+            source_name=extra[0] if extra else "",
+        )
+        if trial.textures:
+            prefix = cand
+            nxt = nxt_try
+            merged = trial
+            break
+    if merged is None or not merged.textures:
         raise RuntimeError(
             f"No recolor / level maps for prefix '{prefix}' in {folder}."
         )

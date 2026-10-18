@@ -10,7 +10,6 @@ SHADER_ITEMS = (
     ("plus", "Apex Shader+", "ovlack Apex Shader+ (Plus 1)"),
     ("cores", "Cores Apex Shader", "CoReArtZz Cores shader"),
     ("cinematic", "Cinematic Shader", "Illustrated hard light, ink edge, cool rim"),
-    ("object", "Object Shader", "Props / non-legend models — textures from the model folder"),
 )
 SHADER_KEYS = {item[0] for item in SHADER_ITEMS}
 

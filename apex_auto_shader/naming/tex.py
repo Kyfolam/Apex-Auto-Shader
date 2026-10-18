@@ -25,6 +25,7 @@ from ..constants import (
     SLOT_ALIASES,
     SLOT_SHORT,
     TECHART_LEGENDS_PARTS,
+    WEIGHT_CLASSES,
 )
 
 # rt01 / rc02 / shared01, plus compound dumps like rt01rc01
@@ -67,6 +68,55 @@ IGNORED_BODYPART_TOKENS = {
 AUX_BODYPART_SUFFIXES = frozenset(
     {"colpass", "prepass", "shadow", "tightshadow", "vsm"}
 )
+_COMPOUND_PARTS = frozenset(
+    {
+        ("vfx", "lines"),
+        ("vfx", "spheres"),
+        ("emotes", "frightened"),
+        ("body", "upper"),
+        ("body", "lower"),
+    }
+)
+_EXTRA_PARTS = frozenset(
+    {
+        "emotes",
+        "lens",
+        "visor",
+        "vfx",
+        "gauntlet",
+        "grapple",
+        "shield",
+        "jumpkit",
+        "zipline",
+        "fur",
+    }
+)
+# Mesh token → texture body part. jumpkit and zipline share gear.
+_PART_ALIAS = {
+    "jumpkit": "gear",
+    "zipline": "gear",
+    "gear": "jumpkit",
+    "gauntlet": "grapple",
+    "grapple": "gauntlet",
+}
+_PART_GROUPS = {
+    "kit": frozenset({"kit", "gear", "jumpkit", "zipline"}),
+    "gear": frozenset({"kit", "gear", "jumpkit", "zipline"}),
+    "jumpkit": frozenset({"kit", "gear", "jumpkit", "zipline"}),
+    "zipline": frozenset({"kit", "gear", "jumpkit", "zipline"}),
+    "gauntlet": frozenset({"gauntlet", "grapple"}),
+    "grapple": frozenset({"gauntlet", "grapple"}),
+}
+
+
+def _bodypart_tail_len(toks: list[str]) -> int:
+    """Trailing body-part tokens: emotes, visor, vfx_lines, body, gear, ..."""
+    if len(toks) >= 2 and tuple(t.lower() for t in toks[-2:]) in _COMPOUND_PARTS:
+        return 2
+    if toks and toks[-1].lower() in MESH_PARTS | _EXTRA_PARTS | IGNORED_BODYPART_TOKENS:
+        return 1
+    return 0
+
 
 HIDE_ON_SHADE_MATERIALS = frozenset()
 HIDE_ON_SHADE_LAST_TOKENS = frozenset()
@@ -295,6 +345,8 @@ def list_folder_recolors(folder: str | Path, prefix: str) -> list[str]:
     parents: list[str] = []
     for root in recolor_search_roots(folder, prefix):
         for path in iter_texture_files(root):
+            if prefix and not prefixes_compatible(path.name, prefix):
+                continue
             names.append(path.name)
             parents.append(path_variant_blob(path))
     return available_recolor_codes(names, parents)
@@ -313,6 +365,9 @@ def detect_target_level(prefix: str, names: Iterable[str] | None = None) -> str:
     pv = file_variant(prefix)
     if pv in LEVEL_CODES:
         return pv
+    # A legendary dump sits next to prestige level01/02/03. Those are not this skin.
+    if ident.rarity not in {"mythic", "prestige"}:
+        return ""
     present = set()
     for name in names or []:
         fv = file_variant(name)
@@ -350,7 +405,7 @@ def variant_priority(fv: str, target: str, recolor: str = "") -> int:
         return -1
     if fv == "base" and target != "base":
         return -1
-    if target in LEVEL_CODES or fv in LEVEL_CODES:
+    if target in LEVEL_CODES:
         if fv in LEVEL_CODES:
             return 200 + level_rank(fv)
         if fv == "":
@@ -471,8 +526,12 @@ def parse_skin_identity(name: str) -> SkinIdentity:
         else:
             rest.append(tok)
     while rest:
+        n = _bodypart_tail_len(rest)
+        if n:
+            del rest[-n:]
+            continue
         low = rest[-1].lower()
-        if low in SLOT_ALIASES or low in MESH_PARTS:
+        if low in SLOT_ALIASES:
             rest.pop()
             continue
         break
@@ -585,15 +644,288 @@ def find_cycled_cast(current: Path, extra_roots: Iterable[Path] | None = None) -
 
 
 def skin_prefix(name: str, token_count: int = PREFIX_TOKEN_COUNT) -> str:
+    raw = strip_blender_suffix(Path(str(name)).name)
+    had_group = bool(_CAST_LOD_GROUP.match(raw))
     ident = parse_skin_identity(name)
     toks = tokenize(strip_cast_lod_group(name))
     while toks and toks[-1].lower() in IGNORED_BODYPART_TOKENS:
         toks.pop()
+    if had_group:
+        # body_0_*_boosted_body → pathfinder_lgnd_v20_boosted, not the rig's short code
+        while toks and _bodypart_tail_len(toks):
+            del toks[-_bodypart_tail_len(toks) :]
     if not toks:
         return ""
     if ident.level and ident.level not in {t.lower() for t in toks}:
         toks.append(ident.level)
+    _ = token_count
     return "_".join(toks)
+
+
+# v19–v21 rigs are often legend_vNN_code while the PNGs are legend_lgnd_vNN_fullname.
+_SHORT_SEASON = re.compile(
+    r"^(?P<legend>[a-z0-9]+)_v(?P<ver>19|20|21)_(?P<skin>[a-z0-9]+(?:_[a-z0-9]+)*)$",
+    re.IGNORECASE,
+)
+_SEASON_RARITIES = ("lgnd", "epicp", "rare", "epic")
+
+
+def season_prefix_aliases(prefix: str, mesh_names: Iterable[str] = ()) -> list[str]:
+    """Search order for a v19/v20/v21 model.
+
+    Mesh names win when they already carry the long prefix. Otherwise insert
+    lgnd/epic/rare in front of the version. Other seasons stay unchanged.
+    """
+    prefix = (prefix or "").strip("_")
+    ordered: list[str] = []
+    seen: set[str] = set()
+
+    def add(value: str) -> None:
+        value = (value or "").strip("_").lower()
+        if value and value not in seen:
+            seen.add(value)
+            ordered.append(value)
+
+    mesh_prefs = [skin_prefix(name) for name in mesh_names if name]
+    found = _SHORT_SEASON.match(prefix)
+    if not found:
+        add(prefix)
+        for pref in mesh_prefs:
+            add(pref)
+        return ordered
+
+    legend = found.group("legend").lower()
+    ver = "v" + found.group("ver")
+    skin = found.group("skin").lower()
+    for pref in mesh_prefs:
+        ident = parse_skin_identity(pref)
+        if ident.legend == legend and ident.version == ver and ident.rarity:
+            add(pref)
+    for rarity in _SEASON_RARITIES:
+        add(f"{legend}_{rarity}_{ver}_{skin}")
+    for pref in mesh_prefs:
+        ident = parse_skin_identity(pref)
+        if ident.legend == legend and ident.version == ver:
+            add(pref)
+    add(prefix)
+    return ordered
+
+
+_PILOT_SLOT = re.compile(
+    r"^pilot_(?:light|medium|heavy)_(?P<legend>[a-z0-9]+)"
+    r"_(?P<kind>legendary|epic|rare|mythic)_(?P<idx>\d+)$",
+    re.IGNORECASE,
+)
+_PILOT_KIND_RARITY = {
+    "legendary": frozenset({"lgnd", "legendary"}),
+    "epic": frozenset({"epic", "epicp"}),
+    "rare": frozenset({"rare", "rarep"}),
+    "mythic": frozenset({"mythic"}),
+}
+
+
+def _canon_legend_token(token: str) -> str:
+    ident = parse_skin_identity(token)
+    return ident.legend or (token or "").lower()
+
+
+def pilot_slot_model(name: str) -> tuple[str, str] | None:
+    """pilot_<class>_<legend>_<rarity>_<index> → (canon legend, kind). All legends."""
+    stem = model_dir_name(name)
+    kind_vw, key = normalize_vw_part(stem)
+    found = _PILOT_SLOT.match(key if kind_vw else stem.lower())
+    if not found:
+        return None
+    legend = _canon_legend_token(found.group("legend"))
+    if not is_canon_legend_slug(legend):
+        return None
+    return legend, found.group("kind").lower()
+
+
+def texture_set_prefix(filename: str) -> str:
+    """pathfinder_lgnd_v19_pacer_body_col → pathfinder_lgnd_v19_pacer."""
+    toks = tokenize(filename)
+    if toks and (canonical_slot(toks[-1]) or is_ignored_slot(toks[-1])):
+        toks.pop()
+    while toks and (
+        _bodypart_tail_len(toks)
+        or is_recolor_code(toks[-1])
+    ):
+        if is_recolor_code(toks[-1]) and not _bodypart_tail_len(toks):
+            toks.pop()
+        else:
+            del toks[-_bodypart_tail_len(toks) :]
+    return "_".join(toks).lower()
+
+
+def prefixes_for_pilot_model(model_name: str, filenames: Iterable[str]) -> list[str]:
+    """Read the real skin prefix from PNGs next to a v19–v21 pilot slot model.
+
+    The model folder is pilot_<class>_<legend>_legendary_<n>. The PNGs are
+    <legend>_lgnd_vNN_<skin>_body_col and the same for every legend.
+    """
+    parsed = pilot_slot_model(model_name)
+    if not parsed:
+        return []
+    legend, kind = parsed
+    allowed = _PILOT_KIND_RARITY[kind]
+    counts: dict[str, int] = {}
+    for name in filenames:
+        pref = texture_set_prefix(name)
+        if not pref:
+            continue
+        ident = parse_skin_identity(pref)
+        if ident.legend != legend:
+            continue
+        if ident.rarity and ident.rarity not in allowed:
+            continue
+        if not ident.rarity and kind != "legendary":
+            continue
+        counts[pref] = counts.get(pref, 0) + 1
+    return [key for key, _n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+
+def prefixes_for_short_season(
+    model_name: str,
+    filenames: Iterable[str],
+    mesh_names: Iterable[str] = (),
+) -> list[str]:
+    """v19–v21 file is legend_vNN_code. PNGs are legend_lgnd_vNN_realname.
+
+    Never return a mythic/prestige set. A shared folder must follow the mesh
+    skin (arenas → thrillseeker) instead of whichever set has the most files.
+    """
+    found = _SHORT_SEASON.match(model_dir_name(model_name))
+    if not found:
+        return []
+    legend = found.group("legend").lower()
+    ver = "v" + found.group("ver")
+    short_skin = found.group("skin").lower()
+    mesh_skins: set[str] = set()
+    for name in mesh_names:
+        ident = parse_skin_identity(skin_prefix(name) or name)
+        if ident.legend != legend or ident.version != ver or not ident.skin:
+            continue
+        if ident.rarity in {"mythic", "prestige"}:
+            continue
+        if ident.skin == short_skin and not ident.rarity:
+            continue
+        mesh_skins.add(ident.skin)
+    allowed = {"lgnd", "legendary", "epic", "epicp", "rare", "icon", "iconic"}
+    counts: dict[str, int] = {}
+    for name in filenames:
+        pref = texture_set_prefix(name)
+        ident = parse_skin_identity(pref)
+        if ident.legend != legend or ident.version != ver or not ident.skin:
+            continue
+        if ident.rarity in {"mythic", "prestige"}:
+            continue
+        if ident.rarity and ident.rarity not in allowed:
+            continue
+        counts[pref] = counts.get(pref, 0) + 1
+    ranked = [key for key, _n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+    if not mesh_skins:
+        return ranked
+    preferred = [pref for pref in ranked if parse_skin_identity(pref).skin in mesh_skins]
+    return preferred or ranked
+
+
+def mesh_texture_prefixes(
+    cast_prefix: str,
+    mesh_name: str,
+    known_sets: Iterable[str] = (),
+    discovered: str = "",
+) -> list[str]:
+    """Pick a texture set for one mesh.
+
+    The mesh name wins. A sibling skin in the same folder is not used just
+    because the cast or the model folder resolved to it.
+    """
+    known = [(s or "").strip("_").lower() for s in known_sets if s]
+    known_lookup = set(known)
+    mesh_pref = skin_prefix(mesh_name)
+    mesh_id = parse_skin_identity(mesh_pref or cast_prefix or "")
+    ordered: list[str] = []
+    seen: set[str] = set()
+
+    def add(value: str) -> None:
+        value = (value or "").strip("_").lower()
+        if value and value not in seen:
+            seen.add(value)
+            ordered.append(value)
+
+    def same_skin(pref: str) -> bool:
+        ident = parse_skin_identity(pref)
+        if not mesh_id.legend or ident.legend != mesh_id.legend:
+            return False
+        if mesh_id.version and ident.version and ident.version != mesh_id.version:
+            return False
+        if mesh_id.skin and ident.skin and ident.skin != mesh_id.skin:
+            return False
+        if ident.rarity in {"mythic", "prestige"} and mesh_id.rarity not in {"mythic", "prestige"}:
+            return False
+        if mesh_id.rarity and ident.rarity and ident.rarity != mesh_id.rarity:
+            return False
+        return bool(mesh_id.skin or mesh_id.rarity or mesh_id.version)
+
+    disc = (discovered or "").strip("_").lower()
+    disc_id = parse_skin_identity(disc) if disc else None
+    short = _SHORT_SEASON.match((cast_prefix or "").strip("_").lower())
+    if (
+        disc_id
+        and disc_id.rarity not in {"mythic", "prestige"}
+        and short
+        and disc_id.legend == short.group("legend").lower()
+        and disc_id.version == "v" + short.group("ver")
+        and (
+            (mesh_id.skin and disc_id.skin == mesh_id.skin)
+            or (mesh_id.skin == short.group("skin").lower() and not mesh_id.rarity)
+        )
+    ):
+        add(disc)
+
+    specific = is_canon_legend_slug(mesh_id.legend) and bool(mesh_id.skin or mesh_id.rarity)
+    for pref in known:
+        if pref == (mesh_pref or "").lower() or same_skin(pref):
+            add(pref)
+    if mesh_pref:
+        add(mesh_pref)
+        for alt in season_prefix_aliases(mesh_pref, [mesh_name]):
+            if alt.lower() in known_lookup or alt.lower() == mesh_pref.lower():
+                add(alt)
+    if discovered and not (specific and not same_skin(discovered)):
+        add(discovered)
+    for alt in season_prefix_aliases(cast_prefix, [mesh_name]):
+        add(alt)
+    add(cast_prefix)
+    return ordered
+
+
+def candidate_matches_mesh(mesh_name: str, cand: str) -> bool:
+    """A prestige set must not shade a legendary mesh that only shares the legend."""
+    mesh_id = parse_skin_identity(skin_prefix(mesh_name) or mesh_name)
+    cand_id = parse_skin_identity(cand)
+    if mesh_id.legend and cand_id.legend and mesh_id.legend != cand_id.legend:
+        return False
+    if mesh_id.version and cand_id.version and mesh_id.version != cand_id.version:
+        return False
+    if mesh_id.skin and cand_id.skin and mesh_id.skin != cand_id.skin:
+        return False
+    mesh_mythic = mesh_id.rarity in {"mythic", "prestige"}
+    cand_mythic = cand_id.rarity in {"mythic", "prestige"}
+    if cand_mythic and not mesh_mythic:
+        return False
+    if mesh_mythic and cand_id.rarity and not cand_mythic:
+        return False
+    return True
+
+
+def mesh_requests_head(mesh_name: str) -> bool:
+    part = (mesh_slot_prefix(mesh_name) or "").lower()
+    if part == "head":
+        return True
+    toks = [t.lower() for t in tokenize(strip_cast_lod_group(mesh_name))]
+    return bool(toks) and toks[-1] in {"head", "helmet", "face"}
 
 
 def model_dir_name(name: str) -> str:
@@ -628,6 +960,120 @@ def is_canon_legend_slug(slug: str) -> bool:
     if compact in CANON_LEGENDS:
         return True
     return compact in {c.replace(" ", "") for c in CANON_LEGENDS}
+
+
+_CLASS_SKIP = frozenset({"pilot", "class", *WEIGHT_CLASSES})
+_KIND_RARITY_LABEL = {
+    "legendary": "Legendary",
+    "lgnd": "Legendary",
+    "epic": "Epic",
+    "epicp": "Epic",
+    "rare": "Rare",
+    "mythic": "Prestige",
+    "prestige": "Prestige",
+}
+
+
+def strip_class_prefix(name: str) -> str:
+    """Drop a leading pilot / light / medium / heavy run. The legend is what follows."""
+    toks = tokenize(strip_model_suffix(name))
+    while toks and toks[0].lower() in _CLASS_SKIP:
+        toks.pop(0)
+    return "_".join(toks)
+
+
+def character_bucket(name: str) -> tuple[str, str, str]:
+    """Legend, rarity and label for the Characters list.
+
+    ``pilot_heavy_pathfinder_legendary_01`` is Pathfinder / Legendary, not
+    Pilot / Other. Same for light and medium, and for names that skip ``pilot``.
+    """
+    cleaned = strip_class_prefix(name) or strip_model_suffix(name)
+    ident = parse_skin_identity(cleaned)
+    legend_key = ident.legend
+    if not is_canon_legend_slug(legend_key):
+        toks = tokenize(cleaned)
+        for i, tok in enumerate(toks):
+            if is_canon_legend_slug(tok):
+                legend_key = tok.lower()
+                ident = parse_skin_identity("_".join(toks[i:]))
+                break
+    label = LEGEND_SLUGS.get((legend_key or "").lower(), "") or "Other"
+    rarity = ident.rarity_label if ident.rarity_label != "Other" else ""
+    slot = pilot_slot_model(name)
+    if slot and is_canon_legend_slug(slot[0]):
+        label = LEGEND_SLUGS.get(slot[0], label) or label
+        if not rarity:
+            rarity = _KIND_RARITY_LABEL.get(slot[1], "")
+    if not rarity:
+        rarity = "Original" if ident.skin in {"", "base"} and label != "Other" else "Other"
+    display = ident.display or ""
+    if (
+        not display
+        or display.lower() in _CLASS_SKIP
+        or display.isdigit()
+        or display.lower() == (legend_key or "").lower()
+    ):
+        if rarity in {"Original", "Other"}:
+            display = label
+        else:
+            idx = re.search(r"_(\d+)$", model_dir_name(name))
+            display = f"{rarity} {idx.group(1)}" if idx else rarity
+    return label, rarity, display
+
+
+def suggest_rsx_model_dir(seeds: Iterable[str | Path]) -> str:
+    """RSX always exports under exported_files/mdl, wherever the dump itself sits.
+
+    Prefer ``mdl`` when both the class tree and the techart legend tree exist,
+    so Find Skins sees both. Otherwise return the one that is there.
+    """
+    found_class: Path | None = None
+    found_legends: Path | None = None
+    found_mdl: Path | None = None
+
+    def consider(path: Path) -> None:
+        nonlocal found_class, found_legends, found_mdl
+        if path.suffix:
+            path = path.parent
+        cur = path
+        for _ in range(14):
+            if not str(cur) or cur == cur.parent:
+                break
+            mdl = cur / "exported_files" / "mdl"
+            class_dir = mdl / "humans" / "class"
+            legends = mdl / "techart" / "mshop" / "characters" / "legends"
+            if class_dir.is_dir():
+                found_class = class_dir
+            if legends.is_dir():
+                found_legends = legends
+            if mdl.is_dir() and (class_dir.is_dir() or legends.is_dir()):
+                found_mdl = mdl
+            parts = [part.lower() for part in cur.parts]
+            if "exported_files" in parts:
+                root = Path(*cur.parts[: parts.index("exported_files") + 1])
+                mdl = root / "mdl"
+                class_dir = mdl / "humans" / "class"
+                legends = mdl / "techart" / "mshop" / "characters" / "legends"
+                if class_dir.is_dir():
+                    found_class = class_dir
+                if legends.is_dir():
+                    found_legends = legends
+                if mdl.is_dir():
+                    found_mdl = mdl
+            cur = cur.parent
+
+    for seed in seeds:
+        if not seed:
+            continue
+        consider(Path(seed))
+    if found_class and found_legends and found_mdl is not None:
+        return str(found_mdl)
+    if found_class is not None:
+        return str(found_class)
+    if found_legends is not None:
+        return str(found_legends)
+    return ""
 
 
 def is_legend_character_name(name: str) -> bool:
@@ -710,6 +1156,34 @@ def normalize_vw_part(part: str) -> tuple[str | None, str]:
     kind = match.group(2).lower()
     key = (raw[: match.start()] + (match.group(3) or "")).strip("_").lower()
     return kind, key
+
+
+_PILOT_CLASS = re.compile(
+    r"^pilot_(?:light|medium|heavy)_(?P<legend>[a-z0-9]+)$",
+    re.IGNORECASE,
+)
+
+
+def base_prefix_from_pilot(name: str) -> str:
+    """Legion base rigs are named pilot_<class>_<legend>. Their PNGs are <legend>_base_*."""
+    stem = model_dir_name(name)
+    kind, key = normalize_vw_part(stem)
+    found = _PILOT_CLASS.match(key if kind else stem.lower())
+    if not found:
+        return ""
+    legend = found.group("legend").lower()
+    if not is_canon_legend_slug(legend):
+        return ""
+    return f"{legend}_base"
+
+
+def texture_prefix_from_source(raw: str, object_mode: bool = False) -> str:
+    pilot = base_prefix_from_pilot(raw)
+    if pilot:
+        return pilot
+    if object_mode or not is_legend_character_name(raw):
+        return model_dir_name(raw) or skin_prefix(raw)
+    return skin_prefix(raw)
 
 
 def lod0_view_world(name: str) -> tuple[str | None, str]:
@@ -861,10 +1335,12 @@ def prefixes_compatible(filename: str, prefix: str) -> bool:
         return False
     if file_id.version and pref_id.version and file_id.version != pref_id.version:
         return False
+    file_mythic = file_id.rarity in {"mythic", "prestige"}
+    pref_mythic = pref_id.rarity in {"mythic", "prestige"}
+    if file_mythic != pref_mythic:
+        return False
     if file_id.skin and pref_id.skin and file_id.skin != pref_id.skin:
         if pref_id.skin in file_id.skin or file_id.skin in pref_id.skin:
-            return True
-        if file_id.legend == pref_id.legend and file_id.version and file_id.version == pref_id.version:
             return True
         return False
     return True
@@ -1841,10 +2317,17 @@ def recolor_search_roots(folder: str | Path, prefix: str) -> list[Path]:
             add(legend_root / "base")
         else:
             dirs = rarity_search_dirs(ident) or [""]
+            mythic = ident.rarity in {"mythic", "prestige"} or bool(ident.level)
             for rarity in dirs:
+                if rarity in {"mythic", "prestige"} and not mythic:
+                    continue
                 branch = legend_root / rarity if rarity else legend_root
-                for cand in prestige_level_paths(branch, ident):
-                    add(cand)
+                if mythic:
+                    for cand in prestige_level_paths(branch, ident):
+                        add(cand)
+                else:
+                    for slug in skin_folder_names(ident):
+                        add(branch / slug)
                 if rarity:
                     add(branch)
     return found
@@ -1957,28 +2440,99 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
     known = sorted({bp.lower() for bp in bodyparts if bp}, key=len, reverse=True)
     known_set = set(known)
 
+    def wants_for(token: str) -> set[str]:
+        token = (token or "").lower()
+        found = {token} if token else set()
+        alias = _PART_ALIAS.get(token, "")
+        if alias:
+            found.add(alias)
+        return found
+
+    def best_known(wants: set[str], toks: list[str]) -> str | None:
+        hits = []
+        for bp in known:
+            last = bp.split("_")[-1]
+            if last in wants or _PART_ALIAS.get(last, "") in wants:
+                hits.append(bp)
+        if not hits:
+            return None
+        skin = set(toks)
+        def score(bp: str) -> tuple:
+            bits = bp.split("_")[:-1]
+            overlap = sum(1 for bit in bits if bit in skin)
+            return (-overlap, 0 if bp in wants else 1, len(bp))
+        return sorted(hits, key=score)[0]
+
     def suffix_hit(toks: list[str]) -> str | None:
         for bp in known:
             bp_toks = bp.split("_")
             n = len(bp_toks)
-            if n <= len(toks) and toks[-n:] == bp_toks:
+            if n and n <= len(toks) and toks[-n:] == bp_toks:
                 return bp
+        if not toks:
+            return None
+        if len(toks) >= 2 and tuple(toks[-2:]) in {("body", "upper"), ("body", "lower")}:
+            compound = "_".join(toks[-2:])
+            if compound in known_set:
+                return compound
+            body = best_known({"body"}, toks)
+            if body:
+                return body
+        return best_known(wants_for(toks[-1]), toks)
+
+    def bare_body(raw: str, toks: list[str]) -> str | None:
+        """body_0_<skin> with no part suffix is the body. head_0_<skin> is the head.
+
+        Pathfinder rigs add extra meshes on the same body_N_ prefix, so the
+        group name is only trusted when the tail is not already a part.
+        """
+        part = (mesh_slot_prefix(raw) or "").lower()
+        if not part:
+            return None
+        tail = toks[-1] if toks else ""
+        tail_is_part = bool(tail) and (
+            tail in MESH_PARTS
+            or tail in _EXTRA_PARTS
+            or tail in _PART_ALIAS
+            or _bodypart_tail_len(toks) > 0
+        )
+        if part == "body" and tail_is_part:
+            return None
+        if part == "body" and not tail_is_part:
+            return best_known({"body"}, toks) or ("body" if "body" in known_set else None)
+        resolved = best_known(wants_for(part), toks)
+        if resolved:
+            return resolved
+        if part in {"head", "gear", "kit", "hair"} and part in known_set:
+            return part
+        alias = _PART_ALIAS.get(part, "")
+        if alias and alias in known_set:
+            return alias
         return None
 
+    found: list[tuple[str, str]] = []
     for raw in haystacks:
         if not raw:
             continue
         cleaned = strip_cast_lod_group(raw)
         toks = [t.lower() for t in tokenize(cleaned)]
-        if toks:
-            hit = suffix_hit(toks)
-            if hit:
-                return hit
-        part = mesh_slot_prefix(raw)
-        if part and part != "body":
-            if part in known_set or part in {"kit", "glass", "gear", "hair", "head"}:
-                return part
-    return None
+        hit = suffix_hit(toks) if toks else None
+        if hit is None:
+            hit = bare_body(raw, toks)
+        if hit:
+            found.append((raw, hit))
+    if not found:
+        return None
+
+    def rank(raw: str, hit: str) -> tuple:
+        toks = [t.lower() for t in tokenize(strip_cast_lod_group(raw))]
+        tail = toks[-1] if toks else ""
+        last = hit.split("_")[-1]
+        tail_ok = tail == last or _PART_ALIAS.get(tail, "") == last or tail == hit
+        return (0 if tail_ok else 1, 0 if hit == last else 1, len(hit))
+
+    found.sort(key=lambda item: rank(*item))
+    return found[0][1]
 
 
 GLASS_FAMILY = frozenset(
@@ -2094,8 +2648,9 @@ def related_bodyparts(bodypart: str, known: Iterable[str]) -> list[str]:
         related = [k for k in known_list if is_transparent_family(k)]
         return related or [bp]
     stem = bp.split("_")[-1]
-    if stem in {"kit", "gear"}:
-        related = [k for k in known_list if k == stem or k.endswith("_" + stem)]
+    group = _PART_GROUPS.get(stem) or _PART_GROUPS.get(bp)
+    if group:
+        related = [k for k in known_list if k in group or k.split("_")[-1] in group]
         return related or [bp]
     return [bp]
 

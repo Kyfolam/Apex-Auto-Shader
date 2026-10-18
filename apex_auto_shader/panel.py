@@ -7,7 +7,7 @@ from bpy.props import BoolProperty, CollectionProperty, EnumProperty, IntPropert
 
 from . import anim, extras, pack, utils
 from .config import ADDON_VERSION_STR
-from .naming import RARITY_ORDER, legend_display_name, parse_skin_identity
+from .naming import RARITY_ORDER, character_bucket, legend_display_name, parse_skin_identity, suggest_rsx_model_dir
 from .node_adder import (
     apex_shader_get,
     apex_shader_set,
@@ -179,6 +179,9 @@ def _update_find(self, context):
         present = _prefix_present(prefix, name, lg, self)
         rows.append((lg, name, prefix, _row_detail(prefix), present))
     browse = not query
+    only_present = bool(getattr(self, "apex_find_only_present", True))
+    if only_present:
+        rows = [row for row in rows if row[4]]
     if browse:
         rows.sort(key=lambda item: (item[0].lower(), item[1].lower()))
     group = browse and len({row[0].lower() for row in rows}) > 1
@@ -560,15 +563,16 @@ class APEX_PT_characters(_ApexSubpanel, bpy.types.Panel):
             recolor = arm.get(extras.CHAR_RECOLOR) or ""
             source = with_recolor_prefix(str(tag), str(recolor)) if recolor else str(tag)
             ident = parse_skin_identity(source)
+            legend, rarity, display = character_bucket(source)
             hit = pack.match_source(source) or pack.match_source(str(tag))
-            if hit:
+            if hit and legend != "Other" and legend_display_name(hit[0]).lower() == legend.lower():
+                display = hit[1] or display
+            elif hit and legend == "Other":
                 legend, display = hit[0], hit[1]
-            else:
-                legend = legend_display_name(ident.legend) if ident.legend else "Other"
-                display = ident.display
+                rarity = ident.rarity_label
             if recolor and hit and not str(recolor).lower() in source.lower():
                 display = f"{display} {recolor}"
-            grouped.setdefault(legend, {}).setdefault(ident.rarity_label, []).append((display, arm))
+            grouped.setdefault(legend, {}).setdefault(rarity, []).append((display, arm))
         multi = len(grouped) > 1
         for legend in sorted(grouped, key=lambda n: n.lower()):
             legend_key = f"legend:{legend}"
@@ -930,6 +934,22 @@ class APEX_OT_find_confirm(bpy.types.Operator):
         return APEX_OT_find_load.execute(self, context)
 
 
+def _suggest_model_dir(scene) -> None:
+    from .log import existing_dir
+
+    if existing_dir(getattr(scene, "apex_model_dir", "") or "") is not None:
+        return
+    seeds = [
+        getattr(scene, "apex_cast_path", "") or "",
+        getattr(scene, "apex_texture_dir", "") or "",
+        getattr(scene, "apex_anim_dir", "") or "",
+        getattr(bpy.data, "filepath", "") or "",
+    ]
+    hit = suggest_rsx_model_dir(seeds)
+    if hit:
+        scene.apex_model_dir = hit
+
+
 class APEX_OT_find_skins(bpy.types.Operator):
     bl_idname = "apexaddon.find_skins"
     bl_label = "Find Skins"
@@ -937,6 +957,7 @@ class APEX_OT_find_skins(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def invoke(self, context, event):
+        _suggest_model_dir(context.scene)
         _refresh_find(context.scene, context)
         return context.window_manager.invoke_props_dialog(self, width=620)
 
@@ -944,6 +965,8 @@ class APEX_OT_find_skins(bpy.types.Operator):
         scene = context.scene
         layout = self.layout
         layout.prop(scene, "apex_model_dir", text="Model folder")
+        row = layout.row(align=True)
+        row.prop(scene, "apex_find_only_present", text="Skins found")
         layout.prop(scene, "apex_find_query", text="", icon="VIEWZOOM")
         sugs = pack.suggest_names(scene.apex_find_query, scene.apex_find_legend)
         if sugs:
@@ -971,7 +994,7 @@ class APEX_OT_find_skins(bpy.types.Operator):
             if scene.apex_find_query or (scene.apex_find_legend and scene.apex_find_legend.upper() != "ALL"):
                 layout.label(text="No matches — pick a suggestion or clear the search")
             else:
-                layout.label(text="No skins for that folder")
+                layout.label(text="No skins from this folder" if scene.apex_find_only_present else "No skins for that folder")
             return
         layout.template_list(
             "APEX_UL_find",
@@ -1193,6 +1216,12 @@ def register_props():
         default="",
         update=_update_find,
     )
+    bpy.types.Scene.apex_find_only_present = BoolProperty(
+        name="Skins found",
+        description="Show only skins that were found in the model folder. Turn off to list every skin",
+        default=True,
+        update=_update_find,
+    )
     bpy.types.Scene.apex_find_legend = EnumProperty(
         name="Legend",
         description="Limit results to one legend",
@@ -1233,6 +1262,7 @@ def unregister_props():
         "apex_last_status",
         "apex_model_dir",
         "apex_find_query",
+        "apex_find_only_present",
         "apex_find_legend",
         "apex_find_items",
         "apex_find_index",
