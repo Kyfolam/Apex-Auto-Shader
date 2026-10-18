@@ -9,6 +9,7 @@ SHADER_ITEMS = (
     ("plus_se", "se Apex Shader Plus", "se_Apex Shader Plus (default)"),
     ("plus", "Apex Shader+", "ovlack Apex Shader+ (Plus 1)"),
     ("cores", "Cores Apex Shader", "CoReArtZz Cores shader"),
+    ("cinematic", "Cinematic Shader", "Illustrated hard light, ink edge, cool rim"),
     ("object", "Object Shader", "Props / non-legend models — textures from the model folder"),
 )
 SHADER_KEYS = {item[0] for item in SHADER_ITEMS}
@@ -65,6 +66,16 @@ def auto_load_anims() -> bool:
 def default_shader() -> str:
     key = str(pref("default_shader", "plus_se") or "plus_se")
     return key if key in SHADER_KEYS else "plus_se"
+
+
+def _on_default_shader_update(self, context):
+    """Scenes that were never picked in the UI follow this preference."""
+    try:
+        from .node_adder import sync_unset_scenes
+
+        sync_unset_scenes()
+    except Exception:
+        pass
 
 
 def anim_loop_default() -> bool:
@@ -134,8 +145,8 @@ def optic_enhancer_available() -> bool:
 
 class APEX_OT_uninstall(bpy.types.Operator):
     bl_idname = "apexaddon.uninstall"
-    bl_label = "Uninstall"
-    bl_description = "Disable and remove Apex Auto Shader"
+    bl_label = "Deinstallieren"
+    bl_description = "Schaltet Apex Auto Shader aus und entfernt das Addon"
     bl_options = {"INTERNAL"}
 
     def invoke(self, context, event):
@@ -175,6 +186,7 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
         name="Default Shader",
         items=SHADER_ITEMS,
         default="plus_se",
+        update=_on_default_shader_update,
     )
     model_scale: FloatProperty(
         name="Model Scale",
@@ -227,7 +239,9 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
         layout = self.layout
         row = layout.row()
         row.label(text="Auto-shade Apex Legends Models")
-        row.operator(APEX_OT_uninstall.bl_idname, text="Uninstall", icon="TRASH")
+        row = layout.row(align=True)
+        row.operator("apexaddon.install_zip", text="ZIP installieren", icon="IMPORT")
+        row.operator(APEX_OT_uninstall.bl_idname, text="Deinstallieren", icon="TRASH")
         layout.prop(self, "default_shader")
         layout.prop(self, "model_scale")
         layout.prop(self, "auto_shade")

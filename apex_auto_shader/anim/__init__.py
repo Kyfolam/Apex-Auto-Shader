@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import bpy
+from mathutils import Vector
 from bpy.props import BoolProperty, CollectionProperty, StringProperty
 
 from . import apply, character, clips, const, studio
@@ -48,7 +49,6 @@ class APEX_OT_import_cast(bpy.types.Operator):
             else:
                 self.report({"ERROR"}, f"No LOD0 .cast models in {folder}")
             return {"CANCELLED"}
-        adder = current_node_adder(context.scene)
         last = None
         last_path = None
         first = None
@@ -67,7 +67,10 @@ class APEX_OT_import_cast(bpy.types.Operator):
             if auto_shade():
                 try:
                     reports = utils.shade_selected(
-                        [arm], adder, folder=folder, finish=len(paths) == 1 and imported == 0
+                        [arm],
+                        current_node_adder(context.scene),
+                        folder=folder,
+                        finish=len(paths) == 1 and imported == 0,
                     )
                     shaded += sum(1 for r in reports if r.get("wired"))
                 except Exception as exc:
@@ -256,39 +259,172 @@ class APEX_UL_anims(bpy.types.UIList):
         return flags, []
 
 
+class APEX_OT_toggle_frame(bpy.types.Operator):
+    bl_idname = "apexaddon.toggle_frame"
+    bl_label = "Aspect"
+    bl_description = "Switch the render between 9:16 and 16:9"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        from .studio import apply_frame_orientation
+        scene = context.scene
+        scene.apex_cam_portrait = not bool(getattr(scene, "apex_cam_portrait", True))
+        apply_frame_orientation(scene)
+        label = "9:16" if scene.apex_cam_portrait else "16:9"
+        self.report({"INFO"}, label)
+        return {"FINISHED"}
+
+
 class APEX_OT_add_camera(bpy.types.Operator):
     bl_idname = "apexaddon.add_camera"
     bl_label = "Add Camera"
-    bl_description = "Add a studio camera and lights at a starting pose (not locked — move it freely)"
+    bl_description = "Add studio camera and lights on the current 3D viewport look"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         obj = resolve_character(context)
-        cam = add_camera_rig(context, obj)
-        self.report({"INFO"}, f"Added {cam.name} and studio lights")
+        cam = add_camera_rig(context, obj, snap_view=True)
+        self.report({"INFO"}, f"Added {cam.name} on the current viewport")
         return {"FINISHED"}
 
 
 class APEX_OT_set_camera_pov(bpy.types.Operator):
     bl_idname = "apexaddon.set_camera_pov"
-    bl_label = "Set Camera POV"
-    bl_description = "Lock the camera to jx_c_camera, aiming at jx_c_pov (portrait 1080×1920)"
+    bl_label = "Lock Model"
+    bl_description = "Lock the studio camera on the selected mesh. Click again to unlock"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        try:
-            apply_camera_pov(context, create=True)
-        except Exception as exc:
-            self.report({"ERROR"}, str(exc))
+        from .studio import focus_object, set_camera_lock
+        scene = context.scene
+        locked = bool(getattr(scene, "apex_cam_lock", False))
+        if locked:
+            set_camera_lock(context, False)
+            self.report({"INFO"}, "Camera unlocked")
+            return {"FINISHED"}
+        obj = focus_object(context)
+        if obj is None:
+            self.report({"ERROR"}, "Select a mesh on the model, or pick one in the list")
             return {"CANCELLED"}
-        redraw_view3d(context)
-        fov = detect_cast_camera_fov(resolve_character(context))
-        if fov:
-            self.report({"INFO"}, f"Camera POV locked, portrait (FOV {fov:.0f}° from CAST)")
-        else:
-            self.report({"INFO"}, "Camera POV locked to jx_c_camera → jx_c_pov (portrait)")
+        set_camera_lock(context, True, obj)
+        self.report({"INFO"}, f"Camera locked on {obj.name}")
         return {"FINISHED"}
 
+
+
+class APEX_OT_nudge_camera(bpy.types.Operator):
+    bl_idname = "apexaddon.nudge_camera"
+    bl_label = "Nudge Studio Camera"
+    bl_description = "Move or rotate the studio camera while looking through it"
+    bl_options = {"REGISTER", "UNDO"}
+
+    move: bpy.props.EnumProperty(
+        items=(
+            ("LEFT", "Left", ""),
+            ("RIGHT", "Right", ""),
+            ("UP", "Up", ""),
+            ("DOWN", "Down", ""),
+        ),
+        default="UP",
+    )
+    rotate: bpy.props.BoolProperty(default=False)
+    vertical: bpy.props.BoolProperty(default=False)
+
+    @classmethod
+    def poll(cls, context):
+        area = getattr(context, "area", None)
+        space = getattr(area, "spaces", None)
+        space = space.active if space is not None else None
+        r3d = getattr(space, "region_3d", None)
+        cam = getattr(getattr(context, "scene", None), "camera", None)
+        return (
+            r3d is not None
+            and getattr(r3d, "view_perspective", "") == "CAMERA"
+            and cam is not None
+            and getattr(cam, "type", "") == "CAMERA"
+        )
+
+    def execute(self, context):
+        cam = context.scene.camera
+        step = 0.08
+        if self.rotate:
+            angle = 0.04
+            cam.rotation_mode = "XYZ"
+            if self.move == "LEFT":
+                cam.rotation_euler.rotate_axis("Y", angle)
+            elif self.move == "RIGHT":
+                cam.rotation_euler.rotate_axis("Y", -angle)
+            elif self.move == "UP":
+                cam.rotation_euler.rotate_axis("X", angle)
+            else:
+                cam.rotation_euler.rotate_axis("X", -angle)
+            return {"FINISHED"}
+        if self.vertical:
+            delta = Vector((0.0, step if self.move == "UP" else -step, 0.0))
+        elif self.move == "LEFT":
+            delta = Vector((-step, 0.0, 0.0))
+        elif self.move == "RIGHT":
+            delta = Vector((step, 0.0, 0.0))
+        elif self.move == "UP":
+            delta = Vector((0.0, 0.0, -step))
+        else:
+            delta = Vector((0.0, 0.0, step))
+        cam.location += cam.matrix_world.to_3x3() @ delta
+        return {"FINISHED"}
+
+
+_camera_keymaps = []
+
+
+def register_camera_keys():
+    wm = bpy.context.window_manager
+    kc = getattr(wm, "keyconfigs", None)
+    addon = getattr(kc, "addon", None) if kc is not None else None
+    if addon is None:
+        return
+    km = addon.keymaps.new(name="3D View", space_type="VIEW_3D")
+    # Alt+arrows move (plain arrows are eaten while an animation plays).
+    # Ctrl+Alt+arrows rotate. Shift+Alt+up/down pedestal.
+    binds = (
+        ("LEFT", False, False, True),
+        ("RIGHT", False, False, True),
+        ("UP", False, False, True),
+        ("DOWN", False, False, True),
+        ("LEFT", True, False, True),
+        ("RIGHT", True, False, True),
+        ("UP", True, False, True),
+        ("DOWN", True, False, True),
+        ("UP", False, True, True),
+        ("DOWN", False, True, True),
+    )
+    key_type = {
+        "LEFT": "LEFT_ARROW",
+        "RIGHT": "RIGHT_ARROW",
+        "UP": "UP_ARROW",
+        "DOWN": "DOWN_ARROW",
+    }
+    for direction, ctrl, shift, alt in binds:
+        kmi = km.keymap_items.new(
+            APEX_OT_nudge_camera.bl_idname,
+            key_type[direction],
+            "PRESS",
+            ctrl=ctrl,
+            shift=shift,
+            alt=alt,
+        )
+        kmi.properties.move = direction
+        kmi.properties.rotate = ctrl
+        kmi.properties.vertical = shift
+        _camera_keymaps.append((km, kmi))
+
+
+def unregister_camera_keys():
+    for km, kmi in list(_camera_keymaps):
+        try:
+            km.keymap_items.remove(kmi)
+        except Exception:
+            pass
+    _camera_keymaps.clear()
 
 class APEX_OT_pick_anim_folder(bpy.types.Operator):
     bl_idname = "apexaddon.pick_anim_folder"
@@ -749,7 +885,9 @@ anim_classes = (
     APEX_OT_toggle_anim_group,
     APEX_UL_anims,
     APEX_OT_add_camera,
+    APEX_OT_toggle_frame,
     APEX_OT_set_camera_pov,
+    APEX_OT_nudge_camera,
     APEX_OT_camera_preset,
     APEX_OT_focus_character,
     APEX_OT_pick_anim_folder,

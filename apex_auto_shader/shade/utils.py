@@ -739,7 +739,7 @@ def shade_mesh(
         hint = f" Expected a folder named '{expected}'." if expected else ""
         raise RuntimeError(
             f"No texture folder for '{mesh.name}'.{hint} "
-            "Use Choose Texture Folder, or keep PNGs next to the CAST (filename without _LOD0)."
+            "Import the CAST or use Find Skin so the texture folder is stored on the character."
         )
     if not prefix:
         raise RuntimeError(
@@ -857,7 +857,7 @@ def shade_armature(
     prefix = prefix or detect_prefix(armature, scene)
     folder = folder or detect_texture_folder(armature, scene)
     if folder is None:
-        raise RuntimeError("No texture folder. Set it in the Apex Shader panel.")
+        raise RuntimeError("No texture folder stored on this character. Import the CAST or use Find Skin.")
     if not prefix:
         hint = ""
         if folder is not None:
@@ -1033,7 +1033,7 @@ def recolorSelected(
     scene = bpy.context.scene
     folder = folder or detect_texture_folder(arm, scene)
     if folder is None:
-        raise RuntimeError("No texture folder. Set it in the Apex Shader panel.")
+        raise RuntimeError("No texture folder stored on this character. Import the CAST or use Find Skin.")
     prefix = detect_prefix(arm, scene)
     if not prefix:
         raise RuntimeError("Could not read a CAST prefix from the model name.")

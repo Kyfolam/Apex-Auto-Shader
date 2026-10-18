@@ -207,7 +207,7 @@ def find_legend_anim_dir(start: str | Path, legend: str) -> Path | None:
         if "pilot" in name:
             score += 20
         try:
-            n = sum(1 for p in dirpath.glob("*.cast"))
+            n = sum(1 for p in dirpath.rglob("*.cast") if p.is_file())
         except OSError:
             n = 0
         if n == 0:
@@ -217,6 +217,43 @@ def find_legend_anim_dir(start: str | Path, legend: str) -> Path | None:
             best_score = score
             best = dirpath
     return best
+
+
+def find_legend_anim_dirs(start: str | Path, legend: str) -> list[Path]:
+    """Every animseq class folder for this legend, not only the single best match."""
+    root = find_animseq_class_root(start)
+    if root is None:
+        return []
+    needles = [n.lower() for n in legend_folder_needles(legend)]
+    if not needles:
+        one = find_legend_anim_dir(start, legend)
+        return [one] if one is not None else []
+    found: list[Path] = []
+    for dirpath in root.rglob("*"):
+        if not dirpath.is_dir():
+            continue
+        name = dirpath.name.lower()
+        if "victim" in name:
+            continue
+        if not any(
+            name == n or name.endswith(f"_{n}") or name.startswith(f"{n}_") or f"_{n}_" in name
+            for n in needles
+        ):
+            continue
+        try:
+            has_cast = next((p for p in dirpath.rglob("*.cast") if p.is_file()), None) is not None
+        except OSError:
+            has_cast = False
+        if not has_cast:
+            continue
+        if any(dirpath == prev or dirpath.is_relative_to(prev) for prev in found):
+            continue
+        found = [prev for prev in found if not prev.is_relative_to(dirpath)]
+        found.append(dirpath)
+    if not found:
+        one = find_legend_anim_dir(start, legend)
+        return [one] if one is not None else []
+    return found
 
 
 def find_legend_model_cast(start: str | Path, legend: str) -> Path | None:
@@ -318,7 +355,7 @@ def pose_subtype(name: str, legend: str = "") -> str:
 def skip_bannerpose(name: str) -> bool:
     stem = Path(str(name)).stem.lower()
     # Lighting helper clips, not the light weight-class prefix on legends.
-    return bool(re.search(r"(gladcard|glad_card|banner|pose)_light(_|$)", stem) or stem.endswith("_light"))
+    return bool(re.search(r"(gladcard|glad_card|bannerpose|banner_pose)_light(_|$)", stem))
 
 
 def is_capturemode_clip(name: str) -> bool:

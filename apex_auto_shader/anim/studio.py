@@ -71,6 +71,24 @@ _POV_RES_PCT = "apex_pov_prev_res_pct"
 _POV_RES_SAVED = "apex_pov_res_saved"
 
 
+def apply_frame_orientation(scene) -> None:
+    """Portrait or landscape from the camera panel toggle. Banner POV still forces portrait."""
+    if scene is None:
+        return
+    portrait = bool(getattr(scene, "apex_cam_portrait", True))
+    render = scene.render
+    try:
+        if portrait:
+            render.resolution_x = 1080
+            render.resolution_y = 1920
+        else:
+            render.resolution_x = 1920
+            render.resolution_y = 1080
+        render.resolution_percentage = 100
+    except Exception:
+        pass
+
+
 def apply_portrait_render(scene, enabled: bool = True) -> None:
     """Banner holocards are 9:16. Studio presets restore the previous size."""
     if scene is None:
@@ -333,42 +351,141 @@ def restore_studio_camera(context) -> None:
 
 
 def _character_metrics(obj: bpy.types.Object | None) -> tuple[Vector, float, float]:
-    origin, height, radius, _center = _character_bounds(obj)
+    origin, height, radius, _center, _forward = _visual_frame(obj)
     return origin, height, radius
 
 
+_FACE_BONES = (
+    "def_c_hips",
+    "def_c_pelvis",
+    "def_c_spineA",
+    "def_c_spine_01",
+    "jx_c_start",
+)
+
+
+def _refresh_pose() -> None:
+    try:
+        bpy.context.view_layer.update()
+    except Exception:
+        pass
+    try:
+        bpy.context.view_layer.depsgraph.update()
+    except Exception:
+        pass
+
+
+def _evaluated_mesh(obj):
+    try:
+        return obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    except Exception:
+        return obj
+
+
+def _flatten(vec: Vector, up: Vector) -> Vector:
+    flat = vec - up * vec.dot(up)
+    if flat.length_squared < 1e-8:
+        return Vector((0.0, 0.0, 0.0))
+    return flat.normalized()
+
+
+def _character_facing(arm) -> tuple[Vector, Vector]:
+    """World up stays Y. Forward follows the posed hips, else the moved armature."""
+    up = _layout_up()
+    forward = _layout_forward()
+    if arm is None:
+        return up, forward
+    bases = []
+    bone = _pose_bone(arm, _FACE_BONES)
+    if bone is not None:
+        try:
+            bases.append((arm.matrix_world @ bone.matrix).to_3x3())
+        except Exception:
+            pass
+    try:
+        bases.append(arm.matrix_world.to_3x3())
+    except Exception:
+        pass
+    for basis in bases:
+        for axis in (Vector((0.0, 0.0, 1.0)), Vector((1.0, 0.0, 0.0)), Vector((0.0, 0.0, -1.0))):
+            flat = _flatten(basis @ axis, up)
+            if flat.length_squared > 0.5:
+                return up, flat
+    return up, forward
+
+
+def _align_staging(empty, origin: Vector, up: Vector, forward: Vector) -> None:
+    y_axis = up.normalized()
+    z_axis = _flatten(forward, y_axis)
+    if z_axis.length_squared < 0.5:
+        z_axis = _layout_forward()
+    x_axis = y_axis.cross(z_axis)
+    if x_axis.length_squared < 1e-8:
+        x_axis = Vector((1.0, 0.0, 0.0))
+    x_axis.normalize()
+    z_axis = x_axis.cross(y_axis).normalized()
+    empty.location = origin
+    empty.rotation_mode = "QUATERNION"
+    empty.rotation_quaternion = Matrix(
+        (
+            (x_axis.x, y_axis.x, z_axis.x),
+            (x_axis.y, y_axis.y, z_axis.y),
+            (x_axis.z, y_axis.z, z_axis.z),
+        )
+    ).to_quaternion()
+
+
 def _character_bounds(obj: bpy.types.Object | None) -> tuple[Vector, float, float, Vector]:
+    """Feet origin + visual center from the current pose, not the rest armature origin."""
     fallback = Vector((0.0, 0.0, 0.0))
     if obj is None:
         return fallback, 1.8, 0.6, Vector((0.0, 0.9, 0.0))
+    _refresh_pose()
     target = resolve_armature(obj) or obj
+    up = _layout_up()
     coords: list[Vector] = []
     pool = [target]
     children = getattr(target, "children_recursive", None)
     pool.extend(list(children) if children is not None else list(getattr(target, "children", [])))
     for item in pool:
-        if item.type not in {"MESH", "ARMATURE"}:
+        if getattr(item, "type", "") not in {"MESH", "ARMATURE"}:
             continue
+        src = _evaluated_mesh(item) if item.type == "MESH" else item
         try:
-            for corner in item.bound_box:
-                coords.append(item.matrix_world @ Vector(corner))
+            mat = src.matrix_world.copy()
+            for corner in src.bound_box:
+                coords.append(mat @ Vector(corner))
         except Exception:
             coords.append(item.matrix_world.translation.copy())
-    origin = target.matrix_world.translation.copy()
+    arm = target if getattr(target, "type", "") == "ARMATURE" else resolve_armature(target)
+    if arm is not None and getattr(arm, "pose", None) is not None:
+        mw = arm.matrix_world
+        for bone in arm.pose.bones:
+            try:
+                coords.append(mw @ bone.head)
+                coords.append(mw @ bone.tail)
+            except Exception:
+                pass
+    object_origin = target.matrix_world.translation.copy()
     if not coords:
-        return origin, 1.8, 0.6, origin + Vector((0.0, 0.9, 0.0))
-    xs = [c.x for c in coords]
-    ys = [c.y for c in coords]
-    zs = [c.z for c in coords]
-    height = max(max(ys) - min(ys), 0.4)
-    radius = max(max(xs) - min(xs), max(zs) - min(zs), 0.3) * 0.5
-    center = Vector(
-        (
-            (min(xs) + max(xs)) * 0.5,
-            (min(ys) + max(ys)) * 0.5,
-            (min(zs) + max(zs)) * 0.5,
-        )
-    )
+        return object_origin, 1.8, 0.6, object_origin + up * 0.9
+    along = [c.dot(up) for c in coords]
+    low = min(along)
+    high = max(along)
+    height = max(high - low, 0.4)
+    center = Vector((0.0, 0.0, 0.0))
+    for c in coords:
+        center += c
+    center /= len(coords)
+    # Feet under the visual center, so a posed/moved model is framed where it stands.
+    origin = center - up * center.dot(up) + up * low
+    flat = [c - up * c.dot(up) for c in coords]
+    span = 0.3
+    if flat:
+        fx = [c.x for c in flat]
+        fz = [c.z for c in flat]
+        span = max(max(fx) - min(fx), max(fz) - min(fz), 0.3)
+    radius = span * 0.5
     return origin, height, radius, center
 
 
@@ -483,49 +600,137 @@ def _layout_forward() -> Vector:
     return Vector(LAYOUT_FORWARD)
 
 
-def _studio_cam_offset(offset: Vector, dist: float, three_quarter: bool = False) -> Vector:
-    fwd = _layout_forward() * dist
-    if three_quarter:
-        side = _layout_up().cross(_layout_forward())
-        if side.length_squared < 1e-8:
-            side = Vector((1.0, 0.0, 0.0))
-        side = side.normalized() * (dist * 0.42)
-        fwd = fwd * 0.86
-        return offset + side + fwd
-    return offset + fwd
-
-
 def _bone_world_loc(arm, bone) -> Vector:
     return (arm.matrix_world @ bone.matrix).to_translation()
 
 
 def _look_at_y_up(cam: bpy.types.Object, origin: Vector, target: Vector) -> None:
+    if cam.parent is None:
+        cam.matrix_world = _look_matrix(origin, target)
+        return
     direction = target - origin
     if direction.length_squared < 1e-12:
         return
-    z_axis = -direction.normalized()
-    world_up = _layout_up()
-    x_axis = world_up.cross(z_axis)
-    if x_axis.length_squared < 1e-12:
-        x_axis = Vector((1.0, 0.0, 0.0))
-    x_axis.normalize()
-    y_axis = z_axis.cross(x_axis)
-    rot_world = Matrix(
-        (
-            (x_axis.x, y_axis.x, z_axis.x),
-            (x_axis.y, y_axis.y, z_axis.y),
-            (x_axis.z, y_axis.z, z_axis.z),
-        )
-    ).to_quaternion()
+    world = _look_matrix(origin, target).to_quaternion()
     cam.rotation_mode = "QUATERNION"
-    if cam.parent is not None:
-        cam.rotation_quaternion = cam.parent.matrix_world.to_quaternion().inverted() @ rot_world
-    else:
-        cam.rotation_quaternion = rot_world
+    cam.rotation_quaternion = cam.parent.matrix_world.to_quaternion().inverted() @ world
 
 
-def _point_camera_at(cam: bpy.types.Object, world_target: Vector) -> None:
-    _look_at_y_up(cam, cam.matrix_world.translation.copy(), world_target)
+def _view3d_parts(context):
+    area = getattr(context, "area", None)
+    if area is not None and getattr(area, "type", "") == "VIEW_3D":
+        region = next((r for r in area.regions if getattr(r, "type", "") == "WINDOW"), None)
+        return area, region, area.spaces.active
+    screen = getattr(context, "screen", None)
+    areas = getattr(screen, "areas", []) if screen is not None else []
+    for item in areas:
+        if getattr(item, "type", "") != "VIEW_3D":
+            continue
+        region = next((r for r in item.regions if getattr(r, "type", "") == "WINDOW"), None)
+        return item, region, item.spaces.active
+    return None, None, None
+
+
+def _view3d_space(context):
+    _area, _region, space = _view3d_parts(context)
+    return space
+
+
+def _soften_studio_lights(cam, target: Vector) -> None:
+    """Key / fill / rim far enough that the model is not blown out."""
+    look = bpy.data.objects.get(STAGING_TARGET)
+    if look is not None:
+        _clear_cam_lock(look)
+        look.parent = None
+        look.location = target
+    eye = cam.matrix_world.translation.copy()
+    dist = max((eye - target).length, 2.4)
+    forward = target - eye
+    if forward.length_squared < 1e-8:
+        forward = Vector((0.0, 0.0, -1.0))
+    forward.normalize()
+    up = _layout_up()
+    right = up.cross(forward)
+    if right.length_squared < 1e-8:
+        right = Vector((1.0, 0.0, 0.0))
+    right.normalize()
+    spots = (
+        (eye - right * dist * 1.35 + up * dist * 0.9 - forward * dist * 0.15, 180.0, max(dist * 1.6, 2.4), (1.0, 0.96, 0.9)),
+        (target + up * dist * 2.0 - forward * dist * 0.15, 70.0, max(dist * 2.0, 3.0), (0.88, 0.92, 1.0)),
+        (target - forward * dist * 1.7 + right * dist * 0.85 + up * dist * 0.6, 55.0, max(dist * 1.4, 2.0), (1.0, 0.97, 0.94)),
+    )
+    for name, (loc, energy, size, color) in zip(STAGING_LIGHTS, spots):
+        light = bpy.data.objects.get(name)
+        if light is None:
+            continue
+        _clear_cam_lock(light)
+        light.parent = None
+        light.location = loc
+        data = getattr(light, "data", None)
+        if data is not None:
+            try:
+                data.energy = energy
+                data.size = size
+                data.color = color
+            except Exception:
+                pass
+        if look is not None:
+            _track_to(light, look)
+
+
+def capture_viewport_camera(context, cam: bpy.types.Object | None = None) -> bpy.types.Object:
+    """Match Blender's Align Camera to View. Copying view_matrix alone frames too tight."""
+    area, region, space = _view3d_parts(context)
+    r3d = getattr(space, "region_3d", None) if space is not None else None
+    if r3d is None or area is None or region is None:
+        raise RuntimeError("No 3D Viewport. Frame the shot in the viewport first.")
+    if cam is None or getattr(cam, "type", "") != "CAMERA":
+        cam = bpy.data.objects.get(STAGING_CAMERA)
+    if cam is None or getattr(cam, "type", "") != "CAMERA":
+        cam = add_camera_rig(context, resolve_character(context), snap_view=False)
+    _clear_cam_lock(cam)
+    _clear_cam_lock(bpy.data.objects.get(STAGING_EMPTY))
+    cam.parent = None
+    cam.parent_type = "OBJECT"
+    try:
+        cam.parent_bone = ""
+    except Exception:
+        pass
+    data = cam.data
+    try:
+        data.type = "PERSP"
+        data.lens = float(space.lens)
+        data.clip_start = float(space.clip_start)
+        data.clip_end = float(space.clip_end)
+        data.sensor_width = 36.0
+        data.sensor_fit = "AUTO"
+        data.shift_x = 0.0
+        data.shift_y = 0.0
+    except Exception:
+        pass
+    context.scene.camera = cam
+    matched = False
+    try:
+        override = context.temp_override(window=context.window, area=area, region=region, space_data=space)
+        with override:
+            result = bpy.ops.view3d.camera_to_view()
+        matched = "FINISHED" in set(result)
+    except Exception:
+        matched = False
+    if not matched:
+        quat = r3d.view_rotation.copy()
+        cam.rotation_mode = "QUATERNION"
+        cam.rotation_quaternion = quat
+        cam.location = Vector(r3d.view_location) + quat @ Vector((0.0, 0.0, float(r3d.view_distance)))
+    target = Vector(r3d.view_location)
+    _soften_studio_lights(cam, target)
+    try:
+        context.scene.apex_cam_preset = "view"
+    except Exception:
+        pass
+    context.scene.camera = cam
+    context.view_layer.update()
+    return cam
 
 
 @persistent
@@ -568,15 +773,15 @@ def _clear_cam_lock(obj: bpy.types.Object | None) -> None:
         pass
 
 
-def add_camera_rig(context, obj: bpy.types.Object | None) -> bpy.types.Object:
+def add_camera_rig(context, obj: bpy.types.Object | None, snap_view: bool = True) -> bpy.types.Object:
     origin, height, radius = _character_metrics(obj)
     _remove_staging()
     coll = _ensure_collection(context)
 
     empty = bpy.data.objects.new(STAGING_EMPTY, None)
     empty.empty_display_type = "PLAIN_AXES"
-    empty.location = origin
     coll.objects.link(empty)
+    _align_staging(empty, origin, *_character_facing(resolve_armature(obj) or obj))
 
     look = bpy.data.objects.new(STAGING_TARGET, None)
     look.empty_display_type = "SPHERE"
@@ -618,12 +823,20 @@ def add_camera_rig(context, obj: bpy.types.Object | None) -> bpy.types.Object:
         _track_to(light, look)
         return light
 
-    add_area(STAGING_LIGHTS[0], (-dist * 0.55, height * 0.85, dist * 0.35), 450.0, max(height * 0.8, 0.6))
-    add_area(STAGING_LIGHTS[1], (0.0, height * 1.55, -dist * 0.12), 280.0, max(height * 1.1, 0.8))
-    add_area(STAGING_LIGHTS[2], (dist * 0.55, height * 0.55, dist * 0.22), 160.0, max(height * 0.7, 0.5))
+    add_area(STAGING_LIGHTS[0], (-dist * 1.4, height * 1.3, dist * 0.9), 180.0, max(height * 1.6, 2.2))
+    add_area(STAGING_LIGHTS[1], (0.0, height * 2.4, -dist * 0.4), 70.0, max(height * 2.2, 2.8))
+    add_area(STAGING_LIGHTS[2], (dist * 1.3, height * 1.1, dist * 0.8), 55.0, max(height * 1.4, 1.8))
     preset = getattr(context.scene, "apex_cam_preset", "front") or "front"
     if preset == "pov":
         preset = "front"
+    if snap_view:
+        try:
+            capture_viewport_camera(context, cam)
+            apply_light_boost(context.scene)
+            sync_closeup_dof(context)
+            return cam
+        except Exception:
+            pass
     apply_camera_preset(context, preset)
     return cam
 
@@ -648,16 +861,309 @@ def _pose_bone(arm, names) -> object | None:
     return None
 
 
-def _copy_loc(obj, arm, bone=None, name=CON_FOLLOW_LOC):
-    _strip_named_constraints(obj, {name, CON_FOLLOW_LOC, CON_FOLLOW_ROT, CON_CAM_LOC, CON_CAM_TRACK, CON_STUDIO_TRACK})
-    loc = obj.constraints.new("COPY_LOCATION")
-    loc.name = name
-    loc.target = arm
-    if bone is not None:
-        loc.subtarget = bone.name
-    obj.rotation_mode = "XYZ"
-    obj.rotation_euler = (0.0, 0.0, 0.0)
-    return loc
+def focus_object(context):
+    """Viewport selection wins. The dropdown is only the fallback."""
+    active = getattr(context, "active_object", None)
+    if active is not None and getattr(active, "type", "") in {"MESH", "ARMATURE"}:
+        if not (active.name or "").startswith("Apex "):
+            return active
+    selected = [
+        obj for obj in list(getattr(context, "selected_objects", []) or [])
+        if getattr(obj, "type", "") in {"MESH", "ARMATURE"} and not (obj.name or "").startswith("Apex ")
+    ]
+    if selected:
+        return selected[0]
+    scene = getattr(context, "scene", None)
+    name = str(getattr(scene, "apex_cam_target", "") or "")
+    if name and name != "ACTIVE":
+        picked = bpy.data.objects.get(name)
+        if picked is not None:
+            return picked
+    return resolve_character(context)
+
+
+def _head_focus(obj):
+    """Current posed head. Front / 3/4 / close-up all hang off this point."""
+    up = _layout_up()
+    forward = _layout_forward()
+    if not _IN_LOCK:
+        _refresh_pose()
+    arm = None
+    if obj is not None:
+        arm = resolve_armature(obj) or (obj if getattr(obj, "type", "") == "ARMATURE" else None)
+    head = _pose_bone(arm, HEAD_BONES) if arm is not None else None
+    if head is None and arm is not None and getattr(arm, "pose", None) is not None:
+        for bone in arm.pose.bones:
+            name = (bone.name or "").lower()
+            if "head" in name and "camera" not in name and not name.startswith("jx_"):
+                head = bone
+                break
+    if head is not None and arm is not None:
+        loc = arm.matrix_world @ Vector(head.head)
+        basis = (arm.matrix_world @ head.matrix).to_3x3()
+        best = None
+        best_up = 2.0
+        for axis in ((0.0, 0.0, 1.0), (0.0, 0.0, -1.0), (1.0, 0.0, 0.0), (-1.0, 0.0, 0.0)):
+            raw = basis @ Vector(axis)
+            if raw.length_squared < 1e-8:
+                continue
+            vertical = abs(raw.normalized().dot(up))
+            flat = _flatten(raw, up)
+            if flat.length_squared < 0.25:
+                continue
+            if vertical < best_up:
+                best_up = vertical
+                best = flat
+        if best is not None:
+            forward = best
+        else:
+            flat = _flatten(arm.matrix_world.to_3x3() @ Vector(LAYOUT_FORWARD), up)
+            if flat.length_squared > 0.5:
+                forward = flat
+        hips = _pose_bone(arm, _FACE_BONES)
+        if hips is not None:
+            height = max((loc - (arm.matrix_world @ Vector(hips.head))).length * 1.45, 1.2)
+        else:
+            height = 1.7
+        return loc, height, forward
+    origin, height, _radius, center, forward = _visual_frame(obj)
+    return origin + up * (height * 0.88) if height else center, max(height, 1.2), forward
+
+
+_IN_LOCK = False
+
+
+def _body_points(arm) -> list[Vector]:
+    pts = []
+    if arm is None or getattr(arm, "pose", None) is None:
+        return pts
+    mw = arm.matrix_world
+    for bone in arm.pose.bones:
+        name = (bone.name or "").lower()
+        if name.startswith("jx_") or "camera" in name or "weapon" in name or "attach" in name:
+            continue
+        if not name.startswith("def_"):
+            continue
+        try:
+            pts.append(mw @ bone.head)
+        except Exception:
+            pass
+    return pts
+
+
+def _look_matrix(eye: Vector, target: Vector) -> Matrix:
+    direction = target - eye
+    if direction.length_squared < 1e-12:
+        direction = Vector((0.0, 0.0, -1.0))
+    z_axis = -direction.normalized()
+    world_up = _layout_up()
+    x_axis = world_up.cross(z_axis)
+    if x_axis.length_squared < 1e-12:
+        x_axis = Vector((1.0, 0.0, 0.0))
+    x_axis.normalize()
+    y_axis = z_axis.cross(x_axis)
+    mat = Matrix(
+        (
+            (x_axis.x, y_axis.x, z_axis.x, eye.x),
+            (x_axis.y, y_axis.y, z_axis.y, eye.y),
+            (x_axis.z, y_axis.z, z_axis.z, eye.z),
+            (0.0, 0.0, 0.0, 1.0),
+        )
+    )
+    return mat
+
+
+def _unparent_keep_world(obj) -> None:
+    if obj is None:
+        return
+    world = obj.matrix_world.copy()
+    obj.parent = None
+    try:
+        obj.parent_type = "OBJECT"
+        obj.parent_bone = ""
+    except Exception:
+        pass
+    try:
+        obj.matrix_parent_inverse = Matrix.Identity(4)
+        obj.delta_location = (0.0, 0.0, 0.0)
+        obj.delta_rotation_euler = (0.0, 0.0, 0.0)
+    except Exception:
+        pass
+    obj.matrix_world = world
+
+
+def _visual_frame(obj):
+    """Posed body bones first. Rest mesh boxes stay at the import spot."""
+    up = _layout_up()
+    forward = _layout_forward()
+    fallback_origin = Vector((0.0, 0.0, 0.0))
+    if obj is None:
+        return fallback_origin, 1.8, 0.45, up * 0.9, forward
+    if not _IN_LOCK:
+        _refresh_pose()
+    arm = resolve_armature(obj) or (obj if getattr(obj, "type", "") == "ARMATURE" else None)
+    if arm is not None:
+        flat = _flatten(arm.matrix_world.to_3x3() @ Vector(LAYOUT_FORWARD), up)
+        if flat.length_squared > 0.5:
+            forward = flat
+    coords = _body_points(arm)
+    if len(coords) < 6 and not _IN_LOCK:
+        pool = []
+        if getattr(obj, "type", "") == "MESH":
+            pool.append(obj)
+        root = arm or obj
+        children = getattr(root, "children_recursive", None)
+        kids = list(children) if children is not None else list(getattr(root, "children", []))
+        for item in [root, *kids]:
+            if getattr(item, "type", "") == "MESH" and item not in pool:
+                pool.append(item)
+        for item in pool:
+            src = _evaluated_mesh(item)
+            try:
+                mat = src.matrix_world.copy()
+                for corner in src.bound_box:
+                    coords.append(mat @ Vector(corner))
+            except Exception:
+                coords.append(item.matrix_world.translation.copy())
+    if not coords and arm is not None:
+        coords.append(arm.matrix_world.translation.copy())
+    if not coords:
+        return fallback_origin, 1.8, 0.45, up * 0.9, forward
+    along = [c.dot(up) for c in coords]
+    low = min(along)
+    height = max(max(along) - low, 0.4)
+    center = Vector((0.0, 0.0, 0.0))
+    for c in coords:
+        center += c
+    center /= len(coords)
+    origin = center - up * center.dot(up) + up * low
+    flat_pts = [c - up * c.dot(up) for c in coords]
+    span = max(
+        max(c.x for c in flat_pts) - min(c.x for c in flat_pts),
+        max(c.z for c in flat_pts) - min(c.z for c in flat_pts),
+        0.3,
+    )
+    return origin, height, span * 0.5, center, forward
+
+
+def _place_camera_world(cam, eye: Vector, target: Vector) -> None:
+    _clear_cam_lock(cam)
+    _unparent_keep_world(cam)
+    try:
+        cam.delta_location = (0.0, 0.0, 0.0)
+        cam.delta_rotation_euler = (0.0, 0.0, 0.0)
+    except Exception:
+        pass
+    cam.matrix_world = _look_matrix(eye, target)
+
+
+
+_LIGHT_ORIG = "apex_light_energy"
+_DOF_FLAG = "apex_dof_prev"
+_DOF_DIST = "apex_dof_dist_prev"
+_DOF_FSTOP = "apex_dof_fstop_prev"
+
+
+def apply_light_boost(scene) -> None:
+    """Same scale as Optic Enhancer: energy = captured base * (1 + percent/100)."""
+    if scene is None:
+        return
+    try:
+        pct = float(getattr(scene, "apex_light_boost", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        pct = 0.0
+    mul = 1.0 + max(0.0, pct) / 100.0
+    for name in STAGING_LIGHTS:
+        obj = bpy.data.objects.get(name)
+        if obj is None or getattr(obj, "type", "") != "LIGHT":
+            continue
+        data = getattr(obj, "data", None)
+        if data is None:
+            continue
+        if obj.get(_LIGHT_ORIG) is None:
+            try:
+                obj[_LIGHT_ORIG] = float(getattr(data, "energy", 0.0))
+            except Exception:
+                continue
+        try:
+            data.energy = float(obj[_LIGHT_ORIG]) * mul
+        except Exception:
+            pass
+
+
+def sync_closeup_dof(context) -> None:
+    """Shallow DOF only on the close-up preset, and only when Close-up DOF is on."""
+    scene = getattr(context, "scene", None)
+    cam = bpy.data.objects.get(STAGING_CAMERA)
+    if cam is None or getattr(cam, "type", "") != "CAMERA":
+        cam = getattr(scene, "camera", None) if scene is not None else None
+    if scene is None or cam is None or getattr(cam, "type", "") != "CAMERA":
+        return
+    data = getattr(cam, "data", None)
+    dof = getattr(data, "dof", None) if data is not None else None
+    if dof is None or not hasattr(dof, "use_dof"):
+        return
+    preset = str(getattr(scene, "apex_cam_preset", "") or "")
+    want = preset == "closeup" and bool(getattr(scene, "apex_closeup_dof", False))
+    if want:
+        if cam.get(_DOF_FLAG) is None:
+            try:
+                cam[_DOF_FLAG] = 1 if bool(dof.use_dof) else 0
+            except Exception:
+                cam[_DOF_FLAG] = 0
+            try:
+                cam[_DOF_DIST] = float(getattr(dof, "focus_distance", 0.35))
+            except Exception:
+                cam[_DOF_DIST] = 0.35
+            try:
+                cam[_DOF_FSTOP] = float(getattr(dof, "aperture_fstop", 2.8))
+            except Exception:
+                cam[_DOF_FSTOP] = 2.8
+        try:
+            dof.focus_object = None
+        except Exception:
+            pass
+        dist = 0.35
+        target = getattr(context, "active_object", None)
+        if target is not None and target != cam:
+            try:
+                delta = cam.matrix_world.translation - target.matrix_world.translation
+                dist = float(delta.length)
+            except Exception:
+                dist = 0.35
+        try:
+            dof.use_dof = True
+            dof.focus_distance = max(0.05, dist)
+        except Exception:
+            pass
+        if hasattr(dof, "aperture_fstop"):
+            try:
+                dof.aperture_fstop = 2.8
+            except Exception:
+                pass
+        return
+    if cam.get(_DOF_FLAG) is None:
+        return
+    try:
+        dof.use_dof = bool(int(cam[_DOF_FLAG]))
+    except Exception:
+        pass
+    if hasattr(dof, "focus_distance") and cam.get(_DOF_DIST) is not None:
+        try:
+            dof.focus_distance = float(cam[_DOF_DIST])
+        except Exception:
+            pass
+    if hasattr(dof, "aperture_fstop") and cam.get(_DOF_FSTOP) is not None:
+        try:
+            dof.aperture_fstop = float(cam[_DOF_FSTOP])
+        except Exception:
+            pass
+    for key in (_DOF_FLAG, _DOF_DIST, _DOF_FSTOP):
+        if key in cam:
+            try:
+                del cam[key]
+            except Exception:
+                pass
 
 
 def apply_camera_preset(context, preset: str, create: bool = True) -> None:
@@ -673,90 +1179,46 @@ def apply_camera_preset(context, preset: str, create: bool = True) -> None:
     set_studio_lights_visible(True)
     if not create and not studio_camera_exists():
         return
-    arm = resolve_character(context)
+    focus = focus_object(context)
     cam = ensure_camera_rig(context) if create else bpy.data.objects.get(STAGING_CAMERA)
     if cam is None or cam.type != "CAMERA":
         return
-    empty = bpy.data.objects.get(STAGING_EMPTY)
-    look = bpy.data.objects.get(STAGING_TARGET)
-    origin, height, radius, center = _character_bounds(arm)
-    dist = _front_distance(height, radius)
-    offset = center - origin
-    _clear_cam_lock(empty)
-    _clear_cam_lock(look)
-    _clear_cam_lock(cam)
-    _clear_cam_lock(bpy.data.objects.get(STAGING_PIVOT))
-    if empty is not None:
-        empty["apex_studio_dist"] = dist
-        empty["apex_studio_lift"] = offset.y
-        empty["apex_studio_height"] = height
-        if empty.animation_data:
-            empty.animation_data_clear()
-        empty.rotation_mode = "XYZ"
-        empty.rotation_euler = (0.0, 0.0, 0.0)
-        empty.location = origin
-    context.view_layer.update()
+    head, height, forward = _head_focus(focus)
+    up = _layout_up()
+    dist = max(height * 1.35, 1.8)
+    right = up.cross(forward)
+    if right.length_squared < 1e-8:
+        right = Vector((1.0, 0.0, 0.0))
+    right.normalize()
     if key == "closeup":
-        apply_portrait_render(getattr(context, "scene", None), False)
-        _apply_closeup_portrait(context, cam, arm, empty, look, height)
-        _set_passepartout(cam, 0.0)
-        return
-    if look is not None:
-        look.parent = empty
-        look.location = (offset.x, offset.y, offset.z)
-    cam.parent = empty
-    cam.parent_type = "OBJECT"
-    try:
-        cam.parent_bone = ""
-    except Exception:
-        pass
-    if key == "three_quarter":
-        cam.location = _studio_cam_offset(offset, dist, three_quarter=True)
+        look_at = head
+        eye = head + forward * CLOSEUP_DIST + up * 0.04
+        _place_camera_world(cam, eye, look_at)
+        _set_closeup_lens(cam)
+    elif key == "three_quarter":
+        look_at = head - up * (height * 0.12)
+        eye = head + forward * dist * 0.92 + right * dist * 0.48
+        _place_camera_world(cam, eye, look_at)
+        _set_studio_lens(cam)
     else:
-        cam.location = _studio_cam_offset(offset, dist)
-    _set_studio_lens(cam)
+        look_at = head - up * (height * 0.18)
+        eye = head + forward * dist
+        _place_camera_world(cam, eye, look_at)
+        _set_studio_lens(cam)
     _set_passepartout(cam, 0.0)
-    clear_banner_lights()
     set_studio_lights_visible(True)
-    apply_portrait_render(getattr(context, "scene", None), False)
+    apply_frame_orientation(getattr(context, "scene", None))
     context.view_layer.update()
-    _point_camera_at(cam, center)
+    _soften_studio_lights(cam, look_at)
     context.scene.camera = cam
+    if bool(getattr(context.scene, "apex_cam_lock", False)):
+        look = bpy.data.objects.get(STAGING_TARGET)
+        if look is not None:
+            look.location = head
+        _ensure_lock_track(cam)
     context.view_layer.update()
-
-
-def _apply_closeup_portrait(context, cam, arm, empty, look, height) -> None:
-    head = _pose_bone(arm, HEAD_BONES)
-    _clear_cam_lock(cam)
-    if arm is not None and head is not None:
-        look_at = _bone_world_loc(arm, head)
-    elif empty is not None:
-        look_at = empty.matrix_world.translation + _layout_up() * (height * 0.88)
-    else:
-        look_at = _layout_up() * (height * 0.88)
-    cam.parent = empty
-    cam.parent_type = "OBJECT"
-    try:
-        cam.parent_bone = ""
-    except Exception:
-        pass
-    push = _layout_forward() * CLOSEUP_DIST + _layout_up() * 0.06
-    if empty is not None:
-        local = empty.matrix_world.inverted() @ look_at
-        cam.location = local + push
-    else:
-        cam.location = look_at + push
-    if look is not None:
-        look.parent = empty
-        if empty is not None:
-            look.location = empty.matrix_world.inverted() @ look_at
-        else:
-            look.location = look_at
-    _set_closeup_lens(cam)
-    context.view_layer.update()
-    _point_camera_at(cam, look_at)
-    context.scene.camera = cam
-    context.view_layer.update()
+    apply_light_boost(getattr(context, "scene", None))
+    sync_closeup_dof(context)
 
 
 def _fcurve_value(curve, frame: float) -> float | None:
@@ -894,6 +1356,11 @@ def apply_camera_pov(context, create: bool = True, fov=None, isolate: bool = Fal
     cam.parent_type = "OBJECT"
     try:
         cam.parent_bone = ""
+    except Exception:
+        pass
+    _refresh_pose()
+    try:
+        cam.matrix_world.translation = _bone_world_loc(arm, cam_bone)
     except Exception:
         pass
     loc = cam.constraints.new("COPY_LOCATION")
@@ -1186,3 +1653,103 @@ def apply_banner_lights(context, setup: dict | None, imported=None) -> None:
     specs = list((setup or {}).get("lights") or [])
     _place_holocard_spots(context, arm, specs)
     set_studio_lights_visible(False)
+
+
+def _lock_target_object(scene):
+    name = str(getattr(scene, "apex_cam_lock_name", "") or "")
+    if name:
+        obj = bpy.data.objects.get(name)
+        if obj is not None:
+            return obj
+    target = str(getattr(scene, "apex_cam_target", "") or "")
+    if target and target != "ACTIVE":
+        return bpy.data.objects.get(target)
+    return None
+
+
+def _ensure_lock_track(cam) -> None:
+    look = bpy.data.objects.get(STAGING_TARGET)
+    if cam is None or look is None:
+        return
+    if cam.parent is not None:
+        _unparent_keep_world(cam)
+    for con in list(cam.constraints):
+        if con.name == CON_STUDIO_TRACK and con.type != "DAMPED_TRACK":
+            cam.constraints.remove(con)
+    for con in list(cam.constraints):
+        if con.type == "DAMPED_TRACK" and con.name == CON_STUDIO_TRACK:
+            con.target = look
+            con.track_axis = "TRACK_NEGATIVE_Z"
+            return
+    con = cam.constraints.new("DAMPED_TRACK")
+    con.name = CON_STUDIO_TRACK
+    con.target = look
+    con.track_axis = "TRACK_NEGATIVE_Z"
+
+
+def set_camera_lock(context, enabled: bool, obj=None) -> None:
+    scene = context.scene
+    scene.apex_cam_lock = bool(enabled)
+    cam = bpy.data.objects.get(STAGING_CAMERA)
+    if cam is None or getattr(cam, "type", "") != "CAMERA":
+        cam = ensure_camera_rig(context)
+    if not enabled:
+        scene.apex_cam_lock_name = ""
+        if cam is not None:
+            for con in list(cam.constraints):
+                if con.name == CON_STUDIO_TRACK:
+                    cam.constraints.remove(con)
+        return
+    if obj is None:
+        obj = focus_object(context)
+    if obj is None:
+        scene.apex_cam_lock = False
+        return
+    scene.apex_cam_lock_name = obj.name
+    aim_locked_camera(scene)
+    if cam is not None:
+        _ensure_lock_track(cam)
+
+
+def aim_locked_camera(scene) -> None:
+    global _IN_LOCK
+    if _IN_LOCK or scene is None or not bool(getattr(scene, "apex_cam_lock", False)):
+        return
+    _IN_LOCK = True
+    try:
+        _aim_locked_camera(scene)
+    finally:
+        _IN_LOCK = False
+
+
+def _aim_locked_camera(scene) -> None:
+    if scene is None or not bool(getattr(scene, "apex_cam_lock", False)):
+        return
+    obj = _lock_target_object(scene)
+    cam = bpy.data.objects.get(STAGING_CAMERA)
+    look = bpy.data.objects.get(STAGING_TARGET)
+    if obj is None or cam is None:
+        return
+    head, _height, _forward = _head_focus(obj)
+    if look is None:
+        look = bpy.data.objects.new(STAGING_TARGET, None)
+        look.empty_display_type = "SPHERE"
+        look.empty_display_size = 0.05
+        try:
+            scene.collection.objects.link(look)
+        except Exception:
+            pass
+    look.parent = None
+    look.location = head
+    look.hide_viewport = True
+    look.hide_render = True
+    _ensure_lock_track(cam)
+
+
+@persistent
+def _lock_camera_handler(scene, *_args) -> None:
+    try:
+        if scene is not None and bool(getattr(scene, "apex_cam_lock", False)):
+            aim_locked_camera(scene)
+    except Exception:
+        pass

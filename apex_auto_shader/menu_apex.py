@@ -4,12 +4,14 @@ import bpy
 
 from . import utils
 from .naming import SLOT_LABELS
+from .cinematic import CinematicNodeAdder
 from .node_adder import (
     CoresNodeAdder,
     ObjectNodeAdder,
     PlusNodeAdder,
     PlusSENodeAdder,
     current_node_adder,
+    shader_key_for,
 )
 
 
@@ -66,13 +68,7 @@ def makeChooseShaderOptionOperator(idname, display_name, node_adder_cls_arg, des
         node_adder_cls = node_adder_cls_arg
 
         def execute(self, context):
-            mapping = {
-                PlusSENodeAdder: "plus_se",
-                CoresNodeAdder: "cores",
-                PlusNodeAdder: "plus",
-                ObjectNodeAdder: "object",
-            }
-            context.scene.apex_shader = mapping.get(self.node_adder_cls, "plus_se")
+            context.scene.apex_shader = shader_key_for(self.node_adder_cls)
             return {"FINISHED"}
 
     return ApexChooseShaderOptionOp
@@ -82,6 +78,7 @@ available_shaders = [
     ("plus_se", "se Apex Shader Plus", PlusSENodeAdder, "se_Apex Shader Plus (default)"),
     ("plus", "Apex Shader+", PlusNodeAdder, "ovlack Apex Shader+ (Plus 1)"),
     ("cores", "Cores Apex Shader", CoresNodeAdder, "CoReArtZz Cores shader"),
+    ("cinematic", "Cinematic Shader", CinematicNodeAdder, "Illustrated hard light, ink edge, cool rim"),
     ("object", "Object Shader", ObjectNodeAdder, "Props / non-legend models"),
 ]
 
@@ -113,11 +110,8 @@ class ApexSubmenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator("apexaddon.import_cast")
-        layout.operator("apexaddon.shade_panel")
-        layout.operator("apexaddon.pick_texture_folder")
+        layout.operator("apexaddon.apply_shader")
         layout.operator("apexaddon.recolor")
-        layout.separator()
-        layout.operator("apexaddon.eevee_ready")
         layout.separator()
         layout.operator("apexaddon.clean_scene")
         layout.separator()

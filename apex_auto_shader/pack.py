@@ -237,6 +237,10 @@ _UNIQUE_MARKS = ("_lgnd_", "_icon_", "_mythic_", "_epicp_")
 _RC_TAIL = re.compile(r"(?:^|_)(?:(?:rt|rc)\d{2}){1,2}$", re.IGNORECASE)
 # Shared-folder palettes and event rares/epics that reuse the base CAST
 _LOW_RARITY = re.compile(r"(?:^|_)(common|rare|epic)(?:_|$)", re.IGNORECASE)
+_RARITY_LABEL = re.compile(
+    r"^(?:common|rare|epic|legendary|heirloom|mythic)(?:\s+\d+)?$",
+    re.IGNORECASE,
+)
 
 
 def _legend_aliases(name: str) -> set[str]:
@@ -286,11 +290,11 @@ def _has_recolor_tail(extra: str) -> bool:
 
 
 def is_finder_row(extra: str, name: str = "") -> bool:
-    """Skins shown in Find Skins: originals, unique meshes, rt/rc families.
+    """Skins shown in Find Skins: named cosmetics, originals, unique meshes, rt/rc.
 
-    Numbered Common/Rare/Epic and event palettes reuse the base CAST and live
-    in shared camo folders. Those stay in ncache for match_source, but they
-    are hidden from search until a real texture map exists.
+    A numbered common/rare/epic extra reuses the base CAST. Those rows stay
+    hidden only when the display name is itself just a rarity label. Named
+    skins such as Wallflower stay searchable.
     """
     if _is_base_name(name) or _is_base_row(extra, name):
         return True
@@ -299,6 +303,9 @@ def is_finder_row(extra: str, name: str = "") -> bool:
     if _has_recolor_tail(extra):
         return True
     if _LOW_RARITY.search(extra or ""):
+        label = (name or "").strip()
+        if label and not _is_base_name(label) and not _RARITY_LABEL.match(label):
+            return True
         return False
     return True
 

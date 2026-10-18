@@ -6,6 +6,7 @@ and asserts a few stable behaviors used by shade/import paths.
 """
 from __future__ import annotations
 
+import re
 import sys
 import types
 from pathlib import Path
@@ -288,6 +289,10 @@ def _test_cosmetics_and_index() -> None:
     legends = {lg for lg, _n, _e in rows}
     assert "Axle" in legends
     assert "Fade" not in legends
+    assert "_unlisted" not in legends
+    assert pack.unreleased_needles() == ()
+    restless = pack.search_index("Restless Spirit", "Alter")
+    assert restless and restless[0][1] == "Restless Spirit", restless
     assert any(name == "Restless Spirit" for _lg, name, _e in rows)
     assert pack.prefix_for("Alter", "Alterior Motive").endswith("rc02")
     assert pack.prefix_for("Alter", "Fashion Fatale").endswith("rc01")
@@ -395,10 +400,21 @@ def main() -> int:
     assert hasattr(shade, "utils")
     assert hasattr(shade.utils, "shade_selected")
     assert hasattr(shade.extras, "should_skip_lod")
-    assert hasattr(naming.tex, "is_eye_material") or hasattr(naming, "is_eye_material")
+    assert hasattr(naming, "is_eye_material")
+    assert hasattr(naming, "is_glass_family")
+    assert hasattr(naming, "is_transparent_family")
     assert hasattr(naming, "scan_object_folder")
     assert hasattr(naming, "techart_legend_texture_candidates")
     assert hasattr(naming, "parse_object_texture_name")
+    assert hasattr(anim, "resolve_shade_objects")
+    assert hasattr(anim, "apply_light_boost")
+    assert hasattr(anim, "sync_closeup_dof")
+    assert hasattr(anim, "apply_camera_preset")
+    from apex_auto_shader.node_adder import SHADER_ADDERS
+    from apex_auto_shader.blender_compat import material_meshes, resolve_armature
+
+    assert "cinematic" in SHADER_ADDERS
+    assert callable(material_meshes) and callable(resolve_armature)
 
     _test_object_and_techart()
     _test_cosmetics_and_index()
@@ -410,7 +426,33 @@ def main() -> int:
     assert not (ROOT / "skins.json").exists(), "plaintext skins.json must not exist"
     assert not (PKG_DIR / "skins.json").exists(), "plaintext skins.json must not exist"
 
-    assert apex_auto_shader.bl_info["version"] >= (2, 0, 0)
+    ver = apex_auto_shader.bl_info["version"]
+    assert ver == (2, 1, 0), ver
+    from apex_auto_shader import config
+
+    assert config.ADDON_VERSION == ver
+    assert config.ADDON_VERSION_STR == "2.1.0"
+    manifest = (PKG_DIR / "blender_manifest.toml").read_text(encoding="utf-8")
+    found = re.search(r'(?m)^version\s*=\s*"([^"]+)"', manifest)
+    assert found and found.group(1) == "2.1.0", manifest
+    panel_src = (PKG_DIR / "panel.py").read_text(encoding="utf-8")
+    assert "apexaddon.uninstall" not in panel_src
+    from apex_auto_shader.install import other_copies
+    from apex_auto_shader.menu import classes as menu_classes
+
+    menu_ids = {getattr(cls, "bl_idname", "") for cls in menu_classes}
+    assert "apexaddon.install_zip" in menu_ids
+    assert "apexaddon.uninstall" in menu_ids
+    assert "apexaddon.drop_old_copy" in menu_ids
+    here = Path("/tmp/aas-current")
+    old = Path("/tmp/aas-old")
+    here.mkdir(exist_ok=True)
+    old.mkdir(exist_ok=True)
+    dupes = other_copies(
+        [{"path": str(here), "version": "2.1.0"}, {"path": str(old), "version": "2.0.1"}],
+        current=here,
+    )
+    assert len(dupes) == 1 and dupes[0]["version"] == "2.0.1"
 
     print("smoke_import: OK")
     return 0

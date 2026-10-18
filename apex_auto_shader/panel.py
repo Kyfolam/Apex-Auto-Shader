@@ -8,8 +8,14 @@ from bpy.props import BoolProperty, CollectionProperty, EnumProperty, IntPropert
 from . import anim, extras, pack, utils
 from .config import ADDON_VERSION_STR
 from .naming import RARITY_ORDER, legend_display_name, parse_skin_identity
-from .node_adder import current_node_adder
-from .prefs import SHADER_ITEMS, anim_loop_default, cast_importer_available, default_shader
+from .node_adder import (
+    apex_shader_get,
+    apex_shader_set,
+    current_node_adder,
+    on_apex_shader_update,
+    sync_unset_scenes,
+)
+from .prefs import SHADER_ITEMS, anim_loop_default, cast_importer_available
 
 
 def _fold_set(scene, attr: str) -> set[str]:
@@ -308,7 +314,7 @@ def _pick_cast(scene, needle: str) -> Path | None:
 class APEX_OT_shade_panel(bpy.types.Operator):
     bl_idname = "apexaddon.shade_panel"
     bl_label = "Shade Selected"
-    bl_description = "Auto-shade the character from the texture folder"
+    bl_description = "Auto-shade the character with the selected shader"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -324,6 +330,16 @@ class APEX_OT_shade_panel(bpy.types.Operator):
             return {"CANCELLED"}
         _report_shade(self, reports, context.scene)
         return {"FINISHED"}
+
+
+class APEX_OT_apply_shader(bpy.types.Operator):
+    bl_idname = "apexaddon.apply_shader"
+    bl_label = "Apply Shader"
+    bl_description = "Shade the selection with the shader chosen in the dropdown"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        return APEX_OT_shade_panel.execute(self, context)
 
 
 class APEX_OT_pick_texture_folder(bpy.types.Operator):
@@ -463,10 +479,9 @@ class APEX_PT_textures(_ApexSubpanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(context.scene, "apex_texture_dir", text="")
-        layout.operator(APEX_OT_pick_texture_folder.bl_idname, icon="FILE_FOLDER")
+        layout.prop(context.scene, "apex_shader", text="")
+        layout.operator(APEX_OT_apply_shader.bl_idname, icon="NODE_MATERIAL")
         layout.operator(APEX_OT_recolor.bl_idname, icon="COLOR")
-        layout.operator(APEX_OT_eevee_ready.bl_idname, icon="SHADING_RENDERED")
         if anim.character_has_level(context):
             label = anim.upgrade_button_label(context)
             icon = "TRIA_DOWN" if label == "Downgrade" else "TRIA_UP"
@@ -599,12 +614,29 @@ class APEX_PT_camera(_ApexSubpanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator(anim.APEX_OT_add_camera.bl_idname, icon="CAMERA_DATA")
-        layout.operator(anim.APEX_OT_set_camera_pov.bl_idname, icon="CON_TRACKTO")
+        split = layout.split(factor=0.67, align=True)
+        split.operator(anim.APEX_OT_add_camera.bl_idname, icon="CAMERA_DATA")
+        portrait = bool(getattr(context.scene, "apex_cam_portrait", True))
+        split.operator(
+            anim.APEX_OT_toggle_frame.bl_idname,
+            text="9:16" if portrait else "16:9",
+        )
+        locked = bool(getattr(context.scene, "apex_cam_lock", False))
+        row = layout.row(align=True)
+        row.operator(
+            anim.APEX_OT_set_camera_pov.bl_idname,
+            text="Unlock" if locked else "Lock Model",
+            icon="LOCKED" if locked else "UNLOCKED",
+        )
+        pick = row.row(align=True)
+        pick.ui_units_x = 7.0
+        pick.prop(context.scene, "apex_cam_target", text="")
         row = layout.row(align=True)
         for key, label in (("front", "Front"), ("three_quarter", "3/4"), ("closeup", "Close-up")):
             op = row.operator(anim.APEX_OT_camera_preset.bl_idname, text=label)
             op.preset = key
+        layout.prop(context.scene, "apex_light_boost")
+        layout.prop(context.scene, "apex_closeup_dof")
 
 
 class APEX_PT_animation(_ApexSubpanel, bpy.types.Panel):
@@ -970,6 +1002,7 @@ class APEX_OT_find_skins(bpy.types.Operator):
 
 panel_classes = (
     APEX_OT_shade_panel,
+    APEX_OT_apply_shader,
     APEX_OT_pick_texture_folder,
     APEX_OT_recolor,
     APEX_OT_clean_scene,
@@ -992,11 +1025,84 @@ panel_classes = (
 )
 
 
+def _update_light_boost(self, _context):
+    try:
+        from .anim.studio import apply_light_boost
+
+        apply_light_boost(self)
+    except Exception:
+        pass
+
+
+def _update_closeup_dof(self, context):
+    try:
+        from .anim.studio import sync_closeup_dof
+
+        sync_closeup_dof(context)
+    except Exception:
+        pass
+
+
+def _update_portrait(self, _context):
+    try:
+        from .anim.studio import apply_frame_orientation
+        apply_frame_orientation(self)
+    except Exception:
+        pass
+
+
+def _cam_target_items(_self, context):
+    items = [("ACTIVE", "Selected object", "Lock whatever is selected")]
+    groups = {}
+    loose = []
+    scene = getattr(context, "scene", None)
+    objects = list(getattr(scene, "objects", []) or [])
+    for obj in objects:
+        if getattr(obj, "type", "") != "MESH":
+            continue
+        if (obj.name or "").startswith("Apex "):
+            continue
+        parent = getattr(obj, "parent", None)
+        if parent is not None and getattr(parent, "type", "") == "ARMATURE":
+            groups.setdefault(parent.name, []).append(obj.name)
+        else:
+            loose.append(obj.name)
+    for arm_name in sorted(groups):
+        items.append(None)
+        for mesh_name in sorted(groups[arm_name]):
+            items.append((mesh_name, f"{arm_name} / {mesh_name}", mesh_name))
+    if loose:
+        items.append(None)
+        for mesh_name in sorted(loose):
+            items.append((mesh_name, mesh_name, mesh_name))
+    return items
+
+
+def _update_cam_target(self, _context):
+    if not bool(getattr(self, "apex_cam_lock", False)):
+        return
+    try:
+        from .anim.studio import aim_locked_camera
+        aim_locked_camera(self)
+    except Exception:
+        pass
+
+
 def register_props():
     bpy.types.Scene.apex_shader = EnumProperty(
         name="Shader",
+        description="Shader used by Apply Shader, import, and Find Skin",
         items=SHADER_ITEMS,
-        default=default_shader(),
+        default="plus_se",
+        get=apex_shader_get,
+        set=apex_shader_set,
+        update=on_apex_shader_update,
+    )
+    bpy.types.Scene.apex_shader_user_set = BoolProperty(
+        name="Shader Chosen",
+        description="Set when the shader dropdown or menu is changed",
+        default=False,
+        options={"HIDDEN"},
     )
     bpy.types.Scene.apex_anim_loop = BoolProperty(
         name="Loop",
@@ -1004,6 +1110,39 @@ def register_props():
         default=anim_loop_default(),
     )
     bpy.types.Scene.apex_cam_preset = StringProperty(name="Camera preset", default="front")
+    bpy.types.Scene.apex_light_boost = bpy.props.FloatProperty(
+        name="Light boost",
+        description="Multiply Apex studio light energy. 0% keeps the camera rig values.",
+        default=0.0,
+        min=0.0,
+        max=200.0,
+        soft_min=0.0,
+        soft_max=100.0,
+        step=100,
+        precision=0,
+        subtype="PERCENTAGE",
+        update=_update_light_boost,
+    )
+    bpy.types.Scene.apex_closeup_dof = BoolProperty(
+        name="Close-up DOF",
+        description="Shallow depth of field on the studio camera when Close-up is active. Focuses the active object.",
+        default=False,
+        update=_update_closeup_dof,
+    )
+    bpy.types.Scene.apex_cam_portrait = BoolProperty(
+        name="Portrait",
+        description="On = portrait 1080x1920, off = landscape 1920x1080",
+        default=True,
+        update=_update_portrait,
+    )
+    bpy.types.Scene.apex_cam_lock = BoolProperty(name="Lock camera", default=False)
+    bpy.types.Scene.apex_cam_lock_name = StringProperty(name="Locked object", default="")
+    bpy.types.Scene.apex_cam_target = EnumProperty(
+        name="Lock target",
+        description="Mesh the camera stays aimed at",
+        items=_cam_target_items,
+        update=_update_cam_target,
+    )
     bpy.types.Scene.apex_texture_dir = StringProperty(
         name="Texture folder",
         description="Folder that contains every PNG for this skin",
@@ -1064,13 +1203,24 @@ def register_props():
     bpy.types.Scene.apex_find_index = IntProperty(name="Skin", default=0)
     bpy.types.Scene.apex_find_collapsed = StringProperty(default="")
     bpy.types.Scene.apex_find_dupe_msg = StringProperty(default="")
+    try:
+        sync_unset_scenes()
+    except Exception:
+        pass
 
 
 def unregister_props():
     for attr in (
         "apex_shader",
+        "apex_shader_user_set",
         "apex_anim_loop",
         "apex_cam_preset",
+        "apex_light_boost",
+        "apex_closeup_dof",
+        "apex_cam_portrait",
+        "apex_cam_lock",
+        "apex_cam_lock_name",
+        "apex_cam_target",
         "apex_texture_dir",
         "apex_anim_dir",
         "apex_anim_items",

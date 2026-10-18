@@ -405,6 +405,8 @@ class PlusSENodeAdder(NodeAdder):
         )
 
 
+# Filled after CinematicNodeAdder is imported. Object stays Plus wiring
+# with folder-local matching; it is not PlusNodeAdder itself.
 SHADER_ADDERS = {
     "plus_se": PlusSENodeAdder,
     "cores": CoresNodeAdder,
@@ -412,15 +414,168 @@ SHADER_ADDERS = {
     "object": ObjectNodeAdder,
 }
 
+# Registration default of Scene.apex_shader. Until the user picks a shader
+# in the dropdown or the Choose Shader menu, the addon preference wins,
+# even if the scene still holds the factory value or an older key.
+_FACTORY_SHADER = "plus_se"
+_syncing_shader = False
+
+
+def shader_key_for(node_adder_cls) -> str:
+    for key, cls in SHADER_ADDERS.items():
+        if cls is node_adder_cls:
+            return key
+    return _FACTORY_SHADER
+
+
+def _shader_keys() -> list[str]:
+    from .prefs import SHADER_ITEMS
+
+    return [item[0] for item in SHADER_ITEMS]
+
+
+def _preferred_shader() -> str:
+    from .prefs import default_shader
+
+    key = default_shader()
+    return key if key in SHADER_ADDERS else _FACTORY_SHADER
+
+
+def shader_user_set(scene) -> bool:
+    """True only after the dropdown or Choose Shader menu writes the value."""
+    if scene is None:
+        return False
+    try:
+        if bool(scene.get("apex_shader_user_set", False)):
+            return True
+    except Exception:
+        pass
+    return bool(getattr(scene, "apex_shader_user_set", False))
+
+
+def _stored_shader_index(scene) -> int:
+    keys = _shader_keys()
+    try:
+        raw = scene.get("apex_shader", 0)
+    except Exception:
+        raw = 0
+    if isinstance(raw, str):
+        return keys.index(raw) if raw in keys else 0
+    try:
+        idx = int(raw)
+    except (TypeError, ValueError):
+        return 0
+    if idx < 0 or idx >= len(keys):
+        return 0
+    return idx
+
+
+def apex_shader_get(self):
+    """Unread scenes show the preference, not a stale scene enum."""
+    keys = _shader_keys()
+    if not shader_user_set(self):
+        key = _preferred_shader()
+        return keys.index(key) if key in keys else 0
+    return _stored_shader_index(self)
+
+
+def apex_shader_set(self, value):
+    """UI and menu writes mark the scene as chosen. Preference sync does not."""
+    keys = _shader_keys()
+    if isinstance(value, str):
+        idx = keys.index(value) if value in keys else 0
+    else:
+        try:
+            idx = int(value)
+        except (TypeError, ValueError):
+            idx = 0
+        if idx < 0 or idx >= len(keys):
+            idx = 0
+    try:
+        self["apex_shader"] = idx
+    except Exception:
+        return
+    if _syncing_shader:
+        return
+    try:
+        self["apex_shader_user_set"] = True
+    except Exception:
+        pass
+    try:
+        self.apex_shader_user_set = True
+    except Exception:
+        pass
+
+
+def _assign_shader(scene, key: str) -> None:
+    global _syncing_shader
+    if scene is None or key not in SHADER_ADDERS:
+        return
+    keys = _shader_keys()
+    try:
+        raw = scene.get("apex_shader", None)
+    except Exception:
+        raw = None
+    if isinstance(raw, str) and raw == key:
+        return
+    if isinstance(raw, int) and not isinstance(raw, bool) and 0 <= raw < len(keys) and keys[raw] == key:
+        return
+    _syncing_shader = True
+    try:
+        scene.apex_shader = key
+    except Exception:
+        pass
+    finally:
+        _syncing_shader = False
+
+
+def on_apex_shader_update(self, _context):
+    """Dropdown / menu writes are explicit. Preference sync is not."""
+    global _syncing_shader
+    if _syncing_shader:
+        return
+    try:
+        self["apex_shader_user_set"] = True
+    except Exception:
+        pass
+    try:
+        self.apex_shader_user_set = True
+    except Exception:
+        pass
+
 
 def current_shader_key(scene=None) -> str:
+    """Dropdown wins after the user picks one. Otherwise the preference."""
     scene = scene or getattr(bpy.context, "scene", None)
-    key = getattr(scene, "apex_shader", "") if scene is not None else ""
-    if not key:
-        from .prefs import default_shader
+    pref = _preferred_shader()
+    if scene is None:
+        return pref
+    if not shader_user_set(scene):
+        _assign_shader(scene, pref)
+        return pref
+    keys = _shader_keys()
+    idx = _stored_shader_index(scene)
+    raw = keys[idx] if 0 <= idx < len(keys) else ""
+    if raw not in SHADER_ADDERS:
+        try:
+            shown = str(getattr(scene, "apex_shader", "") or "")
+        except Exception:
+            shown = ""
+        raw = shown
+    return raw if raw in SHADER_ADDERS else pref
 
-        key = default_shader()
-    return key if key in SHADER_ADDERS else "plus_se"
+
+def sync_unset_scenes() -> None:
+    """Push the preference into scenes the user has not picked a shader for."""
+    pref = _preferred_shader()
+    try:
+        scenes = list(bpy.data.scenes)
+    except Exception:
+        scenes = []
+    for scene in scenes:
+        if shader_user_set(scene):
+            continue
+        _assign_shader(scene, pref)
 
 
 def is_object_shader(scene=None, node_adder_cls=None) -> bool:
@@ -431,3 +586,4 @@ def is_object_shader(scene=None, node_adder_cls=None) -> bool:
 
 def current_node_adder(scene=None):
     return SHADER_ADDERS.get(current_shader_key(scene), PlusSENodeAdder)
+

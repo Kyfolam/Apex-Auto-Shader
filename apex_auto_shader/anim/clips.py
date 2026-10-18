@@ -13,6 +13,7 @@ from ..naming import (
     emote_subtype,
     find_class_root,
     find_legend_anim_dir,
+    find_legend_anim_dirs,
     finisher_display_name,
     guess_legend_from_anim,
     guess_legend_from_path,
@@ -329,15 +330,22 @@ def _anim_sources_for_scene(context, prefer_cast: str | Path | None = None):
         stored = arm.get(CHAR_ANIM, "")
         folder = existing_dir(stored) if stored else None
         cast = arm.get(CHAR_CAST, "") or (str(prefer_cast) if prefer_cast else "")
-        if folder is None and cast:
-            folder = find_legend_anim_dir(cast, legend)
-        if folder is None or not folder.is_dir():
+        folders = []
+        if folder is not None:
+            folders.append(folder)
+        if cast:
+            for extra in find_legend_anim_dirs(cast, legend):
+                if extra not in folders:
+                    folders.append(extra)
+        if not folders:
             continue
-        key = str(folder)
-        if key in seen:
-            continue
-        seen.add(key)
-        sources.append((folder, legend))
+        folder = folders[0]
+        for extra in folders:
+            key = str(extra)
+            if key in seen or not extra.is_dir():
+                continue
+            seen.add(key)
+            sources.append((extra, legend))
         try:
             arm[CHAR_ANIM] = str(folder)
             if legend:
@@ -345,9 +353,9 @@ def _anim_sources_for_scene(context, prefer_cast: str | Path | None = None):
         except (ReferenceError, TypeError):
             pass
     if not sources and prefer_cast:
-        folder = find_legend_anim_dir(prefer_cast, prefer_legend)
-        if folder is not None and folder.is_dir():
-            sources.append((folder, prefer_legend))
+        for extra in find_legend_anim_dirs(prefer_cast, prefer_legend):
+            if extra.is_dir():
+                sources.append((extra, prefer_legend))
     return sources, prefer_legend
 
 

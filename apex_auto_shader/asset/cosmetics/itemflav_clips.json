@@ -1,53 +1,12 @@
 {
   "note": "Rebuilt from rsx_2.3.0 itemflav + gcard_emotes/character_* name maps",
   "stats": {
-    "banner": 459,
+    "banner": 458,
     "emote": 284,
     "finisher": 88,
-    "bannerLights": 459
+    "bannerLights": 458
   },
   "banner": {
-    "_temp.json": {
-      "fov": 10.0614,
-      "lights": [
-        {
-          "brightness": 1.0,
-          "distance": 200.0,
-          "cone": 30.0,
-          "inner": 10.0,
-          "half": 0.25,
-          "pbr": true,
-          "shadow": true
-        },
-        {
-          "brightness": 1.0,
-          "distance": 200.0,
-          "cone": 30.0,
-          "inner": 10.0,
-          "half": 0.25,
-          "pbr": true,
-          "shadow": true
-        },
-        {
-          "brightness": 1.0,
-          "distance": 200.0,
-          "cone": 30.0,
-          "inner": 10.0,
-          "half": 0.25,
-          "pbr": true,
-          "shadow": true
-        },
-        {
-          "brightness": 1.0,
-          "distance": 200.0,
-          "cone": 30.0,
-          "inner": 10.0,
-          "half": 0.25,
-          "pbr": true,
-          "shadow": true
-        }
-      ]
-    },
     "alter/common_01.json": {
       "still": "alter_gladcard_static_common_standing",
       "stillLight": "alter_gladcard_static_common_standing_light",
@@ -2316,7 +2275,7 @@
       "hasMoving": true,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -2410,7 +2369,7 @@
       "hasMoving": true,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -2730,7 +2689,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -2792,7 +2751,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -3006,7 +2965,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -3294,7 +3253,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -3338,7 +3297,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -7162,7 +7121,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 80.0,
           "inner": 10.0,
@@ -11310,7 +11269,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -11327,7 +11286,7 @@
       "fov": 16.84,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -11371,7 +11330,7 @@
       "fov": 20.139999,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -12588,7 +12547,7 @@
       "fov": 47.880001,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -12676,7 +12635,7 @@
       "fov": 32.98,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -12767,7 +12726,7 @@
       "hasMoving": true,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -12814,7 +12773,7 @@
       "hasMoving": true,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -12861,7 +12820,7 @@
       "hasMoving": true,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -12996,7 +12955,7 @@
       "fov": 20.139999,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -13040,7 +12999,7 @@
       "fov": 25.030001,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -13128,7 +13087,7 @@
       "fov": 20.139999,
       "lights": [
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -14250,7 +14209,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 200.0,
           "cone": 30.0,
           "inner": 10.0,
@@ -20528,7 +20487,7 @@
           "shadow": true
         },
         {
-          "brightness": 0.0,
+          "brightness": null,
           "distance": 30.0,
           "cone": 70.0,
           "inner": 10.0,
@@ -20843,7 +20802,9 @@
       "name": "Looking Sharp"
     },
     "bangalore/default.json": {
-      "name": "No Sweat"
+      "name": "No Sweat",
+      "anim": "bangalore_ground_emote_pushups",
+      "animLoop": "bangalore_ground_emote_pushups_loop"
     },
     "bangalore/epic_boxing.json": {
       "name": "Butterfly Barrage"
@@ -21065,7 +21026,9 @@
       "name": "Clear the Pipes"
     },
     "gibraltar/default.json": {
-      "name": "Bring It"
+      "name": "Bring It",
+      "anim": "gibraltar_ground_emote_bringit",
+      "animLoop": "gibraltar_ground_emote_bringit_loop"
     },
     "gibraltar/epic_kickflip.json": {
       "name": "Kickflip"
@@ -21578,7 +21541,9 @@
       "name": "Telekinetic Energy"
     },
     "wraith/default.json": {
-      "name": "Cut Throat"
+      "name": "Cut Throat",
+      "anim": "wraith_ground_emote_cutthroat",
+      "animLoop": "wraith_ground_emote_cutthroat_loop"
     },
     "wraith/epic_v22_frustrated.json": {
       "name": "Get it Together"
@@ -21622,10 +21587,12 @@
   },
   "finisher": {
     "alter/default.json": {
-      "name": "Dynamic Exit"
+      "name": "Dynamic Exit",
+      "attacker": "alter_playing_execution_attacker"
     },
     "alter/mythic.json": {
-      "name": "Crystal Corruption"
+      "name": "Crystal Corruption",
+      "attacker": "alter_execution_prestige"
     },
     "alter/tail_whip.json": {
       "name": "Tail End"
@@ -21646,7 +21613,8 @@
       "name": "The Last Word"
     },
     "bangalore/default.json": {
-      "name": "No Sweat"
+      "name": "Recycle",
+      "attacker": "bangalore_execution_base"
     },
     "bangalore/heirloom.json": {
       "name": "Reveille"
