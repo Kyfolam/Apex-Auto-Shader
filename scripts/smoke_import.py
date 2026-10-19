@@ -427,14 +427,14 @@ def main() -> int:
     assert not (PKG_DIR / "skins.json").exists(), "plaintext skins.json must not exist"
 
     ver = apex_auto_shader.bl_info["version"]
-    assert ver == (2, 1, 0), ver
+    assert ver == (2, 1, 1), ver
     from apex_auto_shader import config
 
     assert config.ADDON_VERSION == ver
-    assert config.ADDON_VERSION_STR == "2.1.0"
+    assert config.ADDON_VERSION_STR == "2.1.1"
     manifest = (PKG_DIR / "blender_manifest.toml").read_text(encoding="utf-8")
     found = re.search(r'(?m)^version\s*=\s*"([^"]+)"', manifest)
-    assert found and found.group(1) == "2.1.0", manifest
+    assert found and found.group(1) == "2.1.1", manifest
     panel_src = (PKG_DIR / "panel.py").read_text(encoding="utf-8")
     assert "apexaddon.uninstall" not in panel_src
     from apex_auto_shader.install import other_copies
@@ -449,7 +449,7 @@ def main() -> int:
     here.mkdir(exist_ok=True)
     old.mkdir(exist_ok=True)
     dupes = other_copies(
-        [{"path": str(here), "version": "2.1.0"}, {"path": str(old), "version": "2.0.1"}],
+        [{"path": str(here), "version": "2.1.1"}, {"path": str(old), "version": "2.0.1"}],
         current=here,
     )
     assert len(dupes) == 1 and dupes[0]["version"] == "2.0.1"
