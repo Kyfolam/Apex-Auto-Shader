@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import bpy
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, IntProperty, StringProperty
 
-from . import anim, extras, pack, utils
+from . import anim, extras, pack, prop as propmod, utils
 from .config import ADDON_VERSION_STR
-from .naming import RARITY_ORDER, character_bucket, legend_display_name, parse_skin_identity, suggest_rsx_model_dir
+from .naming import RARITY_ORDER, character_bucket, legend_display_name, parse_skin_identity
 from .node_adder import (
     apex_shader_get,
     apex_shader_set,
@@ -65,7 +66,26 @@ def _report_shade(operator, reports, scene=None):
 
 
 def _update_anim_dir(self, context):
+    from .prefs import anim_folder_pref
+
+    global _ANIM_LOCK_HOLD
     raw = getattr(self, "apex_anim_dir", "") or ""
+    locked = anim_folder_pref()
+    if locked is not None:
+        locked_text = str(locked)
+        try:
+            same = Path(bpy.path.abspath(raw)).resolve() == locked.resolve()
+        except Exception:
+            same = str(raw) == locked_text
+        if not same:
+            if _ANIM_LOCK_HOLD:
+                return
+            _ANIM_LOCK_HOLD = True
+            try:
+                self.apex_anim_dir = locked_text
+            finally:
+                _ANIM_LOCK_HOLD = False
+            raw = locked_text
     if not raw:
         self.apex_anim_items.clear()
         return
@@ -74,53 +94,57 @@ def _update_anim_dir(self, context):
         anim.fill_animation_list(self, folder)
 
 
-_STEM_CACHE: tuple[str, tuple[str, ...]] | None = None
-_TEX_CACHE: tuple[str, tuple[str, ...]] | None = None
+_INDEX_CACHE: tuple | None = None
+_FIND_HOLD = False
+_ANIM_LOCK_HOLD = False
+_PRESENT_KEY = ""
+_PRESENT_MEMO: dict[tuple[str, str, str], bool] = {}
 
 
 def _model_root(scene) -> Path | None:
     from .log import existing_dir
+    from .prefs import model_folder_pref
 
+    locked = model_folder_pref()
+    if locked is not None:
+        return locked
     return existing_dir(getattr(scene, "apex_model_dir", "") or "")
 
 
-def _folder_stems(scene) -> tuple[str, ...]:
-    global _STEM_CACHE
+def _broad_dir(path: Path) -> bool:
+    """Home, Downloads and drive roots are not model folders. Do not walk them."""
+    try:
+        if path.parent == path or len(path.parts) <= 1:
+            return True
+    except Exception:
+        return True
+    home = Path.home()
+    broad = {home, home / "Downloads", home / "Desktop", home / "Documents"}
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    return resolved in broad or path in broad
+
+
+def _model_index(scene):
+    global _INDEX_CACHE, _PRESENT_KEY, _PRESENT_MEMO
     root = _model_root(scene)
     key = str(root) if root is not None else ""
-    if _STEM_CACHE is not None and _STEM_CACHE[0] == key:
-        return _STEM_CACHE[1]
-    stems: list[str] = []
-    if root is not None:
-        try:
-            for path in _casts_in(root):
-                stems.append(path.stem.lower())
-        except Exception:
-            pass
-    packed = tuple(stems)
-    _STEM_CACHE = (key, packed)
-    return packed
-
-
-def _folder_tex_blobs(scene) -> tuple[str, ...]:
-    global _TEX_CACHE
-    from .naming import IMAGE_SUFFIXES
-
-    root = _model_root(scene)
-    key = str(root) if root is not None else ""
-    if _TEX_CACHE is not None and _TEX_CACHE[0] == key:
-        return _TEX_CACHE[1]
-    blobs: list[str] = []
-    if root is not None:
-        try:
-            for path in root.rglob("*"):
-                if not path.is_file() or path.suffix.lower() not in IMAGE_SUFFIXES:
-                    continue
-                blobs.append("_".join([path.stem, *path.parts[-4:]]).lower())
-        except OSError:
-            pass
-    packed = tuple(blobs)
-    _TEX_CACHE = (key, packed)
+    if _INDEX_CACHE is not None and _INDEX_CACHE[0] == key:
+        return _INDEX_CACHE[1:]
+    if key != _PRESENT_KEY:
+        _PRESENT_KEY = key
+        _PRESENT_MEMO = {}
+    if root is None or _broad_dir(root):
+        packed = ((), (), (), False, ())
+        _INDEX_CACHE = (key, *packed)
+        return packed
+    try:
+        packed = pack.walk_model_index(root)
+    except OSError:
+        packed = ((), (), (), False, ())
+    _INDEX_CACHE = (key, *packed)
     return packed
 
 
@@ -128,13 +152,29 @@ def _prefix_present(prefix: str, name: str = "", legend: str = "", scene=None) -
     scene = scene if scene is not None else getattr(bpy.context, "scene", None)
     if scene is None or _model_root(scene) is None:
         return False
-    return pack.files_present(_folder_stems(scene), _folder_tex_blobs(scene), prefix, name, legend)
+    memo_key = ((prefix or "").lower(), (name or "").lower(), (legend or "").lower())
+    cached = _PRESENT_MEMO.get(memo_key)
+    if cached is not None:
+        return cached
+    casts, blobs, tex, _truncated, _paths = _model_index(scene)
+    hit = pack.files_present_indexed(casts, blobs, tex, prefix, name, legend)
+    _PRESENT_MEMO[memo_key] = hit
+    return hit
 
 
 def _refresh_find(self, context):
-    global _STEM_CACHE, _TEX_CACHE
-    _STEM_CACHE = None
-    _TEX_CACHE = None
+    global _FIND_HOLD
+    if _FIND_HOLD:
+        return
+    from .prefs import model_folder_pref
+
+    locked = model_folder_pref()
+    if locked is not None and str(getattr(self, "apex_model_dir", "") or "") != str(locked):
+        _FIND_HOLD = True
+        try:
+            self.apex_model_dir = str(locked)
+        finally:
+            _FIND_HOLD = False
     _update_find(self, context)
 
 
@@ -160,12 +200,90 @@ def _row_detail(prefix: str) -> str:
     return rarity or "—"
 
 
+def _rarity_rank(detail: str) -> int:
+    word = ((detail or "").split() or [""])[0].lower()
+    order = {name.lower(): index for index, name in enumerate(RARITY_ORDER)}
+    return order.get(word, len(order))
+
+
+def _order_find_rows(rows, sort_key: str, desc: bool):
+    """Name is A-Z. Rarity follows the rarity order. The legend selector filters."""
+    if sort_key == "rarity":
+        rows.sort(
+            key=lambda item: (_rarity_rank(item[3]), item[1].lower(), item[0].lower()),
+            reverse=desc,
+        )
+        return rows
+    rows.sort(key=lambda item: (item[1].lower(), item[0].lower()), reverse=desc)
+    return rows
+
+
+def _emit_find_header(items, title: str, key: str) -> None:
+    hdr = items.add()
+    hdr.name = title
+    hdr.legend = key
+    hdr.detail = ""
+    hdr.present = False
+    hdr.header = True
+    hdr.favorite = False
+    hdr.pick = False
+
+
+def _emit_find_skin(items, row, favorite: bool, picked: bool = False) -> None:
+    lg, name, _prefix, label, present = row
+    item = items.add()
+    item.name = name
+    item.legend = lg
+    item.detail = label
+    item.present = bool(present)
+    item.header = False
+    item.favorite = favorite
+    item.pick = picked
+
+
+def _find_selection(scene):
+    """Highlighted row and ticked skins, so a rebuild can put them back."""
+    items = getattr(scene, "apex_find_items", None)
+    picks = set()
+    selected = None
+    if not items:
+        return selected, picks
+    idx = int(getattr(scene, "apex_find_index", 0) or 0)
+    section = ""
+    if 0 <= idx < len(items):
+        for pos in range(idx, -1, -1):
+            if items[pos].header:
+                section = items[pos].legend or ""
+                break
+        current = items[idx]
+        if not current.header:
+            selected = (section, (current.legend or "").lower(), (current.name or "").lower())
+    for item in items:
+        if item.header or not item.pick:
+            continue
+        picks.add(((item.legend or "").lower(), (item.name or "").lower()))
+    return selected, picks
+
+
 def _update_find(self, context):
+    from .prefs import favorite_key, favorite_set
+
+    selected, picks = _find_selection(self)
     items = self.apex_find_items
     items.clear()
-    if _model_root(self) is None:
+    root = _model_root(self)
+    if root is None:
         self.apex_find_index = 0
+        try:
+            self["apex_find_truncated"] = False
+        except Exception:
+            pass
         return
+    _casts, _blobs, _tex, truncated, _paths = _model_index(self)
+    try:
+        self["apex_find_truncated"] = bool(truncated)
+    except Exception:
+        pass
     query = (getattr(self, "apex_find_query", "") or "").strip()
     legend = getattr(self, "apex_find_legend", "") or ""
     try:
@@ -178,36 +296,42 @@ def _update_find(self, context):
         prefix = row[2] if len(row) > 2 else pack.prefix_for(lg, name)
         present = _prefix_present(prefix, name, lg, self)
         rows.append((lg, name, prefix, _row_detail(prefix), present))
-    browse = not query
     only_present = bool(getattr(self, "apex_find_only_present", True))
     if only_present:
         rows = [row for row in rows if row[4]]
-    if browse:
-        rows.sort(key=lambda item: (item[0].lower(), item[1].lower()))
-    group = browse and len({row[0].lower() for row in rows}) > 1
+    sort_key = str(getattr(self, "apex_find_sort", "name") or "name")
+    if sort_key not in {"name", "rarity"}:
+        sort_key = "name"
+    desc = bool(getattr(self, "apex_find_sort_desc", False))
+    favs = favorite_set()
+    fav_rows = [row for row in rows if favorite_key(row[0], row[1]) in favs]
+    fav_rows = _order_find_rows(list(fav_rows), sort_key, desc)
+    rows = _order_find_rows(rows, sort_key, desc)
     collapsed = _fold_set(self, "apex_find_collapsed")
-    last = ""
     first_skin = -1
-    for lg, name, prefix, label, present in rows:
-        if group and lg.lower() != last:
-            hdr = items.add()
-            hdr.name = lg
-            hdr.legend = lg
-            hdr.detail = ""
-            hdr.present = False
-            hdr.header = True
-            last = lg.lower()
-        if group and lg.lower() in collapsed:
-            continue
-        item = items.add()
-        item.name = name
-        item.legend = lg
-        item.detail = label
-        item.present = bool(present)
-        item.header = False
+    chosen = -1
+
+    def emit_skin(row, section: str) -> None:
+        nonlocal first_skin, chosen
+        key = ((row[0] or "").lower(), (row[1] or "").lower())
+        _emit_find_skin(items, row, favorite_key(row[0], row[1]) in favs, key in picks)
+        index = len(items) - 1
         if first_skin < 0:
-            first_skin = len(items) - 1
-    self.apex_find_index = max(first_skin, 0)
+            first_skin = index
+        if selected == (section, key[0], key[1]):
+            chosen = index
+
+    if fav_rows:
+        _emit_find_header(items, "Favorites", "__favorites__")
+        if "__favorites__" not in collapsed:
+            for row in fav_rows:
+                emit_skin(row, "__favorites__")
+    if rows:
+        _emit_find_header(items, "All Skins", "__all__")
+        if "__all__" not in collapsed:
+            for row in rows:
+                emit_skin(row, "__all__")
+    self.apex_find_index = chosen if chosen >= 0 else max(first_skin, 0)
 
 
 _LEGEND_ENUM: list[tuple[str, str, str]] = [("ALL", "All", "All legends")]
@@ -260,12 +384,13 @@ def _find_roots(scene) -> list[Path]:
 
 
 def _casts_in(root: Path) -> list[Path]:
-    from .extras import list_model_casts
     from .naming import collect_lod0_casts, prefer_world_lod0, unique_skin_casts
 
-    found = list(collect_lod0_casts(root))
-    found.extend(list_model_casts(root))
-    return unique_skin_casts(prefer_world_lod0(found, root))
+    key = str(root)
+    if _INDEX_CACHE is not None and _INDEX_CACHE[0] == key:
+        paths = [Path(item) for item in _INDEX_CACHE[5]]
+        return unique_skin_casts(prefer_world_lod0(paths, root))
+    return collect_lod0_casts(root)
 
 
 def _score_cast(path: Path, needle: str) -> tuple[int, int, int, int, int] | None:
@@ -281,37 +406,103 @@ def _score_cast(path: Path, needle: str) -> tuple[int, int, int, int, int] | Non
     return (start, tight, lod0, is_w, -(len(stem) - len(n)))
 
 
+def _casts_under(root: Path, lod0_only: bool) -> list[Path]:
+    """CAST files under root. The texture walk can stop before the mesh."""
+    from .naming import is_lod0_cast
+
+    found: list[Path] = []
+    if root is None or not root.is_dir():
+        return found
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [
+            name
+            for name in dirnames
+            if not name.startswith(".") and name not in {"__pycache__", ".git"}
+        ]
+        for name in filenames:
+            if not name.lower().endswith(".cast"):
+                continue
+            if lod0_only and not is_lod0_cast(name):
+                continue
+            found.append(Path(dirpath) / name)
+    return found
+
+
 def _pick_cast(scene, needle: str) -> Path | None:
     from .naming import cast_search_prefixes, prefer_world_lod0, unique_skin_casts
 
     if not needle:
         return None
-    roots = _find_roots(scene)
+    roots: list[Path] = []
+    seen_roots: set[str] = set()
+    model_root = _model_root(scene)
+    for root in ([model_root] if model_root is not None else []) + _find_roots(scene):
+        if root is None:
+            continue
+        key = str(root)
+        if key in seen_roots:
+            continue
+        seen_roots.add(key)
+        roots.append(root)
     queries = cast_search_prefixes(needle) or [needle]
+    pool: list[Path] = []
+    seen_paths: set[str] = set()
+    for root in roots:
+        for path in _casts_in(root):
+            try:
+                key = str(path.resolve())
+            except OSError:
+                key = str(path)
+            if key in seen_paths:
+                continue
+            seen_paths.add(key)
+            pool.append(path)
+    ranked = pack.rank_cast_for_prefix(needle, [str(path) for path in pool])
+    if ranked:
+        return Path(ranked)
+    beside = pack.cast_beside_prefix(needle)
+    if beside:
+        return Path(beside)
+    truncated = False
+    if model_root is not None and _INDEX_CACHE is not None and _INDEX_CACHE[0] == str(model_root):
+        truncated = bool(_INDEX_CACHE[4])
+    if model_root is not None and (truncated or not pool):
+        walked = _casts_under(model_root, lod0_only=True)
+        ranked = pack.rank_cast_for_prefix(needle, [str(path) for path in walked])
+        if ranked:
+            return Path(ranked)
+    if model_root is not None:
+        any_cast = _casts_under(model_root, lod0_only=False)
+        ranked = pack.rank_cast_for_prefix(needle, [str(path) for path in any_cast])
+        if ranked:
+            return Path(ranked)
     matched: list[tuple[str, Path]] = []
     seen: set[str] = set()
     for query in queries:
-        for root in roots:
-            for path in _casts_in(root):
-                if _score_cast(path, query) is None:
-                    continue
-                try:
-                    key = str(path.resolve())
-                except OSError:
-                    key = str(path)
-                if key in seen:
-                    continue
-                seen.add(key)
-                matched.append((query, path))
+        for path in pool:
+            if _score_cast(path, query) is None:
+                continue
+            try:
+                key = str(path.resolve())
+            except OSError:
+                key = str(path)
+            if key in seen:
+                continue
+            seen.add(key)
+            matched.append((query, path))
         if matched:
             break
+    if not matched:
+        names = [str(path) for path in pool]
+        for item in pack.casts_for_skin(needle, names):
+            matched.append((needle, Path(item)))
     if not matched:
         return None
     query = matched[0][0]
     paths = [item[1] for item in matched]
-    ranked = unique_skin_casts(prefer_world_lod0(paths, roots[0] if roots else None))
-    ranked.sort(key=lambda p: _score_cast(p, query) or (0, 0, 0, 0, -9999), reverse=True)
-    return ranked[0]
+    ranked_paths = unique_skin_casts(prefer_world_lod0(paths, roots[0] if roots else None))
+    ranked_paths.sort(key=lambda p: _score_cast(p, query) or (0, 0, 0, 0, -9999), reverse=True)
+    return ranked_paths[0]
 
 
 class APEX_OT_shade_panel(bpy.types.Operator):
@@ -435,13 +626,29 @@ class APEX_OT_check_updates(bpy.types.Operator):
 
 class APEX_OT_eevee_ready(bpy.types.Operator):
     bl_idname = "apexaddon.eevee_ready"
-    bl_label = "Apply Eevee-ready settings"
+    bl_label = "Use Eevee"
     bl_description = "Switch to Eevee and apply recommended viewport/render settings"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
         extras.apply_eevee_ready(context.scene)
         self.report({"INFO"}, "Applied Eevee-ready settings")
+        return {"FINISHED"}
+
+
+class APEX_OT_cycles_ready(bpy.types.Operator):
+    bl_idname = "apexaddon.cycles_ready"
+    bl_label = "Use Cycles"
+    bl_description = "Switch the scene render engine to Cycles"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        try:
+            context.scene.render.engine = "CYCLES"
+        except Exception as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        self.report({"INFO"}, "Switched to Cycles")
         return {"FINISHED"}
 
 
@@ -472,6 +679,19 @@ class APEX_PT_main(bpy.types.Panel):
             box.label(text="Install dtzxporter/cast, then restart Blender")
         layout.operator(anim.APEX_OT_import_cast.bl_idname, icon="IMPORT")
         layout.operator(APEX_OT_find_skins.bl_idname, icon="VIEWZOOM")
+        engine = str(getattr(context.scene.render, "engine", "") or "")
+        row = layout.row(align=True)
+        row.label(text="Engine")
+        row.operator(
+            APEX_OT_eevee_ready.bl_idname,
+            text="Eevee",
+            depress=engine.startswith("BLENDER_EEVEE"),
+        )
+        row.operator(
+            APEX_OT_cycles_ready.bl_idname,
+            text="Cycles",
+            depress=engine == "CYCLES",
+        )
         if len(extras.tagged_armatures(context.scene)) > 1:
             layout.operator(anim.APEX_OT_showcase.bl_idname, icon="CAMERA_DATA")
 
@@ -479,6 +699,7 @@ class APEX_PT_main(bpy.types.Panel):
 class APEX_PT_textures(_ApexSubpanel, bpy.types.Panel):
     bl_label = "Textures"
     bl_idname = "APEX_PT_textures"
+    bl_order = 0
 
     def draw(self, context):
         layout = self.layout
@@ -519,6 +740,23 @@ class APEX_OT_toggle_char_group(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class APEX_OT_toggle_bones(bpy.types.Operator):
+    bl_idname = "apexaddon.toggle_bones"
+    bl_label = "Character"
+    bl_description = "Show or hide this whole character"
+    bl_options = {"REGISTER", "UNDO"}
+    target: StringProperty(default="")
+
+    def execute(self, context):
+        obj = bpy.data.objects.get(self.target)
+        if obj is None:
+            self.report({"ERROR"}, "Character not found")
+            return {"CANCELLED"}
+        hidden = utils.character_is_hidden(obj)
+        utils.set_character_hidden(obj, not hidden)
+        return {"FINISHED"}
+
+
 def _fold_header(layout, key: str, text: str, closed: bool, kind: str, default_collapsed: bool, indent: bool = False):
     row = layout.row(align=True)
     if indent:
@@ -547,6 +785,7 @@ def _fold_header(layout, key: str, text: str, closed: bool, kind: str, default_c
 class APEX_PT_characters(_ApexSubpanel, bpy.types.Panel):
     bl_label = "Characters"
     bl_idname = "APEX_PT_characters"
+    bl_order = 40
 
     @classmethod
     def poll(cls, context):
@@ -604,6 +843,12 @@ class APEX_PT_characters(_ApexSubpanel, bpy.types.Panel):
                 for display, arm in sorted(skins, key=lambda item: item[0].lower()):
                     srow = box.row(align=True)
                     srow.label(text=display or arm.name, icon="ARMATURE_DATA")
+                    bones = srow.operator(
+                        APEX_OT_toggle_bones.bl_idname,
+                        text="",
+                        icon="HIDE_ON" if utils.character_is_hidden(arm) else "HIDE_OFF",
+                    )
+                    bones.target = arm.name
                     focus = srow.operator(
                         anim.APEX_OT_focus_character.bl_idname,
                         text="",
@@ -615,12 +860,13 @@ class APEX_PT_characters(_ApexSubpanel, bpy.types.Panel):
 class APEX_PT_camera(_ApexSubpanel, bpy.types.Panel):
     bl_label = "Camera"
     bl_idname = "APEX_PT_camera"
+    bl_order = 10
 
     def draw(self, context):
         layout = self.layout
         split = layout.split(factor=0.67, align=True)
         split.operator(anim.APEX_OT_add_camera.bl_idname, icon="CAMERA_DATA")
-        portrait = bool(getattr(context.scene, "apex_cam_portrait", True))
+        portrait = anim.render_is_portrait(context.scene)
         split.operator(
             anim.APEX_OT_toggle_frame.bl_idname,
             text="9:16" if portrait else "16:9",
@@ -640,29 +886,49 @@ class APEX_PT_camera(_ApexSubpanel, bpy.types.Panel):
             op = row.operator(anim.APEX_OT_camera_preset.bl_idname, text=label)
             op.preset = key
         layout.prop(context.scene, "apex_light_boost")
-        layout.prop(context.scene, "apex_closeup_dof")
+        layout.prop(context.scene, "apex_light_kelvin")
+        row = layout.row(align=True)
+        row.prop(context.scene, "apex_cam_thirds", toggle=True)
+        row.prop(context.scene, "apex_closeup_dof")
 
 
 class APEX_PT_animation(_ApexSubpanel, bpy.types.Panel):
     bl_label = "Animation"
     bl_idname = "APEX_PT_animation"
+    bl_order = 20
 
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        layout.prop(scene, "apex_anim_dir", text="")
+        from .prefs import anim_folder_pref
+
+        locked = anim_folder_pref()
+        folder_row = layout.row()
+        folder_row.enabled = locked is None
+        folder_row.prop(scene, "apex_anim_dir", text="")
         layout.operator(anim.APEX_OT_pick_anim_folder.bl_idname, icon="FILE_FOLDER")
-        layout.prop(scene, "apex_anim_loop", text="Loop")
+        row = layout.row(align=True)
+        row.prop(scene, "apex_anim_loop", text="Loop")
+        search = row.row(align=True)
+        search.alignment = "RIGHT"
+        if bool(getattr(scene, "apex_anim_search", False)):
+            search.prop(scene, "apex_anim_query", text="", icon="VIEWZOOM")
+        search.operator(
+            anim.APEX_OT_anim_search.bl_idname,
+            text="",
+            icon="X" if bool(getattr(scene, "apex_anim_search", False)) else "VIEWZOOM",
+        )
         if not scene.apex_anim_items:
             return
         layout.template_list(
             "APEX_UL_anims",
-            "",
+            "apex_anims_compact",
             scene,
             "apex_anim_items",
             scene,
             "apex_anim_index",
-            rows=6,
+            rows=8,
+            maxrows=8,
         )
         row = layout.row(align=True)
         playing = bool(getattr(context.screen, "is_animation_playing", False))
@@ -672,6 +938,42 @@ class APEX_PT_animation(_ApexSubpanel, bpy.types.Panel):
             row.operator(anim.APEX_OT_anim_play.bl_idname, text="Play", icon="PLAY")
         row.operator(anim.APEX_OT_anim_stop.bl_idname, text="Reset", icon="MESH_PLANE")
         layout.operator(anim.APEX_OT_anim_delete.bl_idname, icon="TRASH")
+
+
+class APEX_PT_prop(_ApexSubpanel, bpy.types.Panel):
+    bl_label = "Prop"
+    bl_idname = "APEX_PT_prop"
+    bl_order = 30
+
+    def draw(self, context):
+        from . import prop as propmod
+        from .prefs import prop_folder_pref
+
+        layout = self.layout
+        scene = context.scene
+        folder_row = layout.row()
+        folder_row.prop(scene, "apex_prop_dir", text="")
+        layout.operator(propmod.APEX_OT_pick_prop_folder.bl_idname, icon="FILE_FOLDER")
+        layout.prop(scene, "apex_prop_query", text="", icon="VIEWZOOM")
+        raw = str(getattr(scene, "apex_prop_dir", "") or "")
+        pref = prop_folder_pref()
+        if not raw and pref is not None:
+            propmod.queue_prop_sync()
+        elif raw and not propmod.prop_list_ready(scene, raw):
+            propmod.queue_prop_sync()
+        if not scene.apex_prop_items:
+            layout.label(text="No props in this folder")
+            return
+        layout.template_list(
+            "APEX_UL_props",
+            "apex_props_compact",
+            scene,
+            "apex_prop_items",
+            scene,
+            "apex_prop_index",
+            rows=6,
+            maxrows=6,
+        )
 
 
 
@@ -687,6 +989,25 @@ class APEX_OT_find_mark(bpy.types.Operator):
 
     def execute(self, context):
         return {"CANCELLED"}
+
+
+class APEX_OT_find_pick(bpy.types.Operator):
+    bl_idname = "apexaddon.find_pick"
+    bl_label = "Select skin"
+    bl_description = "Tick or untick this skin"
+    bl_options = {"INTERNAL"}
+    index: IntProperty(default=-1)
+
+    def execute(self, context):
+        items = context.scene.apex_find_items
+        if self.index < 0 or self.index >= len(items):
+            return {"CANCELLED"}
+        item = items[self.index]
+        if getattr(item, "header", False):
+            return {"CANCELLED"}
+        item.pick = not bool(item.pick)
+        context.scene.apex_find_index = self.index
+        return {"FINISHED"}
 
 
 class APEX_OT_find_suggest(bpy.types.Operator):
@@ -708,6 +1029,41 @@ class APEX_PG_find_item(bpy.types.PropertyGroup):
     detail: StringProperty(name="Detail", default="")
     pick: BoolProperty(name="Pick", default=False)
     header: BoolProperty(name="Header", default=False)
+    favorite: BoolProperty(name="Favorite", default=False)
+
+
+class APEX_OT_find_favorite(bpy.types.Operator):
+    bl_idname = "apexaddon.find_favorite"
+    bl_label = "Favorite"
+    bl_description = "Pin this skin in the Favorites section"
+    bl_options = {"INTERNAL"}
+    legend: StringProperty(default="")
+    skin: StringProperty(default="")
+
+    def execute(self, context):
+        from .prefs import toggle_favorite
+
+        toggle_favorite(self.legend, self.skin)
+        _update_find(context.scene, context)
+        return {"FINISHED"}
+
+
+class APEX_OT_find_sort(bpy.types.Operator):
+    bl_idname = "apexaddon.find_sort"
+    bl_label = "Sort"
+    bl_description = "Sort the skin list. Click again to reverse"
+    bl_options = {"INTERNAL"}
+    key: StringProperty(default="name")
+
+    def execute(self, context):
+        scene = context.scene
+        if str(getattr(scene, "apex_find_sort", "name") or "name") == self.key:
+            scene.apex_find_sort_desc = not bool(scene.apex_find_sort_desc)
+        else:
+            scene.apex_find_sort = self.key
+            scene.apex_find_sort_desc = False
+        _update_find(scene, context)
+        return {"FINISHED"}
 
 
 class APEX_UL_find(bpy.types.UIList):
@@ -722,7 +1078,7 @@ class APEX_UL_find(bpy.types.UIList):
             closed = (item.legend or "").lower() in _fold_set(context.scene, "apex_find_collapsed")
             op = row.operator(
                 APEX_OT_find_toggle_legend.bl_idname,
-                text=item.legend or item.name or "",
+                text=item.name or item.legend or "",
                 icon="TRIA_RIGHT" if closed else "TRIA_DOWN",
                 emboss=False,
             )
@@ -741,15 +1097,71 @@ class APEX_UL_find(bpy.types.UIList):
         pick = row.row(align=True)
         pick.ui_units_x = 1.2
         pick.prop(item, "pick", text="")
+        star = row.row(align=True)
+        star.ui_units_x = 1.2
+        op = star.operator(
+            APEX_OT_find_favorite.bl_idname,
+            text="",
+            icon="SOLO_ON" if item.favorite else "SOLO_OFF",
+            emboss=False,
+        )
+        op.legend = item.legend or ""
+        op.skin = item.name or ""
         name = row.row(align=True)
         name.ui_units_x = 9.0
-        name.label(text=item.name or "")
+        op = name.operator(
+            APEX_OT_find_pick.bl_idname,
+            text=item.name or "",
+            emboss=False,
+            depress=bool(item.pick),
+        )
+        op.index = index
         detail = row.row(align=True)
         detail.ui_units_x = 5.0
-        detail.label(text=item.detail or "—")
+        op = detail.operator(
+            APEX_OT_find_pick.bl_idname,
+            text=item.detail or "—",
+            emboss=False,
+        )
+        op.index = index
         legend = row.row(align=True)
         legend.ui_units_x = 4.0
-        legend.label(text=item.legend or "")
+        op = legend.operator(
+            APEX_OT_find_pick.bl_idname,
+            text=item.legend or "",
+            emboss=False,
+        )
+        op.index = index
+
+
+class APEX_OT_find_import_all(bpy.types.Operator):
+    bl_idname = "apexaddon.find_import_all"
+    bl_label = "Import all"
+    bl_description = "Import every skin currently listed for the selected legend"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        scene = getattr(context, "scene", None)
+        legend = str(getattr(scene, "apex_find_legend", "") or "")
+        items = getattr(scene, "apex_find_items", None)
+        if not legend or legend.upper() == "ALL" or not items:
+            return False
+        return any(not getattr(it, "header", False) for it in items)
+
+    def execute(self, context):
+        scene = context.scene
+        legend = str(getattr(scene, "apex_find_legend", "") or "")
+        if not legend or legend.upper() == "ALL":
+            self.report({"ERROR"}, "Select a legend first")
+            return {"CANCELLED"}
+        rows = [it for it in scene.apex_find_items if not getattr(it, "header", False)]
+        if not rows:
+            self.report({"ERROR"}, "No skins to import")
+            return {"CANCELLED"}
+        for item in rows:
+            item.pick = True
+        return APEX_OT_find_load.execute(self, context)
 
 
 class APEX_OT_find_load(bpy.types.Operator):
@@ -766,7 +1178,7 @@ class APEX_OT_find_load(bpy.types.Operator):
 
     def execute(self, context):
         from .extras import CHAR_RECOLOR, CHAR_TAG, tag_character
-        from .naming import find_texture_folder, split_mesh_variant
+        from .naming import cast_search_prefixes, find_texture_folder, is_recolor_code, split_mesh_variant
         from .node_adder import current_node_adder
         from .prefs import auto_load_anims, auto_shade
         from .utils import hide_rig
@@ -787,6 +1199,15 @@ class APEX_OT_find_load(bpy.types.Operator):
                 self.report({"ERROR"}, "Select a skin under the legend header")
                 return {"CANCELLED"}
             picked = [chosen]
+        seen_skins = set()
+        unique = []
+        for item in picked:
+            key = ((item.legend or "").lower(), (item.name or "").lower())
+            if key in seen_skins:
+                continue
+            seen_skins.add(key)
+            unique.append(item)
+        picked = unique
 
         first = None
         loaded = 0
@@ -798,7 +1219,14 @@ class APEX_OT_find_load(bpy.types.Operator):
             if path is None:
                 self.report({"WARNING"}, f"{item.name}: no CAST in the model folder")
                 continue
-            _mesh, recolor = split_mesh_variant(needle)
+            _mesh, variant = split_mesh_variant(needle)
+            recolor = variant if is_recolor_code(variant) else ""
+            tex_dir = pack.texture_dir_for_prefix(needle)
+            if not tex_dir:
+                for alias in cast_search_prefixes(needle):
+                    tex_dir = pack.texture_dir_for_prefix(alias)
+                    if tex_dir:
+                        break
             try:
                 arm, folder = anim.import_cast_model(context, str(path))
             except Exception as exc:
@@ -807,19 +1235,32 @@ class APEX_OT_find_load(bpy.types.Operator):
             if arm is None:
                 self.report({"WARNING"}, f"{item.name}: imported, but no armature")
                 continue
-            if recolor:
+            if tex_dir and not recolor:
+                folder = Path(tex_dir)
+            elif recolor:
                 tagged = find_texture_folder(path, recolor_code=recolor)
                 if tagged is not None:
                     folder = tagged
-            tag_character(arm, folder=folder, cast_path=path, recolor=recolor)
+                elif tex_dir:
+                    folder = Path(tex_dir)
+            tag_character(arm, folder=folder, cast_path=path, recolor=recolor or None)
             if needle:
                 arm[CHAR_TAG] = needle
             if recolor:
                 arm[CHAR_RECOLOR] = recolor
+            elif CHAR_RECOLOR in arm:
+                try:
+                    del arm[CHAR_RECOLOR]
+                except Exception:
+                    pass
             if auto_shade():
                 try:
                     reports = utils.shade_selected(
-                        [arm], current_node_adder(scene), folder=folder, finish=False
+                        [arm],
+                        current_node_adder(scene),
+                        folder=folder,
+                        prefix=needle,
+                        finish=False,
                     )
                     shaded += sum(1 for r in reports if r.get("wired"))
                 except Exception as exc:
@@ -935,19 +1376,30 @@ class APEX_OT_find_confirm(bpy.types.Operator):
 
 
 def _suggest_model_dir(scene) -> None:
+    """Find Skins opens on the Model folder, or on the RSX export folder."""
+    global _FIND_HOLD
     from .log import existing_dir
+    from .prefs import model_folder_pref, pref
 
-    if existing_dir(getattr(scene, "apex_model_dir", "") or "") is not None:
+    def _set(text: str) -> None:
+        global _FIND_HOLD
+        if str(getattr(scene, "apex_model_dir", "") or "") == text:
+            return
+        _FIND_HOLD = True
+        try:
+            scene.apex_model_dir = text
+        finally:
+            _FIND_HOLD = False
+
+    locked = model_folder_pref()
+    if locked is not None:
+        _set(str(locked))
         return
-    seeds = [
-        getattr(scene, "apex_cast_path", "") or "",
-        getattr(scene, "apex_texture_dir", "") or "",
-        getattr(scene, "apex_anim_dir", "") or "",
-        getattr(bpy.data, "filepath", "") or "",
-    ]
-    hit = suggest_rsx_model_dir(seeds)
-    if hit:
-        scene.apex_model_dir = hit
+    raw = str(pref("rsx_export_dir", "") or "").strip()
+    folder = existing_dir(raw) if raw else None
+    if folder is None or _broad_dir(folder):
+        return
+    _set(str(folder))
 
 
 class APEX_OT_find_skins(bpy.types.Operator):
@@ -962,11 +1414,25 @@ class APEX_OT_find_skins(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self, width=620)
 
     def draw(self, context):
+        from .prefs import model_folder_pref, pref
+
         scene = context.scene
         layout = self.layout
-        layout.prop(scene, "apex_model_dir", text="Model folder")
+        folder_row = layout.row()
+        folder_row.enabled = model_folder_pref() is None
+        folder_row.prop(scene, "apex_model_dir", text="Model folder")
+
+        if model_folder_pref() is None and not str(pref("rsx_export_dir", "") or "").strip():
+            layout.label(text="Set RSX export folder in Add-on Preferences")
+        elif model_folder_pref() is None and _model_root(scene) is None:
+            layout.label(text="RSX export folder was not found")
+        elif bool(scene.get("apex_find_truncated")):
+            layout.label(text="Folder is very large — list may be incomplete")
         row = layout.row(align=True)
         row.prop(scene, "apex_find_only_present", text="Skins found")
+        legend = str(getattr(scene, "apex_find_legend", "") or "")
+        if legend and legend.upper() != "ALL":
+            row.operator(APEX_OT_find_import_all.bl_idname, text="Import all", icon="IMPORT")
         layout.prop(scene, "apex_find_query", text="", icon="VIEWZOOM")
         sugs = pack.suggest_names(scene.apex_find_query, scene.apex_find_legend)
         if sugs:
@@ -996,6 +1462,15 @@ class APEX_OT_find_skins(bpy.types.Operator):
             else:
                 layout.label(text="No skins from this folder" if scene.apex_find_only_present else "No skins for that folder")
             return
+        bar = layout.row(align=True)
+        current = str(getattr(scene, "apex_find_sort", "name") or "name")
+        desc = bool(getattr(scene, "apex_find_sort_desc", False))
+        for key, label in (("name", "Name"), ("rarity", "Rarity")):
+            icon = "NONE"
+            if current == key:
+                icon = "TRIA_UP" if desc else "TRIA_DOWN"
+            op = bar.operator(APEX_OT_find_sort.bl_idname, text=label, icon=icon)
+            op.key = key
         layout.template_list(
             "APEX_UL_find",
             "",
@@ -1031,12 +1506,18 @@ panel_classes = (
     APEX_OT_clean_scene,
     APEX_OT_check_updates,
     APEX_OT_eevee_ready,
+    APEX_OT_cycles_ready,
     APEX_OT_toggle_char_group,
+    APEX_OT_toggle_bones,
     APEX_OT_find_mark,
+    APEX_OT_find_pick,
     APEX_OT_find_suggest,
+    APEX_OT_find_favorite,
+    APEX_OT_find_sort,
     APEX_PG_find_item,
     APEX_UL_find,
     APEX_OT_find_load,
+    APEX_OT_find_import_all,
     APEX_OT_find_toggle_legend,
     APEX_OT_find_confirm,
     APEX_OT_find_skins,
@@ -1045,6 +1526,8 @@ panel_classes = (
     APEX_PT_characters,
     APEX_PT_camera,
     APEX_PT_animation,
+    APEX_PT_prop,
+    *propmod.prop_classes,
 )
 
 
@@ -1053,6 +1536,24 @@ def _update_light_boost(self, _context):
         from .anim.studio import apply_light_boost
 
         apply_light_boost(self)
+    except Exception:
+        pass
+
+
+def _update_light_kelvin(self, _context):
+    try:
+        from .anim.studio import apply_light_kelvin
+
+        apply_light_kelvin(self)
+    except Exception:
+        pass
+
+
+def _update_thirds(self, _context):
+    try:
+        from .anim.studio import apply_composition_guides
+
+        apply_composition_guides(self)
     except Exception:
         pass
 
@@ -1111,6 +1612,22 @@ def _update_cam_target(self, _context):
         pass
 
 
+def _refresh_anim_legends():
+    """Rebuild the animation list so folder names like Jump are not legends."""
+    try:
+        from .anim.clips import fill_animation_list
+        from .prefs import anim_folder_pref
+
+        locked = anim_folder_pref()
+        for scene in list(bpy.data.scenes):
+            folder = str(locked) if locked is not None else str(getattr(scene, "apex_anim_dir", "") or "")
+            if folder:
+                fill_animation_list(scene, folder)
+    except Exception:
+        pass
+    return None
+
+
 def register_props():
     bpy.types.Scene.apex_shader = EnumProperty(
         name="Shader",
@@ -1132,6 +1649,17 @@ def register_props():
         description="Loop the current clip. Off = play once",
         default=anim_loop_default(),
     )
+    bpy.types.Scene.apex_anim_search = BoolProperty(
+        name="Search",
+        description="Show the pose search field",
+        default=False,
+    )
+    bpy.types.Scene.apex_anim_query = StringProperty(
+        name="Search",
+        description="Find a pose by name. Reversed text matches too",
+        default="",
+        options={"TEXTEDIT_UPDATE"},
+    )
     bpy.types.Scene.apex_cam_preset = StringProperty(name="Camera preset", default="front")
     bpy.types.Scene.apex_light_boost = bpy.props.FloatProperty(
         name="Light boost",
@@ -1146,16 +1674,32 @@ def register_props():
         subtype="PERCENTAGE",
         update=_update_light_boost,
     )
+    bpy.types.Scene.apex_light_kelvin = bpy.props.FloatProperty(
+        name="Light color",
+        description="Studio light temperature. 6500K is daylight white, lower is warmer",
+        default=6500.0,
+        min=2700.0,
+        max=9000.0,
+        step=100,
+        precision=0,
+        update=_update_light_kelvin,
+    )
+    bpy.types.Scene.apex_cam_thirds = BoolProperty(
+        name="Thirds",
+        description="Rule-of-thirds guides on the studio camera",
+        default=False,
+        update=_update_thirds,
+    )
     bpy.types.Scene.apex_closeup_dof = BoolProperty(
         name="Close-up DOF",
-        description="Shallow depth of field on the studio camera when Close-up is active. Focuses the active object.",
+        description="Shallow depth of field on the close-up camera. Focuses the character's head",
         default=False,
         update=_update_closeup_dof,
     )
     bpy.types.Scene.apex_cam_portrait = BoolProperty(
         name="Portrait",
         description="On = portrait 1080x1920, off = landscape 1920x1080",
-        default=True,
+        default=False,
         update=_update_portrait,
     )
     bpy.types.Scene.apex_cam_lock = BoolProperty(name="Lock camera", default=False)
@@ -1212,8 +1756,9 @@ def register_props():
     )
     bpy.types.Scene.apex_find_query = StringProperty(
         name="Search",
-        description="Find a skin by name",
+        description="Find a skin by name. The list updates while typing",
         default="",
+        options={"TEXTEDIT_UPDATE"},
         update=_update_find,
     )
     bpy.types.Scene.apex_find_only_present = BoolProperty(
@@ -1231,7 +1776,14 @@ def register_props():
     bpy.types.Scene.apex_find_items = CollectionProperty(type=APEX_PG_find_item)
     bpy.types.Scene.apex_find_index = IntProperty(name="Skin", default=0)
     bpy.types.Scene.apex_find_collapsed = StringProperty(default="")
+    bpy.types.Scene.apex_find_sort = StringProperty(name="Sort", default="name")
+    bpy.types.Scene.apex_find_sort_desc = BoolProperty(name="Sort descending", default=False)
     bpy.types.Scene.apex_find_dupe_msg = StringProperty(default="")
+    propmod.register_scene_props()
+    try:
+        bpy.app.timers.register(_refresh_anim_legends, first_interval=0.8)
+    except Exception:
+        pass
     try:
         sync_unset_scenes()
     except Exception:
@@ -1243,8 +1795,12 @@ def unregister_props():
         "apex_shader",
         "apex_shader_user_set",
         "apex_anim_loop",
+        "apex_anim_search",
+        "apex_anim_query",
         "apex_cam_preset",
         "apex_light_boost",
+        "apex_light_kelvin",
+        "apex_cam_thirds",
         "apex_closeup_dof",
         "apex_cam_portrait",
         "apex_cam_lock",
@@ -1254,6 +1810,11 @@ def unregister_props():
         "apex_anim_dir",
         "apex_anim_items",
         "apex_anim_index",
+        "apex_prop_dir",
+        "apex_prop_items",
+        "apex_prop_index",
+        "apex_prop_query",
+        "apex_prop_collapsed",
         "apex_character",
         "apex_cast_path",
         "apex_cast_collection",
@@ -1267,6 +1828,8 @@ def unregister_props():
         "apex_find_items",
         "apex_find_index",
         "apex_find_collapsed",
+        "apex_find_sort",
+        "apex_find_sort_desc",
         "apex_find_dupe_msg",
     ):
         if hasattr(bpy.types.Scene, attr):

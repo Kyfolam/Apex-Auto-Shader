@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import math
 
 import bpy
 from mathutils import Vector
@@ -32,7 +33,10 @@ from ..blender_compat import deselect_objects, ignore_rna, material_meshes, reso
 from ..log import existing_file, log
 from ..naming import is_banner_clip, is_capturemode_clip, strip_blender_suffix
 from ..prefs import cast_importer_available, model_scale
-from ..utils import hide_rig
+from .files import clip_should_autoplay
+
+from ..utils import hide_rig, hold_rig_visibility, restore_rig_visibility, rig_is_hidden
+
 
 def _unhide(obj: bpy.types.Object) -> bool:
     hidden = bool(obj.hide_get()) or bool(getattr(obj, "hide_viewport", False))
@@ -104,7 +108,9 @@ def view_front_and_frame(context, obj: bpy.types.Object) -> None:
         if active is None:
             active = mesh
             context.view_layer.objects.active = mesh
+    was_hidden = False
     if active is None and target is not None:
+        was_hidden = rig_is_hidden(target)
         _unhide(target)
         try:
             target.select_set(True)
@@ -113,6 +119,8 @@ def view_front_and_frame(context, obj: bpy.types.Object) -> None:
         except Exception:
             pass
     if window is None or active is None:
+        if was_hidden:
+            restore_rig_visibility(target, True)
         return
     try:
         with context.temp_override(window=window, area=area, region=region):
@@ -120,6 +128,8 @@ def view_front_and_frame(context, obj: bpy.types.Object) -> None:
             bpy.ops.view3d.view_selected()
     except Exception:
         pass
+    if was_hidden:
+        restore_rig_visibility(target, True)
     set_material_viewport(context)
 
 
@@ -503,33 +513,54 @@ def _constant_keys(curve) -> None:
         pass
 
 
+def _strip_location_keys(obj: bpy.types.Object) -> None:
+    """Drop object location curves. A constant pin snaps a moved model back on play."""
+    ad = getattr(obj, "animation_data", None)
+    action = getattr(ad, "action", None) if ad is not None else None
+    if action is None:
+        return
+    for curve in list(_action_fcurves(action)):
+        path = getattr(curve, "data_path", "") or ""
+        if path in {"location", "delta_location"}:
+            _remove_fcurve(action, curve)
+    try:
+        action["apex_loc_free"] = True
+    except Exception:
+        pass
+
+
+def _layout_pin_channels(scale) -> tuple:
+    """Scale only. Location is left unkeyed so playback cannot pull the armature back."""
+    return (
+        ("scale", 0, float(scale[0])),
+        ("scale", 1, float(scale[1])),
+        ("scale", 2, float(scale[2])),
+    )
+
+
 def _pin_object_layout(obj: bpy.types.Object, saved: dict | None = None) -> None:
-    """Pin location/scale. Strip rotation keys so CAST cannot tilt the armature by 90°."""
+    """Pin scale. Strip rotation and location keys.
+
+    CAST must not tilt the armature, and it must not own object location.
+    A paused model can be moved; resuming playback keeps that position.
+    """
     _restore_transform(obj, saved)
     _strip_object_rotation_keys(obj)
+    _strip_location_keys(obj)
     ad = getattr(obj, "animation_data", None)
     action = getattr(ad, "action", None) if ad is not None else None
     if action is None:
         _zero_object_rotation(obj)
         return
     _action_slot(obj, action)
-    loc = obj.location
     scl = obj.scale
     scene = getattr(bpy.context, "scene", None)
     start = int(getattr(scene, "frame_start", 1) or 1)
     end = int(getattr(scene, "frame_end", start) or start)
     if end < start:
         end = start
-    channels = (
-        ("location", 0, float(loc[0])),
-        ("location", 1, float(loc[1])),
-        ("location", 2, float(loc[2])),
-        ("scale", 0, float(scl[0])),
-        ("scale", 1, float(scl[1])),
-        ("scale", 2, float(scl[2])),
-    )
     wrote = False
-    for path, index, value in channels:
+    for path, index, value in _layout_pin_channels(scl):
         curve = _ensure_object_fcurve(obj, path, index)
         if curve is None:
             continue
@@ -539,11 +570,11 @@ def _pin_object_layout(obj: bpy.types.Object, saved: dict | None = None) -> None
         try:
             for frame in dict.fromkeys((start, end)):
                 for index in range(3):
-                    obj.keyframe_insert(data_path="location", index=index, frame=frame)
                     obj.keyframe_insert(data_path="scale", index=index, frame=frame)
         except Exception as exc:
-            log.warning("Could not pin layout transform on %s: %s", obj.name, exc)
+            log.warning("Could not pin layout scale on %s: %s", obj.name, exc)
     _strip_object_rotation_keys(obj)
+    _strip_location_keys(obj)
     _zero_object_rotation(obj)
 
 
@@ -719,20 +750,33 @@ def _align_start_bones(attacker: bpy.types.Object, victim: bpy.types.Object) -> 
     return True
 
 
-def _mirror_victim_y(attacker: bpy.types.Object, victim: bpy.types.Object) -> None:
+def _turn_victim_toward_attacker(attacker: bpy.types.Object, victim: bpy.types.Object) -> None:
+    """Face the victim back along X so they look at the attacker.
+
+    CAST forward is local X. Mirroring scale Y only flips left/right, so both
+    keep looking the same way and the victim faces away. 180° around world up
+    (Z) turns local +X into -X. Scale stays positive: the playback pin would
+    otherwise overwrite a negative scale on the next frame.
+    """
     try:
         victim.rotation_mode = "XYZ"
         attacker.rotation_mode = "XYZ"
-        victim.rotation_euler = attacker.rotation_euler.copy()
-        scale = attacker.scale.copy()
-        victim.scale = (scale.x, -abs(float(scale.y) or model_scale()), scale.z)
+        euler = attacker.rotation_euler.copy()
+        euler.z = float(euler.z) + math.pi
+        victim.rotation_euler = euler
+        scale = attacker.scale
+        victim.scale = (
+            abs(float(scale.x)) or model_scale(),
+            abs(float(scale.y)) or model_scale(),
+            abs(float(scale.z)) or model_scale(),
+        )
         victim.location = attacker.location.copy()
     except ReferenceError:
         pass
 
 
 def _place_victim(attacker: bpy.types.Object, victim: bpy.types.Object) -> None:
-    _mirror_victim_y(attacker, victim)
+    _turn_victim_toward_attacker(attacker, victim)
     _align_start_bones(attacker, victim)
 
 
@@ -797,8 +841,31 @@ def apply_cast_animation(
         )
     path = _require_anim_file(filepath, "Animation")
     remember_character(arm)
+    bones_hidden = rig_is_hidden(arm)
     saved = _capture_transform(arm)
     before = set(bpy.data.objects.keys())
+    hold_rig_visibility(True)
+    try:
+        return _apply_cast_animation_body(
+            context, path, arm, saved, before, play=play, aim_camera=aim_camera
+        )
+    finally:
+        try:
+            if _object_alive(arm):
+                restore_rig_visibility(arm, bones_hidden)
+        finally:
+            hold_rig_visibility(False)
+
+
+def _apply_cast_animation_body(
+    context,
+    path: Path,
+    arm: bpy.types.Object,
+    saved,
+    before: set,
+    play: bool = True,
+    aim_camera: bool = True,
+) -> bool:
     make_armature_active(context, arm)
     _object_mode(context)
     _zero_object_rotation(arm)
@@ -854,7 +921,6 @@ def apply_cast_animation(
     _strip_object_rotation_keys(arm)
     _restore_transform(arm, saved)
     _zero_object_rotation(arm)
-    hide_rig(arm)
     remember_character(arm)
     deselect_all(context)
     _stop_animation(context)
@@ -897,6 +963,9 @@ def apply_cast_animation(
             apply_camera_preset(context, "front", create=False)
         else:
             refresh_studio_camera(context)
+    if play and not clip_should_autoplay(path):
+        play = False
+        log.info("Not playing %s (under 200KB)", path.name)
     if (not static_banner) and play and not context.screen.is_animation_playing:
         bpy.ops.screen.animation_play()
     return True
@@ -1109,21 +1178,33 @@ def apply_finisher_full(
         _restore_transform(victim, saved)
     if not _object_alive(arm) or not _object_alive(victim):
         raise RuntimeError("Attacker or victim disappeared after loading finisher clips.")
-    _unhide(arm)
-    _unhide(victim)
-    if not _armature_has_bone(arm, START_BONE):
-        notes.append(f"Attacker is missing bone '{START_BONE}' — victim alignment skipped")
-    elif not _armature_has_bone(victim, START_BONE):
-        notes.append(f"Victim is missing bone '{START_BONE}' — victim alignment skipped")
-    else:
-        _place_victim(arm, victim)
-    _park_victim(context, victim)
-    hide_rig(arm)
-    hide_rig(victim)
+    attacker_hidden = rig_is_hidden(arm)
+    victim_hidden = rig_is_hidden(victim)
+    hold_rig_visibility(True)
+    try:
+        _unhide(arm)
+        _unhide(victim)
+        if not _armature_has_bone(arm, START_BONE):
+            notes.append(f"Attacker is missing bone '{START_BONE}' — victim alignment skipped")
+        elif not _armature_has_bone(victim, START_BONE):
+            notes.append(f"Victim is missing bone '{START_BONE}' — victim alignment skipped")
+        else:
+            _place_victim(arm, victim)
+        _park_victim(context, victim)
+    finally:
+        try:
+            if _object_alive(arm):
+                restore_rig_visibility(arm, attacker_hidden)
+            if _object_alive(victim):
+                restore_rig_visibility(victim, victim_hidden)
+        finally:
+            hold_rig_visibility(False)
     remember_character(arm)
     context.view_layer.update()
-    if not context.screen.is_animation_playing:
+    if clip_should_autoplay(atk) and not context.screen.is_animation_playing:
         bpy.ops.screen.animation_play()
+    elif not clip_should_autoplay(atk):
+        log.info("Not playing finisher %s (under 200KB)", Path(atk).name)
     refresh_studio_camera(context)
     deselect_all(context)
     for note in notes:
@@ -1134,24 +1215,32 @@ def apply_finisher_full(
 def clear_animation(context, arm: bpy.types.Object) -> None:
     if context.screen.is_animation_playing:
         bpy.ops.screen.animation_cancel(restore_frame=False)
-    make_armature_active(context, arm)
-    if arm.animation_data:
-        arm.animation_data.action = None
-        tracks = arm.animation_data.nla_tracks
-        while tracks:
-            tracks.remove(tracks[0])
-        arm.animation_data_clear()
-    for bone in arm.pose.bones:
-        bone.matrix_basis.identity()
-    children = getattr(arm, "children_recursive", None)
-    pool = list(children) if children is not None else list(getattr(arm, "children", []))
-    for child in pool:
-        ad = getattr(child, "animation_data", None)
-        if ad is not None:
-            child.animation_data_clear()
-    context.scene.frame_set(context.scene.frame_start)
-    restore_studio_camera(context)
-    hide_rig(arm)
-    _purge_victim_characters(context)
+    bones_hidden = rig_is_hidden(arm)
+    hold_rig_visibility(True)
+    try:
+        make_armature_active(context, arm)
+        if arm.animation_data:
+            arm.animation_data.action = None
+            tracks = arm.animation_data.nla_tracks
+            while tracks:
+                tracks.remove(tracks[0])
+            arm.animation_data_clear()
+        for bone in arm.pose.bones:
+            bone.matrix_basis.identity()
+        children = getattr(arm, "children_recursive", None)
+        pool = list(children) if children is not None else list(getattr(arm, "children", []))
+        for child in pool:
+            ad = getattr(child, "animation_data", None)
+            if ad is not None:
+                child.animation_data_clear()
+        context.scene.frame_set(context.scene.frame_start)
+        restore_studio_camera(context)
+        _purge_victim_characters(context)
+    finally:
+        try:
+            if _object_alive(arm):
+                restore_rig_visibility(arm, bones_hidden)
+        finally:
+            hold_rig_visibility(False)
 
 

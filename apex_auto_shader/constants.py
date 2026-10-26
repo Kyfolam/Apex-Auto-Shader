@@ -288,14 +288,25 @@ EYE_HASH_MESHES = {
     "17812929278914435647": "eyeshadow",
 }
 
+# CAST rigs that name a mesh with a numeric id instead of a body part.
+PART_HASH_MESHES = {
+    "8533931396491904913": "gear",
+    "9444831493659426347": "head",
+    "10849430867501589620": "hair",
+}
+
 MESH_PARTS = frozenset(
     {
         "body",
         "head",
         "hair",
         "hair02",
+        "stubinhair",
+        "stubinahair",
         "gear",
+        "suit",
         "kit",
+        "helmet",
         "glass",
         "legs",
         "arms",

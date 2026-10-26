@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import base64
+import bisect
 import difflib
 import hashlib
 import hmac
+import os
 import re
 import struct
 import zlib
@@ -323,6 +325,14 @@ _CAST_NOISE = frozenset(
         "legs",
         "gear",
         "kit",
+        "helmet",
+        "suit",
+        "lens",
+        "gauntlet",
+        "grapple",
+        "hair02",
+        "stubinhair",
+        "stubinahair",
         "glass",
         "skin",
         "pt",
@@ -502,12 +512,421 @@ def files_present(
                 continue
             if not anchor or anchor in blob or _blob_has(blob, anchor) or extra in blob:
                 return True
+        needles = [item.lower() for item in cast_search_prefixes(prefix)] or [extra]
+        for stem in stems:
+            for needle in needles:
+                if _stem_matches(stem, needle):
+                    return True
         return False
     needles = [item.lower() for item in cast_search_prefixes(prefix)] or [extra]
     for stem in stems:
         for needle in needles:
             if _stem_matches(stem, needle):
                 return True
+    return False
+
+
+_RECOLOR_BLOB = re.compile(r"(?:^|_)((?:rt|rc)\d{2}|shared0[12])(?:_|$)")
+_IMAGE_EXT = {".png", ".dds", ".tga", ".jpg", ".jpeg", ".tif", ".tiff", ".exr", ".bmp"}
+_BLOB_INDEX: tuple | None = None
+_TEX_TOKENS: tuple | None = None
+_LINK_KEY = ""
+_DIR_TEX: dict[str, tuple[str, ...]] = {}
+_DIR_CASTS: dict[str, tuple[str, ...]] = {}
+_CAST_PATHS: tuple[str, ...] = ()
+_CAST_TEXT: dict[str, tuple[str, ...]] = {}
+_NAME_RE = re.compile(rb"[A-Za-z][A-Za-z0-9_]{5,120}")
+_DISK_TOKEN = re.compile(r"[a-z0-9]+")
+_GENERIC_DIRS = frozenset(
+    {
+        "materials",
+        "material",
+        "textures",
+        "texture",
+        "images",
+        "image",
+        "png",
+        "models",
+        "model",
+        "mdl",
+        "humans",
+        "human",
+        "class",
+        "pilot",
+        "light",
+        "medium",
+        "heavy",
+        "exported_files",
+        "techart",
+        "mshop",
+        "characters",
+        "legends",
+        "skins",
+        "skin",
+        "lod0",
+        "anims",
+    }
+)
+_GENERIC_DISK = frozenset(
+    {
+        "pilot",
+        "light",
+        "medium",
+        "heavy",
+        "class",
+        "lod0",
+        "legendary",
+        "epic",
+        "rare",
+        "mythic",
+        "base",
+        "skin",
+        "skins",
+        "model",
+        "human",
+        "humans",
+    }
+)
+_INTERESTING = (
+    "_lgnd_",
+    "_mythic_",
+    "_legendary_",
+    "_epic_",
+    "_icon_",
+    "_base_",
+    "_rare_",
+    "albedo",
+    "_col",
+    "_nml",
+    "_msk",
+)
+
+
+def rsx_character_roots(root: Path) -> list[Path]:
+    """The two places RSX puts legend meshes.
+
+    ``mdl/humans/class`` and ``mdl/techart/mshop/characters/legends``.
+    Either folder the user picked still has to see the other one.
+    """
+    start = root if root.is_dir() else root.parent
+    cur = start
+    for _ in range(12):
+        candidates = []
+        if cur.name.lower() == "mdl":
+            candidates.append(cur)
+        candidates.append(cur / "mdl")
+        candidates.append(cur / "exported_files" / "mdl")
+        for mdl in candidates:
+            if not mdl.is_dir():
+                continue
+            found: list[Path] = []
+            class_dir = mdl / "humans" / "class"
+            legends = mdl / "techart" / "mshop" / "characters" / "legends"
+            if class_dir.is_dir():
+                found.append(class_dir)
+            if legends.is_dir():
+                found.append(legends)
+            if found:
+                return found
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    return []
+
+
+def rsx_art_legend_root(root: Path) -> Path | None:
+    """Recolor PNGs: exported_files/texture/art/mshop/characters/legends."""
+    start = root if root.is_dir() else root.parent
+    cur = start
+    rel = ("texture", "art", "mshop", "characters", "legends")
+    for _ in range(12):
+        for base in (cur, cur / "exported_files"):
+            cand = base.joinpath(*rel)
+            try:
+                if cand.is_dir():
+                    return cand
+            except OSError:
+                continue
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    return None
+
+
+def _path_under(path: Path, parent: Path) -> bool:
+    try:
+        path.resolve().relative_to(parent.resolve())
+        return True
+    except (OSError, ValueError):
+        try:
+            path.relative_to(parent)
+            return True
+        except ValueError:
+            return False
+
+
+def walk_model_index(root: Path, limit: int = 250000):
+    """One pass over a model folder. No resolve(), so a big RSX dump stays usable.
+
+    Returns sorted cast stems, recolor texture blobs, sorted texture stems,
+    whether the walk stopped early, and LOD0 cast paths for Find Skins import.
+
+    Also remembers which texture-set prefix sits in the same directory as a
+    CAST, so a pilot slot name can be tied to the catalog skin beside it.
+    """
+    global _LINK_KEY, _DIR_TEX, _DIR_CASTS, _CAST_PATHS, _CAST_TEXT
+    from .naming.tex import texture_set_prefix
+
+    casts: list[str] = []
+    tex: list[str] = []
+    blobs: list[str] = []
+    cast_paths: list[str] = []
+    seen_cast: set[str] = set()
+    seen_tex: set[str] = set()
+    dir_tex: dict[str, set[str]] = {}
+    dir_casts: dict[str, list[str]] = {}
+    n = 0
+    truncated = False
+    root = Path(root)
+    priority = rsx_character_roots(root)
+    art = rsx_art_legend_root(root)
+    if art is not None and all(art != item for item in priority):
+        priority.append(art)
+
+    def note_file(here: Path, name: str, count_images: bool) -> bool:
+        """Record one file. Casts never use up the limit. Returns True to stop."""
+        nonlocal n, truncated
+        suffix = Path(name).suffix.lower()
+        stem = Path(name).stem.lower()
+        parent = here.name.lower()
+        grand = here.parent.name.lower()
+        folder_key = str(here)
+        if suffix == ".cast":
+            key = _normalize_cast_stem(stem)
+            if key and key not in seen_cast:
+                seen_cast.add(key)
+                casts.append(key)
+            if "lod0" in stem:
+                full = str(here / name)
+                cast_paths.append(full)
+                dir_casts.setdefault(folder_key, []).append(full)
+            return False
+        if not count_images or suffix not in _IMAGE_EXT:
+            return False
+        n += 1
+        if n > limit:
+            truncated = True
+            return True
+        if stem not in seen_tex:
+            seen_tex.add(stem)
+            tex.append(stem)
+        pref = texture_set_prefix(stem)
+        if pref:
+            dir_tex.setdefault(folder_key, set()).add(pref)
+        blob = f"{stem}_{parent}_{grand}"
+        if _RECOLOR_BLOB.search(blob):
+            blobs.append(blob)
+        return False
+
+    def consume(start: Path, skip: list[Path], images: bool) -> None:
+        nonlocal truncated
+        if not start.is_dir():
+            return
+        if images and truncated:
+            return
+        for dirpath, dirnames, filenames in os.walk(start):
+            here = Path(dirpath)
+            if any(here == old or _path_under(here, old) for old in skip):
+                dirnames[:] = []
+                continue
+            dirnames[:] = [
+                name
+                for name in dirnames
+                if not name.startswith(".")
+                and name not in {"__pycache__", ".git"}
+                and not any(_path_under(here / name, old) or here / name == old for old in skip)
+            ]
+            parent = here.name.lower()
+            grand = here.parent.name.lower()
+            if parent and parent not in _GENERIC_DIRS:
+                label = f"{grand}_{parent}" if grand and grand not in _GENERIC_DIRS else parent
+                if label not in seen_tex:
+                    seen_tex.add(label)
+                    tex.append(label)
+            for name in filenames:
+                if note_file(here, name, images):
+                    break
+            if images and truncated:
+                break
+
+    consume(root, [], False)
+    for start in priority:
+        consume(start, [], True)
+    consume(root, priority, True)
+    casts.sort()
+    tex.sort()
+    _LINK_KEY = str(root)
+    _DIR_TEX = {key: tuple(sorted(val)) for key, val in dir_tex.items()}
+    _DIR_CASTS = {key: tuple(val) for key, val in dir_casts.items()}
+    _CAST_PATHS = tuple(cast_paths)
+    _CAST_TEXT = {}
+    return tuple(casts), tuple(blobs), tuple(tex), truncated, tuple(cast_paths)
+
+
+def _blob_buckets(blobs: tuple[str, ...] | list[str]) -> dict[str, list[str]]:
+    global _BLOB_INDEX
+    if _BLOB_INDEX is not None and _BLOB_INDEX[0] is blobs:
+        return _BLOB_INDEX[1]
+    buckets: dict[str, list[str]] = {}
+    for blob in blobs:
+        found = _RECOLOR_BLOB.search(blob)
+        if not found:
+            continue
+        buckets.setdefault(found.group(1), []).append(blob)
+    _BLOB_INDEX = (blobs, buckets)
+    return buckets
+
+
+def _tex_token_buckets(tex: tuple[str, ...] | list[str]) -> dict[str, list[str]]:
+    global _TEX_TOKENS
+    if _TEX_TOKENS is not None and _TEX_TOKENS[0] is tex:
+        return _TEX_TOKENS[1]
+    buckets: dict[str, list[str]] = {}
+    for stem in tex:
+        seen: set[str] = set()
+        for tok in stem.split("_"):
+            if len(tok) < 4 or tok in seen:
+                continue
+            seen.add(tok)
+            buckets.setdefault(tok, []).append(stem)
+    _TEX_TOKENS = (tex, buckets)
+    return buckets
+
+
+def _stem_in_sorted(stems: tuple[str, ...] | list[str], needle: str) -> bool:
+    want = (needle or "").lower()
+    if not want or not stems:
+        return False
+    i = bisect.bisect_left(stems, want)
+    if i < len(stems) and stems[i] == want:
+        return True
+    pref = want + "_"
+    i = bisect.bisect_left(stems, pref)
+    while i < len(stems) and stems[i].startswith(pref):
+        rest = [part for part in stems[i][len(pref) :].split("_") if part]
+        if rest and all(
+            part in _CAST_NOISE or part.startswith("lod") or part.isdigit() for part in rest
+        ):
+            return True
+        i += 1
+    return False
+
+
+def _tex_in_sorted(stems: tuple[str, ...] | list[str], needle: str) -> bool:
+    want = (needle or "").lower()
+    if not want or not stems:
+        return False
+    i = bisect.bisect_left(stems, want)
+    if i < len(stems) and (stems[i] == want or stems[i].startswith(want + "_")):
+        return True
+    pref = want + "_"
+    i = bisect.bisect_left(stems, pref)
+    return i < len(stems) and stems[i].startswith(pref)
+
+
+def _name_on_disk(
+    stems: tuple[str, ...] | list[str],
+    legend: str,
+    name: str,
+) -> bool:
+    """True when a file or its folder carries this skin's name and legend."""
+    tokens = [tok for tok in _name_tokens(legend, name) if len(tok) >= 5]
+    if not tokens:
+        return False
+    slug = re.sub(r"[^a-z0-9]", "", (legend or "").lower())
+    if len(slug) < 3:
+        return False
+    buckets = _tex_token_buckets(stems)
+    pool: list[str] = []
+    seen: set[str] = set()
+    for tok in tokens:
+        for stem in buckets.get(tok, ()):
+            if stem in seen:
+                continue
+            seen.add(stem)
+            pool.append(stem)
+    for stem in pool:
+        if slug not in stem.split("_"):
+            continue
+        if _names_in_blob(stem, legend, name):
+            return True
+    return False
+
+
+def files_present_indexed(
+    casts: tuple[str, ...] | list[str],
+    blobs: tuple[str, ...] | list[str],
+    tex: tuple[str, ...] | list[str],
+    prefix: str,
+    name: str = "",
+    legend: str = "",
+) -> bool:
+    """Same rules as files_present, but cast/texture stems are pre-sorted."""
+    from .naming.tex import cast_search_prefixes, is_recolor_code, split_mesh_variant, split_recolor_prefix
+
+    extra = (prefix or "").lower()
+    if not extra:
+        return False
+    mesh, variant = split_mesh_variant(extra)
+    base, code = split_recolor_prefix(extra)
+    recolor = variant if is_recolor_code(variant) else code
+    if recolor:
+        prefs: list[str] = []
+        for item in (mesh, base):
+            item = (item or "").lower()
+            if item and item != recolor and item not in prefs:
+                prefs.append(item)
+        pool = _blob_buckets(blobs).get(recolor, blobs)
+        for blob in pool:
+            if not _blob_has(blob, recolor):
+                continue
+            if any(_blob_has(blob, pref) or pref in blob for pref in prefs):
+                return True
+        # The recolor's own name. The parent mesh alone is not this skin.
+        own = [extra]
+        low = extra.lower()
+        if "_epicp_" in low:
+            own.append(low.replace("_epicp_", "_epic_"))
+        elif "_epic_" in low:
+            own.append(low.replace("_epic_", "_epicp_"))
+        for needle in own:
+            if _stem_in_sorted(casts, needle) or _tex_in_sorted(tex, needle):
+                return True
+        if _name_on_disk(tex, legend, name) or _name_on_disk(casts, legend, name):
+            return True
+        return False
+    if extra in shared_extras():
+        anchor = _extra_anchor(extra)
+        tokens = _name_tokens(legend, name)
+        pool: tuple[str, ...] | list[str] = tex
+        if tokens and len(tokens[0]) >= 4:
+            pool = _tex_token_buckets(tex).get(tokens[0], ())
+        for stem in pool:
+            if not _names_in_blob(stem, legend, name):
+                continue
+            if not anchor or anchor in stem or _blob_has(stem, anchor) or extra in stem:
+                return True
+        needles = [item.lower() for item in cast_search_prefixes(prefix)] or [extra]
+        for needle in needles:
+            if _stem_in_sorted(casts, needle) or _tex_in_sorted(tex, needle):
+                return True
+        return False
+    needles = [item.lower() for item in cast_search_prefixes(prefix)] or [extra]
+    for needle in needles:
+        if _stem_in_sorted(casts, needle) or _tex_in_sorted(tex, needle):
+            return True
+    if _name_on_disk(tex, legend, name) or _name_on_disk(casts, legend, name):
+        return True
     return False
 
 
@@ -577,6 +996,265 @@ def _rank_hit(row: tuple[str, str, str], q: str, tokens: list[str]) -> tuple:
     )
 
 
+def _interesting_name(text: str) -> bool:
+    return any(mark in text for mark in _INTERESTING)
+
+
+def _cast_text_names(path: str) -> tuple[str, ...]:
+    """ASCII tokens inside one CAST. Cached. Used to map a codename to a skin."""
+    cached = _CAST_TEXT.get(path)
+    if cached is not None:
+        return cached
+    found: list[str] = []
+    seen: set[str] = set()
+    try:
+        with open(path, "rb") as handle:
+            prev = b""
+            while len(found) < 80:
+                chunk = handle.read(1 << 20)
+                if not chunk:
+                    break
+                data = prev + chunk
+                for match in _NAME_RE.finditer(data):
+                    text = match.group(0).decode("ascii", "ignore").lower()
+                    if text in seen or "_" not in text or not _interesting_name(text):
+                        continue
+                    seen.add(text)
+                    found.append(text)
+                    if len(found) >= 80:
+                        break
+                prev = data[-140:]
+    except OSError:
+        found = []
+    out = tuple(found)
+    _CAST_TEXT[path] = out
+    return out
+
+
+def _rows_from_names(names: tuple[str, ...] | list[str]) -> list[tuple[str, str, str]]:
+    rows: list[tuple[str, str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for text in names:
+        hit = match_source(text)
+        if hit is None:
+            continue
+        key = (hit[0].lower(), hit[1].lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append(hit)
+    return rows
+
+
+def _disk_query_tokens(query: str) -> list[str]:
+    """Codename pieces. Three letters are enough (cyb → cyber)."""
+    tokens = [tok for tok in _DISK_TOKEN.findall((query or "").lower()) if len(tok) >= 3]
+    if not tokens:
+        return []
+    from .naming.tex import is_canon_legend_slug
+
+    return [tok for tok in tokens if tok not in _GENERIC_DISK and not is_canon_legend_slug(tok)]
+
+
+def _cast_name_hit(tokens: list[str], parts: set[str]) -> bool:
+    """Exact token, or a prefix of a non-generic token (cyb → cyber, nin → ninja)."""
+    if not tokens or not parts:
+        return False
+    useful = [part for part in parts if part not in _GENERIC_DISK and len(part) >= 3]
+    if not useful:
+        return False
+    for tok in tokens:
+        if not any(part == tok or part.startswith(tok) for part in useful):
+            return False
+    return True
+
+
+def _disk_reverse(query: str, legend: str) -> list[tuple[str, str, str]]:
+    """Model-folder codenames (cyber_ninja, or cyb / nin) → catalog rows (Voidwalker)."""
+    tokens = _disk_query_tokens(query)
+    if not tokens or not _CAST_PATHS:
+        return []
+    want = _legend_filter(legend) if legend else ""
+    # search_index passes an already-lowered legend; _legend_filter accepts both.
+    if legend and legend.lower() not in {"", "all"} and not want:
+        want = legend.lower()
+    rows: list[tuple[str, str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    parsed = 0
+    for path in _CAST_PATHS:
+        parts = set(_DISK_TOKEN.findall(f"{Path(path).stem} {Path(path).parent.name}".lower()))
+        if not _cast_name_hit(tokens, parts):
+            continue
+        directory = str(Path(path).parent)
+        prefs = _DIR_TEX.get(directory, ())
+        hits = _rows_from_names(prefs) if prefs and len(prefs) <= 4 else []
+        if not hits and parsed < 4:
+            parsed += 1
+            hits = _rows_from_names(_cast_text_names(path))
+        for hit in hits:
+            lg, name, extra = hit
+            if is_unlisted_legend(lg) or is_unreleased(name, extra) or not is_finder_row(extra, name):
+                continue
+            if want and not _legend_matches(lg, want):
+                continue
+            key = (lg.lower(), name.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(hit)
+        if len(rows) >= 8:
+            break
+    return rows
+
+
+def _file_contains(path: str, needle: bytes) -> bool:
+    if len(needle) < 6:
+        return False
+    try:
+        with open(path, "rb") as handle:
+            prev = b""
+            while True:
+                chunk = handle.read(1 << 20)
+                if not chunk:
+                    return False
+                if needle in prev + chunk:
+                    return True
+                prev = chunk[-len(needle) :]
+    except OSError:
+        return False
+
+
+def rank_cast_for_prefix(prefix: str, paths: list[str] | tuple[str, ...]) -> str:
+    """LOD0 CAST a Find Skins row should import.
+
+    An epic palette or rt/rc recolor has no mesh of its own. Prefer a CAST
+    whose name is the skin, then the mesh that skin borrows (legendary
+    without the recolor code, or the legend base for common/rare/epic).
+    """
+    from .naming.tex import cast_search_prefixes
+
+    needles = [item.lower() for item in cast_search_prefixes(prefix) if item]
+    if not needles and prefix:
+        needles = [prefix.lower()]
+    best = ""
+    best_key: tuple | None = None
+    for raw in paths:
+        stem = Path(str(raw)).stem.lower()
+        if not stem:
+            continue
+        norm = _normalize_cast_stem(stem)
+        for rank, needle in enumerate(needles):
+            if not needle:
+                continue
+            exact = norm == needle or _stem_matches(stem, needle)
+            borrowed = (not exact) and (
+                needle.endswith("_base") or needle == "base"
+            ) and needle in stem
+            if not exact and not borrowed:
+                # Unique skin token (voidsinister) still names the mesh when
+                # the catalog rarity token does not match the file.
+                skin = needle.split("_")[-1]
+                if len(skin) >= 6 and skin in stem and needle.split("_", 1)[0] in stem:
+                    exact = False
+                    borrowed = True
+                else:
+                    continue
+            lod = 0 if "lod0" in stem else 1
+            key = (rank, 0 if exact else 1, lod, len(stem))
+            if best_key is None or key < best_key:
+                best_key = key
+                best = str(raw)
+    return best
+
+
+def texture_dir_for_prefix(prefix: str) -> str:
+    """Directory whose textures are this skin, from the last model-folder walk."""
+    want = (prefix or "").lower()
+    if not want:
+        return ""
+    for directory, prefs in _DIR_TEX.items():
+        if want in prefs:
+            return directory
+    return ""
+
+
+def cast_beside_prefix(prefix: str) -> str:
+    """CAST sitting next to this skin's textures, when the skin has no own mesh."""
+    directory = texture_dir_for_prefix(prefix)
+    if not directory:
+        return ""
+    found: list[str] = []
+    cur = Path(directory)
+    for _ in range(8):
+        found.extend(_DIR_CASTS.get(str(cur), ()))
+        parent = cur.parent
+        if parent == cur:
+            break
+        cur = parent
+    ranked = rank_cast_for_prefix(prefix, found)
+    if ranked:
+        return ranked
+    cur = Path(directory)
+    for _ in range(8):
+        casts = list(_DIR_CASTS.get(str(cur), ()))
+        base = [item for item in casts if "_base" in Path(item).stem.lower()]
+        if len(base) == 1:
+            return base[0]
+        if len(casts) == 1:
+            return casts[0]
+        parent = cur.parent
+        if parent == cur:
+            break
+        cur = parent
+    return ""
+
+
+def casts_for_skin(prefix: str, cast_paths: list[str] | tuple[str, ...] = ()) -> list[str]:
+    """LOD0 CAST for a catalog prefix, even when the file is a pilot codename."""
+    needle = (prefix or "").strip().lower()
+    if not needle:
+        return []
+    found: list[str] = []
+    seen: set[str] = set()
+
+    def add(path: str) -> None:
+        if path and path not in seen:
+            seen.add(path)
+            found.append(path)
+
+    for directory, prefs in _DIR_TEX.items():
+        if needle not in prefs or len(prefs) > 4:
+            continue
+        for cast in _DIR_CASTS.get(directory, ()):
+            add(cast)
+    if found:
+        return found
+    pool = list(cast_paths) or list(_CAST_PATHS)
+    legend = needle.split("_", 1)[0]
+    candidates = [
+        path
+        for path in pool
+        if legend and legend in Path(path).name.lower()
+    ] or list(pool)
+    raw = needle.encode("ascii", "ignore")
+
+    def sort_key(path: str) -> tuple:
+        hit = match_source(path)
+        other = 1 if hit and (hit[2] or "").lower() not in {needle, ""} else 0
+        return (other, len(Path(path).name))
+
+    candidates.sort(key=sort_key)
+    for path in candidates:
+        names = _CAST_TEXT.get(path)
+        if names is not None and any(needle in item or needle in (match_source(item) or ("", "", ""))[2].lower() for item in names):
+            add(path)
+            return found
+        if _file_contains(path, raw):
+            add(path)
+            return found
+    return found
+
+
 def search_index(query: str, legend: str = "") -> list[tuple[str, str, str]]:
     q = (query or "").strip().lower()
     want = (legend or "").strip()
@@ -643,6 +1321,16 @@ def search_index(query: str, legend: str = "") -> list[tuple[str, str, str]]:
         out.append(row)
         if len(out) >= cap:
             break
+    if q:
+        extra: list[tuple[str, str, str]] = []
+        for row in _disk_reverse(q, want):
+            key = (row[0].lower(), row[1].lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            extra.append(row)
+        if extra:
+            out = (extra + out)[:cap]
     return out
 
 
@@ -693,7 +1381,9 @@ def suggest_names(query: str, legend: str = "") -> list[str]:
             extras.append(name)
         if len(starts) >= 8:
             break
-    return (starts + contains + extras)[:8]
+    catalog = starts + contains + extras
+    disk = [name for _lg, name, _extra in _disk_reverse(q, want) if name not in seen]
+    return (disk + catalog)[:8]
 
 
 def did_you_mean(query: str, legend: str = "") -> list[str]:
@@ -740,23 +1430,50 @@ def legend_names() -> list[str]:
     return sorted(got, key=str.lower)
 
 
-def match_source(text: str) -> tuple[str, str, str] | None:
-    raw = str(text or "").replace("\\", "/").lower()
-    stem = Path(raw).stem.lower()
-    blob = f"{stem} {Path(raw).name.lower()}"
-    best: tuple[str, str, str] | None = None
-    best_n = 0
-    best_orig = -1
-    for lg, name, extra in load_index():
+_PREFIX_BUCKETS: tuple | None = None
+
+
+def _prefix_buckets() -> dict[str, list[tuple[int, str, tuple[str, str, str]]]]:
+    global _PREFIX_BUCKETS
+    rows = load_index()
+    if _PREFIX_BUCKETS is not None and _PREFIX_BUCKETS[0] is rows:
+        return _PREFIX_BUCKETS[1]
+    buckets: dict[str, list[tuple[int, str, tuple[str, str, str]]]] = {}
+    for idx, (lg, name, extra) in enumerate(rows):
         if is_unlisted_legend(lg):
             continue
         pref = (extra or "").lower()
-        if not pref or pref not in blob:
+        if not pref:
             continue
+        token = pref.split("_", 1)[0]
+        buckets.setdefault(token, []).append((idx, pref, (lg, name, extra)))
+    _PREFIX_BUCKETS = (rows, buckets)
+    return buckets
+
+
+def match_source(text: str) -> tuple[str, str, str] | None:
+    raw = str(text or "").replace("\\", "/").lower()
+    stem = Path(raw).stem.lower()
+    parent = Path(raw).parent.name.lower()
+    blob = f"{stem} {Path(raw).name.lower()} {parent}"
+    tokens = {part for part in re.split(r"[^a-z0-9]+", blob) if part}
+    buckets = _prefix_buckets()
+    found: list[tuple[int, str, tuple[str, str, str]]] = []
+    for token in tokens:
+        found.extend(buckets.get(token, ()))
+    found.sort(key=lambda item: item[0])
+    best: tuple[str, str, str] | None = None
+    best_n = 0
+    best_orig = -1
+    seen: set[int] = set()
+    for idx, pref, row in found:
+        if idx in seen or pref not in blob:
+            continue
+        seen.add(idx)
         n = len(pref)
-        orig = 1 if (name or "").lower() in {"original", "base", "standard"} else 0
+        orig = 1 if (row[1] or "").lower() in {"original", "base", "standard"} else 0
         if n > best_n or (n == best_n and orig > best_orig):
-            best = (lg, name, extra)
+            best = row
             best_n = n
             best_orig = orig
     return best

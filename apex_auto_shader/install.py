@@ -190,8 +190,8 @@ def schedule_existing_check() -> None:
 
 class APEX_OT_drop_old_copy(bpy.types.Operator):
     bl_idname = "apexaddon.drop_old_copy"
-    bl_label = "Bereits installiert"
-    bl_description = "Entfernt eine zweite Kopie von Apex Auto Shader"
+    bl_label = "Already installed"
+    bl_description = "Remove a second copy of Apex Auto Shader"
     bl_options = {"INTERNAL"}
 
     def invoke(self, context, event):
@@ -202,28 +202,27 @@ class APEX_OT_drop_old_copy(bpy.types.Operator):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        col.label(text=f"{ADDON_NAME} ist bereits installiert.", icon="ERROR")
+        col.label(text=f"{ADDON_NAME} is already installed.", icon="ERROR")
         for item in other_copies():
             ver = item.get("version") or "?"
-            col.label(text=f"Alte Kopie {ver}")
+            col.label(text=f"Old copy {ver}")
         col.separator()
-        col.label(text="Alte Kopie entfernen und diese Version behalten?")
+        col.label(text="Remove the old copy and keep this version?")
 
     def execute(self, context):
         removed = 0
         for item in other_copies():
             _remove(item, allow_current=False)
             removed += 1
-        self.report({"INFO"}, f"{removed} alte Installation entfernt")
+        self.report({"INFO"}, f"Removed {removed} old installation(s)")
         return {"FINISHED"}
 
 
 class APEX_OT_install_zip(bpy.types.Operator):
     bl_idname = "apexaddon.install_zip"
-    bl_label = "Bereits installiert"
+    bl_label = "Install ZIP"
     bl_description = (
-        "ZIP installieren. Ist die Erweiterung schon da, wird die alte "
-        "nach Bestätigung entfernt und durch diese Datei ersetzt"
+        "Install a ZIP. If this add-on is already installed, confirm to replace the old copy"
     )
     bl_options = {"INTERNAL"}
 
@@ -240,21 +239,21 @@ class APEX_OT_install_zip(bpy.types.Operator):
 
     def draw(self, context):
         col = self.layout.column(align=True)
-        col.label(text=self.line_a or f"{ADDON_NAME} ist bereits installiert.", icon="ERROR")
+        col.label(text=self.line_a or f"{ADDON_NAME} is already installed.", icon="ERROR")
         if self.line_b:
             col.label(text=self.line_b)
 
     def execute(self, context):
         meta = read_zip_manifest(self.filepath)
         if meta is None or meta.get("id") != PKG_ID:
-            self.report({"ERROR"}, "Dieses ZIP ist nicht Apex Auto Shader")
+            self.report({"ERROR"}, "This ZIP is not Apex Auto Shader")
             return {"CANCELLED"}
         existing = find_installs()
         others = other_copies(existing)
         if others and not self.replace:
             have = ", ".join(sorted({item["version"] or "?" for item in others}))
-            self.line_a = f"{ADDON_NAME} {have} ist bereits installiert."
-            self.line_b = f"Alte Version entfernen und {meta['version']} installieren?"
+            self.line_a = f"{ADDON_NAME} {have} is already installed."
+            self.line_b = f"Remove the old version and install {meta['version']}?"
             self.replace = True
             return context.window_manager.invoke_props_dialog(self, width=480)
         path = self.filepath
@@ -263,12 +262,12 @@ class APEX_OT_install_zip(bpy.types.Operator):
             try:
                 replace_with_zip(path)
             except Exception as exc:
-                print(f"[Apex Auto Shader] ZIP-Install fehlgeschlagen: {exc}")
+                print(f"[Apex Auto Shader] ZIP install failed: {exc}")
             return None
 
         try:
             bpy.app.timers.register(_swap, first_interval=0.4)
         except Exception:
             _swap()
-        self.report({"INFO"}, "Alte Version wird entfernt und das ZIP installiert")
+        self.report({"INFO"}, "Removing the old version and installing the ZIP")
         return {"FINISHED"}

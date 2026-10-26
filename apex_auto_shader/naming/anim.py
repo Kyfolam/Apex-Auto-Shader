@@ -100,6 +100,23 @@ def animation_group_label(key: str) -> str:
     return "Other"
 
 
+def is_skin_legend(slug: str) -> bool:
+    """True for a legend that also exists in the skin list. Folders like Jump do not count."""
+    key = (slug or "").strip().lower().replace(" ", "").replace("_", "")
+    if not key:
+        return False
+    canon = {item.lower().replace(" ", "") for item in CANON_LEGENDS}
+    if key in canon:
+        return True
+    label = LEGEND_SLUGS.get(key)
+    if label and label.lower().replace(" ", "") in canon:
+        return True
+    for src, label in LEGEND_SLUGS.items():
+        if src.replace(" ", "").replace("_", "") == key and label.lower().replace(" ", "") in canon:
+            return True
+    return False
+
+
 def legend_display_name(slug: str) -> str:
     key = (slug or "").strip().lower()
     if key in LEGEND_SLUGS:
@@ -145,6 +162,75 @@ def guess_legend_from_path(path: str | Path) -> str:
             if tok in LEGEND_SLUGS:
                 return LEGEND_SLUGS[tok].lower().replace(" ", "")
     return guess_legend_from_anim(p.stem) or guess_legend_from_anim(p.parent.name)
+
+
+def plain_folder_legend(name: str) -> str:
+    """A library folder such as ``Dummy`` or ``Mad Maggie``, not an asset token."""
+    text = (name or "").strip()
+    if not text or "_" in text or any(ch.isdigit() for ch in text):
+        return ""
+    key = re.sub(r"[\s\-]+", "", text).lower()
+    if len(key) < 3 or key in _LEGEND_SKIP or key in _FOLDER_LEGEND_SKIP:
+        return ""
+    if key in LEGEND_SLUGS and is_skin_legend(LEGEND_SLUGS[key]):
+        return LEGEND_SLUGS[key].lower().replace(" ", "")
+    return ""
+
+
+def legend_from_anim_path(path: str | Path, root: str | Path | None = None) -> str:
+    """Legend from the clip name, else from a parent folder (``Newcastle``, ``Dummy``).
+
+    Stops at ``root`` so a dump folder named ``2_Animation`` is not treated as a legend.
+    """
+    file = Path(path)
+    guessed = guess_legend_from_anim(file.name)
+    if guessed:
+        return guessed
+    stop = None
+    if root:
+        try:
+            stop = Path(root).resolve()
+        except Exception:
+            stop = Path(root)
+    cur = file.parent
+    for _ in range(10):
+        if not str(cur) or cur == cur.parent:
+            break
+        hit = guess_legend_from_anim(cur.name) or plain_folder_legend(cur.name)
+        if hit:
+            return hit
+        try:
+            if stop is not None and cur.resolve() == stop:
+                break
+        except Exception:
+            if stop is not None and cur == stop:
+                break
+        cur = cur.parent
+    return ""
+
+
+_FOLDER_LEGEND_SKIP = frozenset(
+    {
+        "anim",
+        "anims",
+        "animation",
+        "animations",
+        "model",
+        "models",
+        "cast",
+        "casts",
+        "skin",
+        "skins",
+        "characters",
+        "humans",
+        "class",
+        "exported",
+        "files",
+        "mdl",
+        "animseq",
+        "blender",
+    }
+)
 
 
 def find_animseq_class_root(start: str | Path) -> Path | None:
@@ -520,6 +606,185 @@ def finisher_display_name(name: str, legend: str = "") -> str:
     text = re.sub(r"^(?:light|medium|heavy)_", "", text, flags=re.I)
     text = re.sub(r"^execution_?", "", text, flags=re.I)
     return text.strip("_") or Path(str(name)).stem
+
+
+_LABEL_NOISE = frozenset(
+    {
+        "mp",
+        "pov",
+        "ptpov",
+        "pt",
+        "lgnd",
+        "npc",
+        "pilot",
+        "class",
+        "core",
+        "humans",
+        "anim",
+        "animseq",
+        "seq",
+        "cast",
+    }
+)
+_GROUP_WORDS = {
+    "idle": frozenset({"idle", "wait"}),
+    "emote": frozenset({"emote", "dance", "taunt"}),
+    "pose": frozenset({"gladcard", "glad", "banner", "bannerpose", "pose", "holocard", "capturemode"}),
+    "select": frozenset({"lobby", "menu", "select", "intro", "characterselect"}),
+    "finisher": frozenset({"execution", "finisher", "finish", "attacker", "victim"}),
+    "finisher_solo": frozenset({"execution", "finisher", "finish", "attacker", "victim"}),
+    "finisher_full": frozenset({"execution", "finisher", "finish", "attacker", "victim"}),
+}
+# First match wins. AIM is last so "AIM_legend_crouch" groups under Crouch, not AIM.
+_ACTION_SUBS = (
+    ("fire", "Fire"),
+    ("shoot", "Fire"),
+    ("reload", "Reload"),
+    ("melee", "Melee"),
+    ("sprint", "Sprint"),
+    ("run", "Run"),
+    ("walk", "Walk"),
+    ("jump", "Jump"),
+    ("slide", "Slide"),
+    ("crouch", "Crouch"),
+    ("mantle", "Mantle"),
+    ("climb", "Climb"),
+    ("swim", "Swim"),
+    ("zipline", "Zipline"),
+    ("zip", "Zipline"),
+    ("death", "Death"),
+    ("knock", "Downed"),
+    ("downed", "Downed"),
+    ("heal", "Heal"),
+    ("revive", "Revive"),
+    ("inspect", "Inspect"),
+    ("holster", "Holster"),
+    ("throw", "Throw"),
+    ("land", "Land"),
+    ("ads", "AIM"),
+    ("aim", "AIM"),
+)
+
+
+def _pretty_token(token: str) -> str:
+    low = token.lower()
+    if low == "aim":
+        return "AIM"
+    if token.isupper() and len(token) <= 4:
+        return token
+    if token.isdigit():
+        return token
+    return token[:1].upper() + token[1:]
+
+
+_INDEX_SUFFIX = re.compile(r"_(\d+)$")
+
+
+def clip_index_base(name: str) -> tuple[str, str]:
+    """Stem without a trailing _0/_1 and that number, if there is one."""
+    stem = Path(str(name)).stem
+    match = _INDEX_SUFFIX.search(stem)
+    if not match:
+        return stem.lower(), ""
+    return stem[: match.start()].lower(), match.group(1)
+
+
+def bases_with_extra_index(names) -> set[str]:
+    """Bases that have a _1, _2, … so the _0 sibling must stay visible."""
+    found: set[str] = set()
+    for name in names:
+        base, index = clip_index_base(name)
+        if index and index != "0":
+            found.add(base)
+    return found
+
+
+def hide_lone_zero(name: str, extra_bases: set[str] | None = None) -> bool:
+    """Hide a trailing _0 only when no _1/_2 sibling exists."""
+    base, index = clip_index_base(name)
+    if index != "0":
+        return False
+    return base not in (extra_bases or set())
+
+
+def clip_display_name(name: str, legend: str = "", group: str = "") -> str:
+    """Drop the legend, AIM_legend wrappers, and the group word when it is already the header."""
+    stem = Path(str(name)).stem
+    index = ""
+    match = re.search(r"_(\d+)$", stem)
+    if match:
+        index = match.group(1)
+        stem = stem[: match.start()]
+    tokens = [part for part in re.split(r"[_\s]+", stem) if part]
+    legend_l = (legend or "").lower().replace(" ", "")
+    drop = set(_GROUP_WORDS.get(group or "", ()))
+    drop |= _LABEL_NOISE
+    drop |= {"light", "medium", "heavy"}
+    if legend_l:
+        drop.add(legend_l)
+        for src, label in LEGEND_SLUGS.items():
+            if label.lower().replace(" ", "") == legend_l or src.replace(" ", "") == legend_l:
+                drop.add(src.lower())
+                drop.add(label.lower().replace(" ", ""))
+    kept = [tok for tok in tokens if tok.lower() not in drop]
+    while len(kept) > 1 and kept[0].lower() == "aim":
+        kept.pop(0)
+    while len(kept) > 1 and kept[-1].lower() == "aim":
+        kept.pop()
+    if not kept:
+        for tok in reversed(tokens):
+            if tok.lower() not in drop or tok.lower() == "aim":
+                kept = [tok]
+                break
+    text = " ".join(_pretty_token(tok) for tok in kept).strip()
+    if not text:
+        text = Path(str(name)).stem
+    if index:
+        return f"{text}_{index}"
+    return text
+
+
+def action_subgroup(name: str, group: str = "") -> tuple[str, str] | None:
+    """Extra folder read from the clip name. None when the name adds no group."""
+    tokens = {part.lower() for part in re.split(r"[_\s.]+", Path(str(name)).stem) if part}
+    if (group or "") == "idle":
+        tokens.discard("idle")
+        tokens.discard("wait")
+    seen: set[str] = set()
+    for key, label in _ACTION_SUBS:
+        if key not in tokens or label in seen:
+            continue
+        seen.add(label)
+        code = "aim" if label == "AIM" else label.lower()
+        return code, label
+    return None
+
+
+def anim_query_match(query: str, *parts: str) -> bool:
+    """Substring match, token match in any order, and the same checks on the reversed text."""
+    raw = (query or "").strip().lower()
+    if not raw:
+        return True
+    hay = " ".join(str(part or "") for part in parts).lower()
+    if not hay:
+        return False
+    folded = hay.replace("_", " ")
+    reversed_hay = hay[::-1]
+
+    def _hit(needle: str) -> bool:
+        if not needle:
+            return False
+        if needle in hay or needle in folded or needle in reversed_hay:
+            return True
+        flipped = needle[::-1]
+        return flipped in hay or flipped in folded
+
+    if _hit(raw):
+        return True
+    words = [word for word in raw.replace("_", " ").split() if word]
+    if len(words) > 1 and all(_hit(word) for word in words):
+        return True
+    return False
 
 
 def strip_unique_trailing_index(names: list[str]) -> list[str]:

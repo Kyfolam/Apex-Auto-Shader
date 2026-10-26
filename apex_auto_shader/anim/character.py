@@ -106,46 +106,29 @@ def import_cast_model(context, filepath: str):
             pass
     from ..extras import tag_character
 
+    if imported:
+        park_imported(context, imported, "Legend", new_cols)
     if arm is not None:
         remember_character(arm)
-        tag_character(arm, folder=folder, cast_path=path, collection="|".join(new_cols))
+        tag_character(arm, folder=folder, cast_path=path, collection="")
+        try:
+            context.scene.apex_cast_collection = ""
+            arm["apex_cast_collection"] = ""
+        except Exception:
+            pass
     return arm, folder
 
 
-def _index_extras() -> set[str]:
+def _cast_in_index(path: Path) -> bool:
+    """True when this CAST maps to a skin already stored in the on-disk index."""
     try:
         from .. import pack
 
-        extras = set()
-        for lg, name, extra in pack.load_index():
-            key = (extra or "").lower()
-            if not key:
-                continue
-            if pack.is_unlisted_legend(lg) or pack.is_unreleased(lg, name, extra):
-                continue
-            extras.add(key)
-        return extras
+        if not pack.load_index():
+            return True
+        return pack.match_source(str(path)) is not None
     except Exception:
-        return set()
-
-
-def _cast_in_index(path: Path, extras: set[str]) -> bool:
-    """True when this CAST maps to a skin already stored in the on-disk index."""
-    if not extras:
         return True
-    from .. import pack
-
-    hit = pack.match_source(str(path))
-    if hit is not None:
-        return True
-    stem = path.stem.lower()
-    parent = path.parent.name.lower()
-    for extra in extras:
-        if extra and extra in stem:
-            return True
-        if extra and extra in parent:
-            return True
-    return False
 
 
 def _gather_import_casts(directory: str, filepath: str, files) -> list[Path]:
@@ -176,17 +159,13 @@ def _gather_import_casts(directory: str, filepath: str, files) -> list[Path]:
         scan = [current if current.is_dir() else current.parent]
     found: list[Path] = []
     seen: set[str] = set()
-    extras = _index_extras()
     for folder in scan:
         for path in collect_lod0_casts(folder):
-            try:
-                key = str(path.resolve())
-            except OSError:
-                key = str(path)
+            key = str(path)
             if key in seen:
                 continue
             seen.add(key)
-            if extras and not _cast_in_index(path, extras):
+            if not _cast_in_index(path):
                 continue
             try:
                 from .. import pack as _pack
@@ -200,6 +179,16 @@ def _gather_import_casts(directory: str, filepath: str, files) -> list[Path]:
                 pass
             found.append(path)
     return found
+
+
+def limit_to_model_folder(paths: list[Path]) -> list[Path]:
+    """Drop CASTs outside Preferences → Model folder. No-op when that folder is empty."""
+    from ..prefs import model_folder_pref, path_is_under
+
+    root = model_folder_pref()
+    if root is None:
+        return list(paths)
+    return [path for path in paths if path_is_under(path, root)]
 
 
 def next_import_x(context) -> float:
@@ -325,10 +314,81 @@ def next_cast_path(context, arm: bpy.types.Object | None) -> Path | None:
 def _is_scene_collection(col) -> bool:
     if col is None:
         return True
+    if getattr(col, "name", "") in {"Legend", "Props and Guns"}:
+        return True
     scene = getattr(bpy.context, "scene", None)
     if scene is not None and col == scene.collection:
         return True
     return col.name in {"Scene Collection", "Master Collection"}
+
+
+def ensure_root_collection(context, name: str):
+    """Scene child collection. Shared by every legend or every prop."""
+    col = bpy.data.collections.get(name)
+    if col is None:
+        col = bpy.data.collections.new(name)
+    parent = context.scene.collection
+    linked = False
+    try:
+        linked = col.name in parent.children
+    except Exception:
+        linked = False
+    if not linked:
+        try:
+            parent.children.link(col)
+        except Exception:
+            pass
+    return col
+
+
+def park_imported(context, objects, collection_name: str, drop_collections=()) -> None:
+    """Move an import into Legend or Props and Guns, then drop empty importer collections."""
+    if context is None:
+        return
+    col = ensure_root_collection(context, collection_name)
+    seen: set[str] = set()
+    ordered = []
+
+    def add(obj):
+        name = getattr(obj, "name", "") or ""
+        if not name or name in seen:
+            return
+        seen.add(name)
+        ordered.append(obj)
+        for child in list(getattr(obj, "children_recursive", []) or []):
+            add(child)
+
+    for obj in objects or []:
+        add(obj)
+    for obj in ordered:
+        if obj.name not in col.objects:
+            try:
+                col.objects.link(obj)
+            except Exception:
+                pass
+        for other in list(getattr(obj, "users_collection", []) or []):
+            if other == col:
+                continue
+            try:
+                other.objects.unlink(obj)
+            except Exception:
+                pass
+    for name in drop_collections or []:
+        if name in {"Legend", "Props and Guns"}:
+            continue
+        other = bpy.data.collections.get(name)
+        if other is None or _is_scene_collection(other):
+            continue
+        try:
+            busy = bool(list(other.objects) or list(other.children))
+        except Exception:
+            busy = True
+        if busy:
+            continue
+        try:
+            bpy.data.collections.remove(other)
+        except Exception:
+            pass
 
 
 def _purge_collection(col) -> None:
@@ -407,6 +467,12 @@ def delete_character(arm: bpy.types.Object) -> None:
 def upgrade_character(context):
     arm = resolve_character(context)
     nxt = next_cast_path(context, arm)
+    if nxt is not None:
+        from ..prefs import model_folder_pref, path_is_under
+
+        root = model_folder_pref()
+        if root is not None and not path_is_under(nxt, root):
+            nxt = None
     if nxt is None:
         raise RuntimeError("No next-level CAST file found next to this model")
     if arm is not None:

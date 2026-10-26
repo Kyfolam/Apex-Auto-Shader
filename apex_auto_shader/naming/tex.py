@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -9,6 +10,7 @@ from typing import Iterable, Iterator
 from ..constants import (
     CANON_LEGENDS,
     EYE_HASH_MESHES,
+    PART_HASH_MESHES,
     EXPECTED_SLOTS,
     IMAGE_SUFFIX_RANK,
     IMAGE_SUFFIXES,
@@ -34,7 +36,9 @@ _RECOLOR_TOKEN = re.compile(
     re.IGNORECASE,
 )
 # Palette skins that reuse the legend base CAST / bodyModel
-_BASE_SKIN_REST = re.compile(r"^(common|rare|epicp?)(?:_|$)", re.IGNORECASE)
+# Numbered body palettes only: rare_01, epic_02. A unique epic
+# (epicp_v23_voidsinister) keeps its own mesh.
+_BASE_SKIN_REST = re.compile(r"^(?:common|rare|epicp?)(?:_\d{1,2})?$", re.IGNORECASE)
 
 
 _LEVEL_CYCLE = re.compile(r"level0([123])", re.IGNORECASE)
@@ -96,21 +100,39 @@ _PART_ALIAS = {
     "jumpkit": "gear",
     "zipline": "gear",
     "gear": "jumpkit",
+    "suit": "gear",
     "gauntlet": "grapple",
     "grapple": "gauntlet",
+    "helmet": "head",
+    "stubinhair": "hair",
+    "stubinahair": "hair",
 }
+_GEAR_GROUP = frozenset({"kit", "gear", "suit", "jumpkit", "zipline"})
+_HAIR_GROUP = frozenset({"hair", "hair02", "stubinhair", "stubinahair"})
+_HEAD_GROUP = frozenset({"head", "helmet", "face"})
 _PART_GROUPS = {
-    "kit": frozenset({"kit", "gear", "jumpkit", "zipline"}),
-    "gear": frozenset({"kit", "gear", "jumpkit", "zipline"}),
-    "jumpkit": frozenset({"kit", "gear", "jumpkit", "zipline"}),
-    "zipline": frozenset({"kit", "gear", "jumpkit", "zipline"}),
+    "kit": _GEAR_GROUP,
+    "gear": _GEAR_GROUP,
+    "suit": _GEAR_GROUP,
+    "jumpkit": _GEAR_GROUP,
+    "zipline": _GEAR_GROUP,
     "gauntlet": frozenset({"gauntlet", "grapple"}),
     "grapple": frozenset({"gauntlet", "grapple"}),
+    "hair": _HAIR_GROUP,
+    "hair02": _HAIR_GROUP,
+    "stubinhair": _HAIR_GROUP,
+    "stubinahair": _HAIR_GROUP,
+    "head": _HEAD_GROUP,
+    "helmet": _HEAD_GROUP,
+    "face": _HEAD_GROUP,
+    "lens": frozenset({"lens"}),
 }
 
 
 def _bodypart_tail_len(toks: list[str]) -> int:
-    """Trailing body-part tokens: emotes, visor, vfx_lines, body, gear, ..."""
+    """Trailing body-part tokens: emotes, visor, vfx_scarf, body, gear, ..."""
+    if len(toks) >= 2 and toks[-2].lower() == "vfx":
+        return 2
     if len(toks) >= 2 and tuple(t.lower() for t in toks[-2:]) in _COMPOUND_PARTS:
         return 2
     if toks and toks[-1].lower() in MESH_PARTS | _EXTRA_PARTS | IGNORED_BODYPART_TOKENS:
@@ -289,6 +311,35 @@ def split_mesh_variant(prefix: str) -> tuple[str, str]:
     return text, rc
 
 
+# Mesh file codename differs from the texture set stored for the skin.
+# Void Prowler / Hellcat / Punk Prowler: model wraith_v20_heist, maps boosted.
+_TEXTURE_FOR_MESH = {
+    "wraith_v20_heist": "wraith_lgnd_v20_boosted",
+    "wraith_lgnd_v20_heist": "wraith_lgnd_v20_boosted",
+}
+_MESH_FOR_TEXTURE = {
+    "wraith_lgnd_v20_boosted": "wraith_v20_heist",
+}
+
+
+def texture_prefixes_for_mesh(prefix: str) -> list[str]:
+    """Texture-set names for a CAST whose file codename is not the skin id."""
+    base, code = split_recolor_prefix(prefix)
+    tex = _TEXTURE_FOR_MESH.get((base or prefix or "").lower())
+    if not tex:
+        return []
+    if code:
+        return [with_recolor_prefix(tex, code), tex]
+    return [tex]
+
+
+def mesh_prefixes_for_texture(prefix: str) -> list[str]:
+    """CAST stem that carries this texture set, when the names differ."""
+    base, _code = split_recolor_prefix(prefix)
+    mesh = _MESH_FOR_TEXTURE.get((base or prefix or "").lower())
+    return [mesh] if mesh else []
+
+
 def cast_search_prefixes(prefix: str) -> list[str]:
     """CAST stems to try for a skin-index extra (recolor / palette → base mesh)."""
     raw = (prefix or "").strip()
@@ -300,6 +351,17 @@ def cast_search_prefixes(prefix: str) -> list[str]:
     for item in (raw, base, mesh):
         if item and item not in out:
             out.append(item)
+        low = (item or "").lower()
+        swapped = ""
+        if "_epicp_" in low:
+            swapped = low.replace("_epicp_", "_epic_")
+        elif "_epic_" in low:
+            swapped = low.replace("_epic_", "_epicp_")
+        if swapped and swapped not in out:
+            out.append(swapped)
+    for alias in mesh_prefixes_for_texture(raw):
+        if alias not in out:
+            out.append(alias)
     return out
 
 
@@ -431,7 +493,7 @@ def is_eye_material(name: str) -> bool:
 
 
 def is_numeric_filler_mesh(name: str) -> bool:
-    if eye_hash_kind(name):
+    if eye_hash_kind(name) or part_hash_kind(name):
         return False
     toks = tokenize(strip_blender_suffix(name))
     if len(toks) < 3:
@@ -450,6 +512,14 @@ def eye_hash_kind(name: str) -> str:
     return ""
 
 
+def part_hash_kind(name: str) -> str:
+    for tok in tokenize(strip_blender_suffix(name)):
+        kind = PART_HASH_MESHES.get(tok)
+        if kind:
+            return kind
+    return ""
+
+
 def mesh_slot_prefix(name: str) -> str:
     found = _MESH_INDEX_PREFIX.match(strip_blender_suffix(name or ""))
     return found.group("part").lower() if found else ""
@@ -458,6 +528,28 @@ def mesh_slot_prefix(name: str) -> str:
 def last_name_token(name: str) -> str:
     toks = [t.lower() for t in tokenize(strip_blender_suffix(name))]
     return toks[-1] if toks else ""
+
+
+def is_base_hair02_name(name: str) -> bool:
+    """body_0_<legend>_base_hair02 — the rig lash card, not a cosmetic hair02."""
+    if part_hash_kind(name):
+        return False
+    toks = [t.lower() for t in tokenize(strip_blender_suffix(name))]
+    return bool(toks) and toks[-1] == "hair02" and "base" in toks
+
+
+def base_hair02_to_hide(names: Iterable[str]) -> list[str]:
+    """Hide *_base_hair02 when some other mesh actually ends in hair02."""
+    raw = [n for n in names if n]
+    base = [n for n in raw if is_base_hair02_name(n)]
+    if not base:
+        return []
+    for name in raw:
+        if is_base_hair02_name(name) or part_hash_kind(name):
+            continue
+        if last_name_token(name) == "hair02":
+            return base
+    return []
 
 
 def should_hide_base_hair(names: Iterable[str]) -> bool:
@@ -645,6 +737,9 @@ def find_cycled_cast(current: Path, extra_roots: Iterable[Path] | None = None) -
 
 def skin_prefix(name: str, token_count: int = PREFIX_TOKEN_COUNT) -> str:
     raw = strip_blender_suffix(Path(str(name)).name)
+    # body_0_<numeric id> is a body part, not a skin name.
+    if part_hash_kind(raw) or eye_hash_kind(raw):
+        return ""
     had_group = bool(_CAST_LOD_GROUP.match(raw))
     ident = parse_skin_identity(name)
     toks = tokenize(strip_cast_lod_group(name))
@@ -901,8 +996,20 @@ def mesh_texture_prefixes(
     return ordered
 
 
+def mesh_has_skin_identity(mesh_name: str) -> bool:
+    """False for numbered CAST meshes (body_0_<id>). Those follow the rig."""
+    if part_hash_kind(mesh_name) or eye_hash_kind(mesh_name):
+        return False
+    pref = skin_prefix(mesh_name)
+    if not pref:
+        return False
+    return is_canon_legend_slug(parse_skin_identity(pref).legend)
+
+
 def candidate_matches_mesh(mesh_name: str, cand: str) -> bool:
     """A prestige set must not shade a legendary mesh that only shares the legend."""
+    if not mesh_has_skin_identity(mesh_name):
+        return True
     mesh_id = parse_skin_identity(skin_prefix(mesh_name) or mesh_name)
     cand_id = parse_skin_identity(cand)
     if mesh_id.legend and cand_id.legend and mesh_id.legend != cand_id.legend:
@@ -921,11 +1028,44 @@ def candidate_matches_mesh(mesh_name: str, cand: str) -> bool:
 
 
 def mesh_requests_head(mesh_name: str) -> bool:
+    if part_hash_kind(mesh_name) == "head":
+        return True
     part = (mesh_slot_prefix(mesh_name) or "").lower()
     if part == "head":
         return True
     toks = [t.lower() for t in tokenize(strip_cast_lod_group(mesh_name))]
     return bool(toks) and toks[-1] in {"head", "helmet", "face"}
+
+
+def dominant_mesh_prefix(mesh_names: Iterable[str]) -> str:
+    """Skin prefix shared by the named meshes on a rig.
+
+    Numbered meshes (body_0_<id>) have no skin of their own. A base-hair
+    eyelash mesh must not beat the legendary set sitting next to it.
+    """
+    normal: dict[str, int] = {}
+    base: dict[str, int] = {}
+    mythic: dict[str, int] = {}
+    for name in mesh_names:
+        if not name or part_hash_kind(name) or eye_hash_kind(name):
+            continue
+        pref = skin_prefix(name)
+        if not pref:
+            continue
+        ident = parse_skin_identity(pref)
+        if not is_canon_legend_slug(ident.legend):
+            continue
+        key = pref.lower()
+        if ident.rarity in {"mythic", "prestige"}:
+            mythic[key] = mythic.get(key, 0) + 1
+        elif ident.rarity == "base":
+            base[key] = base.get(key, 0) + 1
+        else:
+            normal[key] = normal.get(key, 0) + 1
+    pool = normal or base or mythic
+    if not pool:
+        return ""
+    return sorted(pool, key=lambda item: (-pool[item], item))[0]
 
 
 def model_dir_name(name: str) -> str:
@@ -1076,6 +1216,93 @@ def suggest_rsx_model_dir(seeds: Iterable[str | Path]) -> str:
     return ""
 
 
+_RSX_EXES = ("rsx.exe", "rsx_nogui.exe", "RSX.exe")
+_RSX_DIR_NAMES = ("rsx", "RSX", "Legion+", "LegionPlus")
+
+
+def _export_mdl_from(root: Path) -> str:
+    """Return exported_files/mdl next to an RSX install, or ''."""
+    if not root:
+        return ""
+    candidates = [
+        root / "exported_files" / "mdl",
+        root.parent / "exported_files" / "mdl",
+    ]
+    for mdl in candidates:
+        class_dir = mdl / "humans" / "class"
+        legends = mdl / "techart" / "mshop" / "characters" / "legends"
+        if class_dir.is_dir() or legends.is_dir():
+            return str(mdl)
+    return ""
+
+
+def find_rsx_export_dir() -> str:
+    """Look for an RSX install and return its exported_files/mdl folder.
+
+    RSX is portable and writes exports next to the exe. The Apex game path
+    RSX suggests is only the pak source, not the dump.
+    """
+    seen: set[str] = set()
+
+    def consider(path: Path) -> str:
+        key = str(path).lower()
+        if key in seen:
+            return ""
+        seen.add(key)
+        if path.is_file() and path.name.lower() in {n.lower() for n in _RSX_EXES}:
+            return _export_mdl_from(path.parent)
+        if path.is_dir():
+            for name in _RSX_EXES:
+                if (path / name).is_file():
+                    hit = _export_mdl_from(path)
+                    if hit:
+                        return hit
+            if path.name in _RSX_DIR_NAMES:
+                return _export_mdl_from(path)
+        return ""
+
+    path_env = os.environ.get("PATH", "")
+    for entry in path_env.split(os.pathsep):
+        if not entry:
+            continue
+        hit = consider(Path(entry))
+        if hit:
+            return hit
+
+    home = Path.home()
+    roots = [
+        home / "Downloads",
+        home / "Desktop",
+        home / "Documents",
+        home,
+    ]
+    for root in roots:
+        if not root.is_dir():
+            continue
+        hit = consider(root)
+        if hit:
+            return hit
+        try:
+            children = list(root.iterdir())
+        except OSError:
+            continue
+        for child in children:
+            if not child.is_dir():
+                continue
+            hit = consider(child)
+            if hit:
+                return hit
+            try:
+                nested = list(child.iterdir())
+            except OSError:
+                continue
+            for item in nested:
+                hit = consider(item)
+                if hit:
+                    return hit
+    return ""
+
+
 def is_legend_character_name(name: str) -> bool:
     ident = parse_skin_identity(name)
     return is_canon_legend_slug(ident.legend)
@@ -1186,6 +1413,94 @@ def texture_prefix_from_source(raw: str, object_mode: bool = False) -> str:
     return skin_prefix(raw)
 
 
+def _is_base_skin_prefix(prefix: str) -> bool:
+    ident = parse_skin_identity(prefix)
+    if ident.rarity == "base":
+        return True
+    return ident.skin in {"", "base"} and ident.rarity in {"", "base"}
+
+
+def preferred_skin_prefix(*sources: str) -> str:
+    """First real legend skin among the sources.
+
+    A Find Skins tag (``wraith_lgnd_v19_voidwalker``) must beat the CAST
+    codename (``pilot_light_wraith_cyber_ninja``). The codename is not a skin.
+    """
+    for raw in sources:
+        if not raw:
+            continue
+        name = Path(str(raw)).name
+        pilot = base_prefix_from_pilot(name)
+        if pilot:
+            return pilot
+        if not is_legend_character_name(name):
+            continue
+        pref = skin_prefix(name) or model_dir_name(name)
+        ident = parse_skin_identity(pref)
+        if is_canon_legend_slug(ident.legend) and (ident.skin or ident.rarity):
+            return pref
+    return ""
+
+
+def prefixes_for_legend_codename(model_name: str, filenames: Iterable[str]) -> list[str]:
+    """pilot_light_wraith_cyber_ninja → the one legendary set in that folder.
+
+    Base eyelashes share the folder. A dump that holds several skins is left
+    alone — Find Skins already stored the right tag for that case.
+    """
+    stem = model_dir_name(model_name).lower()
+    toks = [t.lower() for t in tokenize(stem)]
+    legends = [t for t in toks if is_canon_legend_slug(t)]
+    if len(legends) != 1:
+        return []
+    legend = legends[0]
+    self_id = parse_skin_identity(stem)
+    if self_id.legend == legend and self_id.rarity in {
+        "lgnd",
+        "legendary",
+        "epic",
+        "epicp",
+        "rare",
+        "mythic",
+        "prestige",
+        "base",
+        "icon",
+        "iconic",
+    }:
+        return []
+    counts: dict[str, int] = {}
+    for name in filenames:
+        pref = texture_set_prefix(name)
+        if not pref:
+            continue
+        ident = parse_skin_identity(pref)
+        if ident.legend != legend or not ident.skin or _is_base_skin_prefix(pref):
+            continue
+        if ident.rarity in {"mythic", "prestige"}:
+            continue
+        counts[pref] = counts.get(pref, 0) + 1
+    skins = {parse_skin_identity(pref).skin for pref in counts}
+    if len(skins) != 1:
+        return []
+    return [key for key, _n in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+
+def prefer_non_base_sets(prefixes: Iterable[str], mesh_name: str) -> list[str]:
+    """Skin set first, base last.
+
+    A numbered head or hair mesh uses the skin maps when they exist and the
+    base maps when the skin has none. Dropping base entirely left those
+    meshes untextured or stuck on the wrong set.
+    """
+    ordered = [p for p in prefixes if p]
+    kind = part_hash_kind(mesh_name)
+    if kind not in {"head", "hair", "gear"}:
+        return ordered
+    rest = [p for p in ordered if not _is_base_skin_prefix(p)]
+    base = [p for p in ordered if _is_base_skin_prefix(p)]
+    return rest + base
+
+
 def lod0_view_world(name: str) -> tuple[str | None, str]:
     return normalize_vw_part(name)
 
@@ -1226,17 +1541,18 @@ def collect_lod0_casts(folder: str | Path) -> list[Path]:
         return []
     out: list[Path] = []
     seen: set[str] = set()
-    for path in sorted(root.rglob("*.cast")):
-        if not path.is_file() or not is_lod0_cast(path.name):
-            continue
-        try:
-            ident = str(path.resolve())
-        except OSError:
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [name for name in dirnames if not name.startswith(".") and name not in SKIP_DIR_NAMES]
+        for name in filenames:
+            if not name.lower().endswith(".cast") or not is_lod0_cast(name):
+                continue
+            path = Path(dirpath) / name
             ident = str(path)
-        if ident in seen:
-            continue
-        seen.add(ident)
-        out.append(path)
+            if ident in seen:
+                continue
+            seen.add(ident)
+            out.append(path)
+    out.sort(key=lambda path: str(path).lower())
     return unique_skin_casts(prefer_world_lod0(out, root))
 
 
@@ -1518,16 +1834,102 @@ def scan_object_folder(folder: str | Path, prefix: str) -> MatchResult:
     return result
 
 
-def iter_texture_files(folder: str | Path) -> Iterator[Path]:
-    root = Path(folder)
+def iter_texture_files(folder: str | Path, focus: tuple[str, ...] = ()) -> Iterator[Path]:
+    yield from list_texture_files(folder, focus)
+
+
+# Wide RSX roots (materials/, legendary/, mdl/). A focused walk only enters
+# child folders that contain the skin token, instead of every legend.
+_WIDE_DIR_NAMES = frozenset(
+    {
+        "materials",
+        "material",
+        "textures",
+        "texture",
+        "art",
+        "legendary",
+        "lgnd",
+        "mythic",
+        "prestige",
+        "epic",
+        "rare",
+        "common",
+        "base",
+        "legends",
+        "characters",
+        "mdl",
+        "exported_files",
+        "humans",
+        "class",
+        "techart",
+        "mshop",
+        "models",
+    }
+)
+_TEX_CACHE: dict[str, tuple[Path, ...]] = {}
+_TEX_DEPTH = 0
+
+
+def push_texture_cache() -> None:
+    """Reuse one directory walk for the rest of this import / shade."""
+    global _TEX_DEPTH
+    _TEX_DEPTH += 1
+
+
+def pop_texture_cache() -> None:
+    global _TEX_DEPTH, _TEX_CACHE
+    _TEX_DEPTH -= 1
+    if _TEX_DEPTH <= 0:
+        _TEX_DEPTH = 0
+        _TEX_CACHE.clear()
+
+
+def _wide_dir(path: Path) -> bool:
+    return path.name.lower() in _WIDE_DIR_NAMES
+
+
+def _walk_texture_files(root: Path, focus: tuple[str, ...] = ()) -> list[Path]:
+    tokens = tuple(t.lower() for t in focus if t)
+    prune = bool(tokens) and _wide_dir(root)
+    found: list[Path] = []
     if not root.is_dir():
-        return
-    for path in sorted(root.rglob("*")):
-        if not path.is_file() or path.suffix.lower() not in IMAGE_SUFFIXES:
-            continue
-        if any(part in SKIP_DIR_NAMES or is_aux_bodypart(part) for part in path.parts):
-            continue
-        yield path
+        return found
+    for dirpath, dirnames, filenames in os.walk(root):
+        here = Path(dirpath)
+        kept: list[str] = []
+        for name in dirnames:
+            if name.startswith(".") or name in SKIP_DIR_NAMES or is_aux_bodypart(name):
+                continue
+            if prune and here == root and not any(tok in name.lower() for tok in tokens):
+                continue
+            kept.append(name)
+        dirnames[:] = kept
+        for name in filenames:
+            if Path(name).suffix.lower() not in IMAGE_SUFFIXES:
+                continue
+            if any(part in SKIP_DIR_NAMES or is_aux_bodypart(part) for part in here.parts):
+                continue
+            found.append(here / name)
+    found.sort(key=lambda path: str(path).lower())
+    return found
+
+
+def list_texture_files(folder: str | Path, focus: tuple[str, ...] = ()) -> tuple[Path, ...]:
+    """Image files under folder. Within push/pop, the full walk is cached."""
+    root = Path(folder)
+    tokens = tuple(dict.fromkeys(t.lower() for t in focus if t))
+    try:
+        if not root.is_dir():
+            return ()
+    except OSError:
+        return ()
+    key = str(root)
+    if not tokens and _TEX_DEPTH and key in _TEX_CACHE:
+        return _TEX_CACHE[key]
+    packed = tuple(_walk_texture_files(root, tokens))
+    if not tokens and _TEX_DEPTH:
+        _TEX_CACHE[key] = packed
+    return packed
 
 
 def texture_score(path: Path, bodypart: str) -> tuple:
@@ -1706,12 +2108,12 @@ def _path_in_folder(path_str: str, folder: str | Path) -> bool:
     root = Path(folder)
     if not root.is_dir():
         return False
-    try:
-        Path(path_str).resolve().relative_to(root.resolve())
+    text = str(path_str).replace("\\", "/")
+    low_root = str(root).replace("\\", "/").lower().rstrip("/")
+    low_text = text.lower()
+    if low_text.startswith(low_root + "/") or low_text == low_root:
         return True
-    except (OSError, ValueError):
-        low = str(root).replace("\\", "/").lower()
-        return low in str(path_str).replace("\\", "/").lower()
+    return low_root in low_text
 
 
 def _layered_from_entries(
@@ -1789,21 +2191,66 @@ def scan_recolor_stack(
     target_level: str | None = None,
     source_name: str = "",
 ) -> MatchResult:
+    push_texture_cache()
+    try:
+        return _scan_recolor_stack(
+            folder, prefix, token_count, apply_recolor, recolor_code, target_level, source_name
+        )
+    finally:
+        pop_texture_cache()
+
+
+def _focus_tokens(prefix: str, recolor_code: str | None) -> tuple[str, ...]:
+    ident = parse_skin_identity(prefix)
+    bits = [ident.skin, recolor_code or "", prefix]
+    if not ident.skin:
+        bits.insert(0, ident.legend)
+    out: list[str] = []
+    for bit in bits:
+        key = (bit or "").strip("_").lower()
+        if len(key) >= 3 and key not in out:
+            out.append(key)
+    return tuple(out)
+
+
+def _images_under(root: Path, focus: tuple[str, ...]) -> tuple[Path, ...]:
+    """Full walk for a skin folder. Wide RSX roots only open matching children."""
+    if not _wide_dir(root) or not focus:
+        return list_texture_files(root)
+    focused = list_texture_files(root, focus)
+    if focused:
+        return focused
+    try:
+        children = sum(1 for _ in root.iterdir())
+    except OSError:
+        return ()
+    if children < 60:
+        return list_texture_files(root)
+    return ()
+
+
+def _scan_recolor_stack(
+    folder: str | Path,
+    prefix: str,
+    token_count: int = PREFIX_TOKEN_COUNT,
+    apply_recolor: bool = False,
+    recolor_code: str | None = None,
+    target_level: str | None = None,
+    source_name: str = "",
+) -> MatchResult:
     _ = target_level, source_name
     base_prefix, embedded = split_recolor_prefix(prefix)
     parse_prefix = base_prefix or prefix
     if recolor_code is None and embedded:
         recolor_code = embedded
         apply_recolor = True
-    roots = recolor_search_roots(folder, prefix)
+    roots = recolor_search_roots(folder, parse_prefix, recolor_code or "")
+    focus = _focus_tokens(parse_prefix, recolor_code)
     files: list[Path] = []
     seen: set[str] = set()
     for root in roots:
-        for path in iter_texture_files(root):
-            try:
-                key = str(path.resolve())
-            except OSError:
-                key = str(path)
+        for path in _images_under(root, focus):
+            key = str(path)
             if key in seen:
                 continue
             seen.add(key)
@@ -1941,6 +2388,75 @@ def _child_dir(parent: Path, name: str) -> Path | None:
     except OSError:
         return None
     return None
+
+
+def find_art_legends_root(path: str | Path) -> Path | None:
+    """``exported_files/texture/art/mshop/characters/legends``.
+
+    Recolor and legendary PNGs live here, not under ``mdl/techart``.
+    """
+    current = Path(path)
+    if current.suffix:
+        current = current.parent
+    rel = ("texture", "art", "mshop", "characters", "legends")
+    for parent in [current, *list(current.parents)[:14]]:
+        for base in (parent, parent / "exported_files"):
+            cand = base.joinpath(*rel)
+            try:
+                if cand.is_dir():
+                    return cand
+            except OSError:
+                continue
+        if parent.name.lower() == "legends":
+            parts = [part.lower() for part in parent.parts]
+            if "texture" in parts and "art" in parts:
+                return parent
+    return None
+
+
+def art_legend_texture_candidates(cast_path: str | Path, prefix: str = "") -> list[Path]:
+    """Folders under texture/art/.../legends for this legend and skin id."""
+    root = find_art_legends_root(cast_path)
+    if root is None:
+        return []
+    path = Path(cast_path)
+    ident = parse_skin_identity(prefix or path.name)
+    legend = ident.legend if is_canon_legend_slug(ident.legend) else ""
+    if not legend:
+        for part in path.parts:
+            if is_canon_legend_slug(part):
+                legend = part.lower()
+                break
+    names: list[str] = []
+    for raw in (prefix, path.name, path.stem):
+        if not raw:
+            continue
+        for item in (raw, *texture_prefixes_for_mesh(raw), *mesh_prefixes_for_texture(raw)):
+            base, _code = split_recolor_prefix(item)
+            for name in (item, base, model_dir_name(item) if item else ""):
+                if name and name not in names:
+                    names.append(name)
+    out: list[Path] = []
+    seen: set[str] = set()
+
+    def add(cand: Path) -> None:
+        key = str(cand).replace("\\", "/").lower()
+        if key in seen:
+            return
+        seen.add(key)
+        out.append(cand)
+
+    homes = [root]
+    if legend:
+        legend_dir = _child_dir(root, legend)
+        if legend_dir is not None:
+            homes.insert(0, legend_dir)
+    for home in homes:
+        add(home)
+        for name in names:
+            add(home / name)
+            add(home / name.lower())
+    return out
 
 
 def find_techart_legends_root(path: str | Path) -> Path | None:
@@ -2138,31 +2654,67 @@ def texture_folder_candidates(cast_path: str | Path) -> list[Path]:
     return out
 
 
+def _scan_has_texture(
+    folder: str | Path,
+    prefix: str,
+    token_count: int = PREFIX_TOKEN_COUNT,
+    recolor_code: str | None = None,
+    variant: str | None = None,
+) -> bool:
+    """Stop at the first map. Finding a folder must not parse the whole tree twice."""
+    base_prefix, embedded = split_recolor_prefix(prefix)
+    parse_prefix = base_prefix or prefix
+    want = variant if variant is not None else recolor_code
+    if want is None and embedded:
+        want = embedded
+    root = Path(folder)
+    if not root.is_dir():
+        return False
+    for path in list_texture_files(root):
+        blob = path_variant_blob(path)
+        if not _keep_variant(path.name, parse_prefix, want, blob):
+            continue
+        parsed = parse_texture_name(
+            str(path),
+            prefix=parse_prefix,
+            token_count=token_count,
+            parent_name=blob,
+        )
+        if parsed is None or not parsed.slot:
+            continue
+        if parsed.slot in SKIP_SLOTS or is_ignored_slot(parsed.slot_raw):
+            continue
+        return True
+    return False
+
+
 def _folder_has_maps(folder: Path, prefix: str, ident: SkinIdentity) -> bool:
     if prefix:
-        hit = scan_folder(folder, prefix)
-        if hit.textures:
+        if _scan_has_texture(folder, prefix):
             return True
         _base, code = split_recolor_prefix(prefix)
-        if code:
-            hit = scan_folder(folder, _base or prefix, recolor_code=code)
-            if hit.textures:
-                return True
-        if ident.level:
-            hit = scan_folder(folder, prefix, variant=ident.level)
-            if hit.textures:
-                return True
-        obj = scan_object_folder(folder, prefix)
-        if obj.textures:
+        if code and _scan_has_texture(folder, _base or prefix, recolor_code=code):
             return True
-        obj = scan_object_folder(folder, model_dir_name(prefix) or prefix)
-        if obj.textures:
+        if ident.level and _scan_has_texture(folder, prefix, variant=ident.level):
+            return True
+        if scan_object_folder(folder, prefix).textures:
+            return True
+        alt = model_dir_name(prefix) or prefix
+        if alt != prefix and scan_object_folder(folder, alt).textures:
             return True
         return False
-    return any(True for _ in iter_texture_files(folder))
+    return bool(list_texture_files(folder))
 
 
 def find_texture_folder(cast_path: str | Path, recolor_code: str = "") -> Path | None:
+    push_texture_cache()
+    try:
+        return _find_texture_folder(cast_path, recolor_code)
+    finally:
+        pop_texture_cache()
+
+
+def _find_texture_folder(cast_path: str | Path, recolor_code: str = "") -> Path | None:
     path = Path(cast_path)
     prefix = skin_prefix(path.name)
     ident = parse_skin_identity(path.name)
@@ -2173,6 +2725,19 @@ def find_texture_folder(cast_path: str | Path, recolor_code: str = "") -> Path |
     seen: set[str] = set()
 
     techart = techart_legend_texture_candidates(path)
+    art = art_legend_texture_candidates(path, prefix)
+    for cand in art:
+        try:
+            if not cand.is_dir():
+                continue
+        except OSError:
+            continue
+        check = with_recolor_prefix(prefix, code) if code else prefix
+        aliases = texture_prefixes_for_mesh(prefix)
+        probes = [check, prefix, *aliases]
+        if any(_folder_has_maps(cand, probe, ident) for probe in probes if probe):
+            return cand
+
     if code:
         for cand in recolor_texture_folder_candidates(path, code):
             try:
@@ -2269,7 +2834,7 @@ def _materials_search_roots(start: str | Path) -> list[Path]:
     return out
 
 
-def recolor_search_roots(folder: str | Path, prefix: str) -> list[Path]:
+def recolor_search_roots(folder: str | Path, prefix: str, recolor_code: str = "") -> list[Path]:
     root = Path(folder)
     ident = parse_skin_identity(prefix)
     found: list[Path] = []
@@ -2289,9 +2854,14 @@ def recolor_search_roots(folder: str | Path, prefix: str) -> list[Path]:
 
     add(root)
     dummy = root / f"{prefix}_w_LOD0.cast" if root.suffix.lower() != ".cast" else root
+    for cand in art_legend_texture_candidates(root, prefix):
+        add(cand)
+    for cand in art_legend_texture_candidates(dummy, prefix):
+        add(cand)
     for cand in parallel_texture_candidates(dummy):
         add(cand)
-    base_prefix, code = split_recolor_prefix(prefix)
+    base_prefix, embedded = split_recolor_prefix(prefix)
+    code = (recolor_code or embedded or "").lower()
     if code:
         for cand in recolor_texture_folder_candidates(dummy, code):
             add(cand)
@@ -2446,9 +3016,12 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
         alias = _PART_ALIAS.get(token, "")
         if alias:
             found.add(alias)
+        group = _PART_GROUPS.get(token) or _PART_GROUPS.get(alias)
+        if group:
+            found.update(group)
         return found
 
-    def best_known(wants: set[str], toks: list[str]) -> str | None:
+    def best_known(wants: set[str], toks: list[str], primary: str = "") -> str | None:
         hits = []
         for bp in known:
             last = bp.split("_")[-1]
@@ -2457,10 +3030,17 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
         if not hits:
             return None
         skin = set(toks)
+        primary = (primary or "").lower()
+        alias = _PART_ALIAS.get(primary, "")
+
         def score(bp: str) -> tuple:
             bits = bp.split("_")[:-1]
+            last = bp.split("_")[-1]
             overlap = sum(1 for bit in bits if bit in skin)
-            return (-overlap, 0 if bp in wants else 1, len(bp))
+            exact = 0 if primary and (bp == primary or last == primary) else 1
+            aliased = 0 if alias and (bp == alias or last == alias) else 1
+            return (-overlap, exact, aliased, 0 if bp in wants else 1, len(bp))
+
         return sorted(hits, key=score)[0]
 
     def suffix_hit(toks: list[str]) -> str | None:
@@ -2478,7 +3058,7 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
             body = best_known({"body"}, toks)
             if body:
                 return body
-        return best_known(wants_for(toks[-1]), toks)
+        return best_known(wants_for(toks[-1]), toks, toks[-1])
 
     def bare_body(raw: str, toks: list[str]) -> str | None:
         """body_0_<skin> with no part suffix is the body. head_0_<skin> is the head.
@@ -2500,7 +3080,7 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
             return None
         if part == "body" and not tail_is_part:
             return best_known({"body"}, toks) or ("body" if "body" in known_set else None)
-        resolved = best_known(wants_for(part), toks)
+        resolved = best_known(wants_for(part), toks, part)
         if resolved:
             return resolved
         if part in {"head", "gear", "kit", "hair"} and part in known_set:
@@ -2510,9 +3090,18 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
             return alias
         return None
 
-    found: list[tuple[str, str]] = []
+    found: list[tuple[str, str, int]] = []
     for raw in haystacks:
         if not raw:
+            continue
+        hashed = part_hash_kind(raw)
+        if hashed:
+            # The number is the part. Do not fall through to bare body_0_<digits>.
+            hit = best_known(wants_for(hashed), [hashed], hashed)
+            if hit is None and hashed in known_set:
+                hit = hashed
+            if hit:
+                found.append((raw, hit, len(found)))
             continue
         cleaned = strip_cast_lod_group(raw)
         toks = [t.lower() for t in tokenize(cleaned)]
@@ -2520,19 +3109,43 @@ def guess_bodypart(haystacks: Iterable[str], bodyparts: Iterable[str]) -> str | 
         if hit is None:
             hit = bare_body(raw, toks)
         if hit:
-            found.append((raw, hit))
+            found.append((raw, hit, len(found)))
     if not found:
         return None
 
-    def rank(raw: str, hit: str) -> tuple:
+    def rank(raw: str, hit: str, index: int) -> tuple:
+        if part_hash_kind(raw):
+            # Hash meshes beat a shared "..._body" material on the same slot.
+            return (0, 0, -index, 0)
         toks = [t.lower() for t in tokenize(strip_cast_lod_group(raw))]
         tail = toks[-1] if toks else ""
         last = hit.split("_")[-1]
         tail_ok = tail == last or _PART_ALIAS.get(tail, "") == last or tail == hit
-        return (0 if tail_ok else 1, 0 if hit == last else 1, len(hit))
+        # Later names are the mesh. A shared body material must not beat helmet.
+        return (1, 0 if tail_ok else 1, -index, len(hit))
 
     found.sort(key=lambda item: rank(*item))
     return found[0][1]
+
+
+def fallback_bodypart(mesh_name: str, known: Iterable[str]) -> str | None:
+    """Part this mesh names, even when that texture set has no such map.
+
+    ``suit`` still resolves to ``gear`` when gear maps exist. A hash id is
+    never turned into body just because body is the only scanned part.
+    """
+    hit = guess_bodypart([mesh_name], known)
+    if hit:
+        return hit
+    if part_hash_kind(mesh_name):
+        return None
+    toks = [t.lower() for t in tokenize(strip_cast_lod_group(mesh_name))]
+    if not toks:
+        return None
+    tail = toks[-1]
+    if tail not in MESH_PARTS and tail not in _EXTRA_PARTS and tail not in _PART_ALIAS:
+        return None
+    return tail
 
 
 GLASS_FAMILY = frozenset(

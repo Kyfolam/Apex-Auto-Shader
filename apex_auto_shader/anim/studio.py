@@ -71,11 +71,24 @@ _POV_RES_PCT = "apex_pov_prev_res_pct"
 _POV_RES_SAVED = "apex_pov_res_saved"
 
 
+def render_is_portrait(scene) -> bool:
+    """True when the render frame is taller than it is wide."""
+    if scene is None:
+        return False
+    render = getattr(scene, "render", None)
+    if render is None:
+        return False
+    try:
+        return int(render.resolution_y) > int(render.resolution_x)
+    except Exception:
+        return False
+
+
 def apply_frame_orientation(scene) -> None:
     """Portrait or landscape from the camera panel toggle. Banner POV still forces portrait."""
     if scene is None:
         return
-    portrait = bool(getattr(scene, "apex_cam_portrait", True))
+    portrait = bool(getattr(scene, "apex_cam_portrait", False))
     render = scene.render
     try:
         if portrait:
@@ -833,6 +846,8 @@ def add_camera_rig(context, obj: bpy.types.Object | None, snap_view: bool = True
         try:
             capture_viewport_camera(context, cam)
             apply_light_boost(context.scene)
+            apply_light_kelvin(context.scene)
+            apply_composition_guides(context.scene)
             sync_closeup_dof(context)
             return cam
         except Exception:
@@ -1064,6 +1079,70 @@ _DOF_DIST = "apex_dof_dist_prev"
 _DOF_FSTOP = "apex_dof_fstop_prev"
 
 
+def kelvin_to_rgb(kelvin: float) -> tuple[float, float, float]:
+    """Blackbody color as linear RGB. 6500K is daylight white, lower is warmer."""
+    t = max(1000.0, min(40000.0, float(kelvin))) / 100.0
+    if t <= 66.0:
+        red = 255.0
+        green = 99.4708025861 * math.log(t) - 161.1195681661
+    else:
+        red = 329.698727446 * ((t - 60.0) ** -0.1332047592)
+        green = 288.1221695283 * ((t - 60.0) ** -0.0755148492)
+    if t >= 66.0:
+        blue = 255.0
+    elif t <= 19.0:
+        blue = 0.0
+    else:
+        blue = 138.5177312231 * math.log(t - 10.0) - 305.0447927307
+
+    def _channel(value: float) -> float:
+        srgb = max(0.0, min(255.0, value)) / 255.0
+        if srgb <= 0.04045:
+            return srgb / 12.92
+        return ((srgb + 0.055) / 1.055) ** 2.4
+
+    return (_channel(red), _channel(green), _channel(blue))
+
+
+def apply_light_kelvin(scene) -> None:
+    """Paint the studio lights with one color temperature. Missing lights are skipped."""
+    if scene is None:
+        return
+    try:
+        kelvin = float(getattr(scene, "apex_light_kelvin", 6500.0) or 6500.0)
+    except (TypeError, ValueError):
+        kelvin = 6500.0
+    color = kelvin_to_rgb(kelvin)
+    for name in STAGING_LIGHTS:
+        obj = bpy.data.objects.get(name)
+        if obj is None or getattr(obj, "type", "") != "LIGHT":
+            continue
+        data = getattr(obj, "data", None)
+        if data is None or not hasattr(data, "color"):
+            continue
+        try:
+            data.color = color
+        except Exception:
+            pass
+
+
+def apply_composition_guides(scene) -> None:
+    """Rule-of-thirds overlay on the studio camera. Off leaves the camera alone."""
+    if scene is None:
+        return
+    cam = bpy.data.objects.get(STAGING_CAMERA)
+    if cam is None or getattr(cam, "type", "") != "CAMERA":
+        cam = getattr(scene, "camera", None)
+    data = getattr(cam, "data", None) if cam is not None else None
+    if data is None or not hasattr(data, "show_composition_thirds"):
+        return
+    enabled = bool(getattr(scene, "apex_cam_thirds", False))
+    try:
+        data.show_composition_thirds = enabled
+    except Exception:
+        pass
+
+
 def apply_light_boost(scene) -> None:
     """Same scale as Optic Enhancer: energy = captured base * (1 + percent/100)."""
     if scene is None:
@@ -1124,13 +1203,13 @@ def sync_closeup_dof(context) -> None:
         except Exception:
             pass
         dist = 0.35
-        target = getattr(context, "active_object", None)
-        if target is not None and target != cam:
-            try:
-                delta = cam.matrix_world.translation - target.matrix_world.translation
-                dist = float(delta.length)
-            except Exception:
-                dist = 0.35
+        try:
+            focus = focus_object(context)
+            head, _height, _forward = _head_focus(focus)
+            delta = cam.matrix_world.translation - head
+            dist = float(delta.length)
+        except Exception:
+            dist = 0.35
         try:
             dof.use_dof = True
             dof.focus_distance = max(0.05, dist)
@@ -1139,6 +1218,16 @@ def sync_closeup_dof(context) -> None:
         if hasattr(dof, "aperture_fstop"):
             try:
                 dof.aperture_fstop = 2.8
+            except Exception:
+                pass
+        if hasattr(dof, "aperture_blades"):
+            try:
+                dof.aperture_blades = 6
+            except Exception:
+                pass
+        if hasattr(dof, "aperture_ratio"):
+            try:
+                dof.aperture_ratio = 1.0
             except Exception:
                 pass
         return
@@ -1218,6 +1307,8 @@ def apply_camera_preset(context, preset: str, create: bool = True) -> None:
         _ensure_lock_track(cam)
     context.view_layer.update()
     apply_light_boost(getattr(context, "scene", None))
+    apply_light_kelvin(getattr(context, "scene", None))
+    apply_composition_guides(getattr(context, "scene", None))
     sync_closeup_dof(context)
 
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import urllib.error
 import urllib.request
@@ -77,15 +78,11 @@ def tagged_armatures(scene=None, include_victims: bool = False) -> list:
             continue
         if not include_victims and obj.get("apex_is_victim"):
             continue
+        if obj.get("apex_prop"):
+            continue
         if CHAR_TAG in obj or CHAR_TEX in obj:
             found.append(obj)
-    if found:
-        return found
-    return [
-        obj
-        for obj in scene.objects
-        if obj.type == "ARMATURE" and (include_victims or not obj.get("apex_is_victim"))
-    ]
+    return found
 
 
 def folder_for(obj, scene=None) -> Path | None:
@@ -132,6 +129,26 @@ def hide_higher_lods(root) -> int:
         if mesh_lod(mesh.name) > 0:
             hide_object(mesh)
             n += 1
+    return n
+
+
+def reveal_higher_lods(root) -> int:
+    if root is None:
+        return 0
+    n = 0
+    for mesh in material_meshes(root):
+        if mesh_lod(mesh.name) <= 0:
+            continue
+        try:
+            mesh.hide_set(False)
+        except Exception:
+            pass
+        try:
+            mesh.hide_viewport = False
+            mesh.hide_render = False
+        except Exception:
+            pass
+        n += 1
     return n
 
 
@@ -361,8 +378,14 @@ def list_model_casts(folder: str | Path) -> list[Path]:
     root = Path(folder)
     if not root.is_dir():
         return []
-    files = [p for p in sorted(root.rglob("*.cast")) if p.is_file()]
-    models = [p for p in files if is_model_cast(p.name)]
+    files: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [name for name in dirnames if not name.startswith(".") and name != "__pycache__"]
+        for name in filenames:
+            if name.lower().endswith(".cast"):
+                files.append(Path(dirpath) / name)
+    files.sort(key=lambda path: str(path).lower())
+    models = [path for path in files if is_model_cast(path.name)]
     return models or files
 
 
@@ -390,18 +413,89 @@ def apex_on_frame(scene, depsgraph=None):
     bpy.app.timers.register(_stop, first_interval=0.02)
 
 
+@persistent
+def apex_keep_moved_location(scene, *args):
+    """Strip armature location keys once per action.
+
+    Playback would otherwise jump a model back to the keyed spot after it
+    was moved while paused. Runs before the frame is evaluated.
+    """
+    _ = scene, args
+    try:
+        from ..anim.apply import _strip_location_keys
+    except Exception:
+        return
+    objects = getattr(bpy.data, "objects", None)
+    if not objects:
+        return
+    for obj in list(objects):
+        try:
+            if getattr(obj, "type", "") != "ARMATURE":
+                continue
+            if not (obj.get(CHAR_CAST) or obj.get(CHAR_TAG)):
+                continue
+            ad = getattr(obj, "animation_data", None)
+            action = getattr(ad, "action", None) if ad is not None else None
+            if action is None:
+                continue
+            try:
+                if action.get("apex_loc_free"):
+                    continue
+            except Exception:
+                pass
+            _strip_location_keys(obj)
+        except Exception:
+            continue
+
+
+def _handler_bucket(name: str):
+    handlers = bpy.app.handlers
+    bucket = getattr(handlers, name, None)
+    if bucket is None:
+        bucket = []
+        try:
+            setattr(handlers, name, bucket)
+        except Exception:
+            return []
+    return bucket
+
+
 def register_handlers():
-    handlers = bpy.app.handlers.frame_change_post
+    handlers = _handler_bucket("frame_change_post")
     # Drop every previous banner-cam sync. Rewriting rotation each frame spins it.
     for fn in list(handlers):
         if getattr(fn, "__name__", "") == "sync_banner_camera":
             handlers.remove(fn)
     if apex_on_frame not in handlers:
         handlers.append(apex_on_frame)
+    pre = _handler_bucket("frame_change_pre")
+    if apex_keep_moved_location not in pre:
+        pre.append(apex_keep_moved_location)
+    deps = _handler_bucket("depsgraph_update_post")
+    from .utils import apex_reveal_unhidden_rigs, apex_reveal_visible_joints
+
+    if apex_reveal_unhidden_rigs not in deps:
+        deps.append(apex_reveal_unhidden_rigs)
+    load = _handler_bucket("load_post")
+    if apex_reveal_visible_joints not in load:
+        load.append(apex_reveal_visible_joints)
+    try:
+        bpy.app.timers.register(lambda: apex_reveal_visible_joints(None), first_interval=0.8)
+    except Exception:
+        pass
 
 
 def unregister_handlers():
-    handlers = bpy.app.handlers.frame_change_post
-    for fn in list(handlers):
-        if getattr(fn, "__name__", "") in {"apex_on_frame", "sync_banner_camera"}:
-            handlers.remove(fn)
+    for name in ("frame_change_post", "frame_change_pre", "depsgraph_update_post", "load_post"):
+        bucket = getattr(bpy.app.handlers, name, None)
+        if not bucket:
+            continue
+        for fn in list(bucket):
+            if getattr(fn, "__name__", "") in {
+                "apex_on_frame",
+                "sync_banner_camera",
+                "apex_keep_moved_location",
+                "apex_reveal_unhidden_rigs",
+                "apex_reveal_visible_joints",
+            }:
+                bucket.remove(fn)
