@@ -45,6 +45,12 @@ def tag_character(arm, folder=None, cast_path=None, collection=None, anim_folder
             arm[CHAR_LEGEND] = slug
     elif CHAR_TAG not in arm:
         arm[CHAR_TAG] = strip_blender_suffix(arm.name)
+    try:
+        from .utils import sync_rig_reveal_handler
+
+        sync_rig_reveal_handler()
+    except Exception:
+        pass
     if collection is not None:
         arm[CHAR_COLL] = str(collection)
     if anim_folder is not None:
@@ -472,10 +478,11 @@ def register_handlers():
     if apex_keep_moved_location not in pre:
         pre.append(apex_keep_moved_location)
     deps = _handler_bucket("depsgraph_update_post")
-    from .utils import apex_reveal_unhidden_rigs, apex_reveal_visible_joints
+    from .utils import apex_reveal_unhidden_rigs, apex_reveal_visible_joints, sync_rig_reveal_handler
 
-    if apex_reveal_unhidden_rigs not in deps:
-        deps.append(apex_reveal_unhidden_rigs)
+    _ = (deps, apex_reveal_unhidden_rigs)
+    # Rig reveal hooks depsgraph only when CAST rigs exist (load_post / import re-check).
+    sync_rig_reveal_handler()
     load = _handler_bucket("load_post")
     if apex_reveal_visible_joints not in load:
         load.append(apex_reveal_visible_joints)

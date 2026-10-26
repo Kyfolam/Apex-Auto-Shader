@@ -816,6 +816,7 @@ def reveal_visible_joints() -> None:
 
 
 def _reveal_visible_joints_later():
+    sync_rig_reveal_handler()
     reveal_visible_joints()
     return None
 
@@ -840,6 +841,26 @@ def queue_rig_reveal(obj) -> None:
         _flush_rig_reveal()
 
 
+def sync_rig_reveal_handler() -> None:
+    """Install the depsgraph rig-reveal handler only when the file has CAST rigs.
+
+    Triggers: addon register, load_post, after import (tag_character), show_rig.
+    """
+    try:
+        bucket = bpy.app.handlers.depsgraph_update_post
+    except Exception:
+        return
+    try:
+        wanted = any(_is_cast_armature(obj) for obj in bpy.data.objects)
+    except Exception:
+        wanted = False
+    present = apex_reveal_unhidden_rigs in bucket
+    if wanted and not present:
+        bucket.append(apex_reveal_unhidden_rigs)
+    elif not wanted and present:
+        bucket.remove(apex_reveal_unhidden_rigs)
+
+
 @persistent
 def apex_reveal_unhidden_rigs(scene, depsgraph=None):
     """Outliner eye opens the Joints armature. Finish the unhide on a timer."""
@@ -849,7 +870,7 @@ def apex_reveal_unhidden_rigs(scene, depsgraph=None):
         return
     for update in updates:
         obj = getattr(update, "id", None)
-        if obj is None:
+        if obj is None or getattr(obj, "type", "") != "ARMATURE":
             continue
         try:
             queue_rig_reveal(obj)
