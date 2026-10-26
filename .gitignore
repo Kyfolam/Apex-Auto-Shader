@@ -6,3 +6,6 @@ __pycache__/
 Thumbs.db
 *.blend1
 *.blend2
+.apex_model_index_cache.json
+.apex_model_index_cache.tmp
+__pycache__/

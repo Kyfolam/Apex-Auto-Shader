@@ -32,6 +32,10 @@ Select the Folder of your exported files. The closer you are at the source, the 
 Then the Skins are listed which can be found and which not. You can search by Legends.
 In the Search-Tab you can look for a specific Skin.
 
+The model folder is no longer scanned when Blender starts or a .blend is opened. The scan runs when you open **Find Skins** for the first time or press **Scan folder**; the result is cached on disk next to the addon (`.apex_model_index_cache.json`) and reused until the folder changes. Press **Scan folder** to rebuild it.
+
+> **Note:** The first start may take longer while the cache is built. (Beim ersten Start ggf. längere Ladezeit (Cache-Aufbau).)
+
 ### Apply Shader
 
 The shader dropdown follows the preference until you pick one for the scene. **Apply Shader** shades the selection with that choice.

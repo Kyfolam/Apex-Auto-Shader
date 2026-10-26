@@ -1786,6 +1786,7 @@ def set_camera_lock(context, enabled: bool, obj=None) -> None:
         cam = ensure_camera_rig(context)
     if not enabled:
         scene.apex_cam_lock_name = ""
+        sync_cam_lock_handlers()
         if cam is not None:
             for con in list(cam.constraints):
                 if con.name == CON_STUDIO_TRACK:
@@ -1797,6 +1798,7 @@ def set_camera_lock(context, enabled: bool, obj=None) -> None:
         scene.apex_cam_lock = False
         return
     scene.apex_cam_lock_name = obj.name
+    sync_cam_lock_handlers()
     aim_locked_camera(scene)
     if cam is not None:
         _ensure_lock_track(cam)
@@ -1835,6 +1837,26 @@ def _aim_locked_camera(scene) -> None:
     look.hide_viewport = True
     look.hide_render = True
     _ensure_lock_track(cam)
+
+
+def sync_cam_lock_handlers() -> None:
+    """Keep _lock_camera_handler installed only while some scene has Lock camera on."""
+    try:
+        wanted = any(bool(getattr(s, "apex_cam_lock", False)) for s in bpy.data.scenes)
+    except Exception:
+        wanted = False
+    for bucket in (bpy.app.handlers.frame_change_post, bpy.app.handlers.depsgraph_update_post):
+        present = _lock_camera_handler in bucket
+        if wanted and not present:
+            bucket.append(_lock_camera_handler)
+        elif not wanted and present:
+            bucket.remove(_lock_camera_handler)
+
+
+@persistent
+def apex_cam_lock_load_post(*_args) -> None:
+    """After opening a .blend: re-arm the lock handler only if that file uses it."""
+    sync_cam_lock_handlers()
 
 
 @persistent

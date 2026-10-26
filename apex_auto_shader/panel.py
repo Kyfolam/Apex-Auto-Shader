@@ -127,21 +127,38 @@ def _broad_dir(path: Path) -> bool:
     return resolved in broad or path in broad
 
 
-def _model_index(scene):
+_SCAN_ALLOWED = False  # set by "Scan folder" / first open of Find Skins
+
+
+def _model_index(scene, scan: bool | None = None, force: bool = False):
+    """Folder index for presence checks.
+
+    Lazy: memory cache, then disk cache. A folder walk only happens when a scan
+    is allowed ("Scan folder" or first open of Find Skins). Returns None when
+    no index is available yet and scanning is not allowed.
+    """
     global _INDEX_CACHE, _PRESENT_KEY, _PRESENT_MEMO
     root = _model_root(scene)
     key = str(root) if root is not None else ""
-    if _INDEX_CACHE is not None and _INDEX_CACHE[0] == key:
+    if not force and _INDEX_CACHE is not None and _INDEX_CACHE[0] == key:
         return _INDEX_CACHE[1:]
-    if key != _PRESENT_KEY:
+    if key != _PRESENT_KEY or force:
         _PRESENT_KEY = key
         _PRESENT_MEMO = {}
     if root is None or _broad_dir(root):
         packed = ((), (), (), False, ())
         _INDEX_CACHE = (key, *packed)
         return packed
+    allowed = _SCAN_ALLOWED if scan is None else bool(scan)
     try:
-        packed = pack.walk_model_index(root)
+        if force:
+            packed = pack.cached_model_index(root, force=True)
+        else:
+            packed = pack.load_model_index_cache(root)
+            if packed is None:
+                if not allowed:
+                    return None
+                packed = pack.cached_model_index(root)
     except OSError:
         packed = ((), (), (), False, ())
     _INDEX_CACHE = (key, *packed)
@@ -156,7 +173,10 @@ def _prefix_present(prefix: str, name: str = "", legend: str = "", scene=None) -
     cached = _PRESENT_MEMO.get(memo_key)
     if cached is not None:
         return cached
-    casts, blobs, tex, _truncated, _paths = _model_index(scene)
+    index = _model_index(scene)
+    if index is None:
+        return False
+    casts, blobs, tex, _truncated, _paths = index
     hit = pack.files_present_indexed(casts, blobs, tex, prefix, name, legend)
     _PRESENT_MEMO[memo_key] = hit
     return hit
@@ -279,9 +299,12 @@ def _update_find(self, context):
         except Exception:
             pass
         return
-    _casts, _blobs, _tex, truncated, _paths = _model_index(self)
+    index = _model_index(self)
+    scanned = index is not None
+    truncated = bool(index[3]) if scanned else False
     try:
         self["apex_find_truncated"] = bool(truncated)
+        self["apex_find_unscanned"] = not scanned
     except Exception:
         pass
     query = (getattr(self, "apex_find_query", "") or "").strip()
@@ -294,9 +317,10 @@ def _update_find(self, context):
     for row in hits:
         lg, name = row[0], row[1]
         prefix = row[2] if len(row) > 2 else pack.prefix_for(lg, name)
-        present = _prefix_present(prefix, name, lg, self)
+        present = _prefix_present(prefix, name, lg, self) if scanned else True
         rows.append((lg, name, prefix, _row_detail(prefix), present))
-    only_present = bool(getattr(self, "apex_find_only_present", True))
+    # Not scanned yet: show the built-in skin list unfiltered.
+    only_present = scanned and bool(getattr(self, "apex_find_only_present", True))
     if only_present:
         rows = [row for row in rows if row[4]]
     sort_key = str(getattr(self, "apex_find_sort", "name") or "name")
@@ -1375,6 +1399,20 @@ class APEX_OT_find_confirm(bpy.types.Operator):
         return APEX_OT_find_load.execute(self, context)
 
 
+class APEX_OT_find_scan(bpy.types.Operator):
+    bl_idname = "apexaddon.find_scan"
+    bl_label = "Scan folder"
+    bl_description = "Scan the model folder now and rebuild the on-disk cache"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context):
+        global _SCAN_ALLOWED
+        _SCAN_ALLOWED = True
+        _model_index(context.scene, force=True)
+        _update_find(context.scene, context)
+        return {"FINISHED"}
+
+
 def _suggest_model_dir(scene) -> None:
     """Find Skins opens on the Model folder, or on the RSX export folder."""
     global _FIND_HOLD
@@ -1409,7 +1447,10 @@ class APEX_OT_find_skins(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def invoke(self, context, event):
+        global _SCAN_ALLOWED
         _suggest_model_dir(context.scene)
+        # First open of the search: allow the folder scan (disk cache first).
+        _SCAN_ALLOWED = True
         _refresh_find(context.scene, context)
         return context.window_manager.invoke_props_dialog(self, width=620)
 
@@ -1428,8 +1469,11 @@ class APEX_OT_find_skins(bpy.types.Operator):
             layout.label(text="RSX export folder was not found")
         elif bool(scene.get("apex_find_truncated")):
             layout.label(text="Folder is very large — list may be incomplete")
+        elif bool(scene.get("apex_find_unscanned")):
+            layout.label(text="Folder not scanned yet — press Scan folder")
         row = layout.row(align=True)
         row.prop(scene, "apex_find_only_present", text="Skins found")
+        row.operator(APEX_OT_find_scan.bl_idname, text="Scan folder", icon="FILE_REFRESH")
         legend = str(getattr(scene, "apex_find_legend", "") or "")
         if legend and legend.upper() != "ALL":
             row.operator(APEX_OT_find_import_all.bl_idname, text="Import all", icon="IMPORT")
@@ -1520,6 +1564,7 @@ panel_classes = (
     APEX_OT_find_import_all,
     APEX_OT_find_toggle_legend,
     APEX_OT_find_confirm,
+    APEX_OT_find_scan,
     APEX_OT_find_skins,
     APEX_PT_main,
     APEX_PT_textures,
@@ -1608,6 +1653,15 @@ def _update_cam_target(self, _context):
     try:
         from .anim.studio import aim_locked_camera
         aim_locked_camera(self)
+    except Exception:
+        pass
+
+
+def _update_cam_lock(self, _context):
+    try:
+        from .anim.studio import sync_cam_lock_handlers
+
+        sync_cam_lock_handlers()
     except Exception:
         pass
 
@@ -1702,7 +1756,7 @@ def register_props():
         default=False,
         update=_update_portrait,
     )
-    bpy.types.Scene.apex_cam_lock = BoolProperty(name="Lock camera", default=False)
+    bpy.types.Scene.apex_cam_lock = BoolProperty(name="Lock camera", default=False, update=_update_cam_lock)
     bpy.types.Scene.apex_cam_lock_name = StringProperty(name="Locked object", default="")
     bpy.types.Scene.apex_cam_target = EnumProperty(
         name="Lock target",

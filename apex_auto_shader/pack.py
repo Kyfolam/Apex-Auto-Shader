@@ -665,6 +665,122 @@ def _path_under(path: Path, parent: Path) -> bool:
             return False
 
 
+_INDEX_CACHE_FILE = ".apex_model_index_cache.json"
+_INDEX_CACHE_VERSION = 1
+
+
+def _index_cache_path() -> Path:
+    """Scan cache next to the addon. Falls back to the extension user dir."""
+    here = Path(__file__).resolve().parent
+    if os.access(str(here), os.W_OK):
+        return here / _INDEX_CACHE_FILE
+    try:
+        import bpy
+
+        return Path(bpy.utils.extension_path_user(__package__, create=True)) / _INDEX_CACHE_FILE
+    except Exception:
+        return here / _INDEX_CACHE_FILE
+
+
+def _mtime(path: Path) -> float:
+    try:
+        return float(os.stat(str(path)).st_mtime)
+    except OSError:
+        return -1.0
+
+
+def _index_signature(root: Path, limit: int) -> dict:
+    """Root + mtime of the root and the priority character folders."""
+    root = Path(root)
+    watch = [root]
+    try:
+        watch += list(rsx_character_roots(root))
+        art = rsx_art_legend_root(root)
+        if art is not None:
+            watch.append(art)
+    except Exception:
+        pass
+    return {
+        "version": _INDEX_CACHE_VERSION,
+        "root": str(root),
+        "limit": int(limit),
+        "mtimes": {str(p): _mtime(p) for p in watch},
+    }
+
+
+def load_model_index_cache(root: Path, limit: int = 250000):
+    """Return the packed index from disk if root/mtime still match, else None. Never walks."""
+    global _LINK_KEY, _DIR_TEX, _DIR_CASTS, _CAST_PATHS, _CAST_TEXT
+    import json
+
+    path = _index_cache_path()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    entry = (data.get("roots") or {}).get(str(Path(root)))
+    if not entry or entry.get("sig") != _index_signature(root, limit):
+        return None
+    try:
+        packed = (
+            tuple(entry["casts"]),
+            tuple(entry["blobs"]),
+            tuple(entry["tex"]),
+            bool(entry["truncated"]),
+            tuple(entry["cast_paths"]),
+        )
+        _LINK_KEY = str(Path(root))
+        _DIR_TEX = {k: tuple(v) for k, v in entry["dir_tex"].items()}
+        _DIR_CASTS = {k: tuple(v) for k, v in entry["dir_casts"].items()}
+        _CAST_PATHS = packed[4]
+        _CAST_TEXT = {}
+    except (KeyError, TypeError, AttributeError):
+        return None
+    return packed
+
+
+def save_model_index_cache(root: Path, packed, limit: int = 250000) -> None:
+    import json
+
+    path = _index_cache_path()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or data.get("version") != _INDEX_CACHE_VERSION:
+            data = {}
+    except (OSError, ValueError):
+        data = {}
+    roots = data.get("roots") if isinstance(data.get("roots"), dict) else {}
+    casts, blobs, tex, truncated, cast_paths = packed
+    roots[str(Path(root))] = {
+        "sig": _index_signature(root, limit),
+        "casts": list(casts),
+        "blobs": list(blobs),
+        "tex": list(tex),
+        "truncated": bool(truncated),
+        "cast_paths": list(cast_paths),
+        "dir_tex": {k: list(v) for k, v in _DIR_TEX.items()},
+        "dir_casts": {k: list(v) for k, v in _DIR_CASTS.items()},
+    }
+    data = {"version": _INDEX_CACHE_VERSION, "roots": roots}
+    tmp = path.with_suffix(".tmp")
+    try:
+        tmp.write_text(json.dumps(data), encoding="utf-8")
+        os.replace(str(tmp), str(path))
+    except OSError:
+        pass
+
+
+def cached_model_index(root: Path, force: bool = False, limit: int = 250000):
+    """Disk cache first; walk only on miss or when force (\"Scan folder\")."""
+    if not force:
+        packed = load_model_index_cache(root, limit)
+        if packed is not None:
+            return packed
+    packed = walk_model_index(root, limit)
+    save_model_index_cache(root, packed, limit)
+    return packed
+
+
 def walk_model_index(root: Path, limit: int = 250000):
     """One pass over a model folder. No resolve(), so a big RSX dump stays usable.
 
