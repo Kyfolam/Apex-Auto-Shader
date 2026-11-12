@@ -479,12 +479,7 @@ def files_present(
     name: str = "",
     legend: str = "",
 ) -> bool:
-    """True only when this skin's own files are in the model folder.
-
-    Recolors need their rt/rc code together with the mesh prefix in one texture
-    path. Skins that share one CAST (Hellcat / Void Prowler) need their own
-    name in a texture path. A bare shared CAST is not enough.
-    """
+    """True when this skin's mesh or its own textures are in the folder index."""
     from .naming.tex import cast_search_prefixes, is_recolor_code, split_mesh_variant, split_recolor_prefix
 
     extra = (prefix or "").lower()
@@ -658,18 +653,16 @@ def _path_key(path: Path | str) -> str:
 
 
 def _path_under(path: Path, parent: Path) -> bool:
-    """True when path is inside parent. No resolve(): that stats every folder on a network drive."""
     child = _path_key(path)
     base = _path_key(parent)
     return child == base or child.startswith(base + "/")
 
 
 def walk_model_index(root: Path, limit: int = 250000):
-    """One pass over a model folder. No resolve(), so a big RSX dump stays usable.
+    """Index CAST stems and texture names under a model folder.
 
-    Character meshes and the texture/art legend tree are read first, so a huge
-    materials folder cannot hide them. CAST files are always recorded. Images
-    stop at the limit, but the walk continues so later meshes are still found.
+    Legend meshes and texture/art are read first. Images stop at the limit.
+    CAST files are still recorded after that.
     """
     global _LINK_KEY, _DIR_TEX, _DIR_CASTS, _CAST_PATHS, _CAST_TEXT
     from .naming.tex import texture_set_prefix
@@ -743,15 +736,20 @@ def walk_model_index(root: Path, limit: int = 250000):
                     continue
                 kept.append(name)
             dirnames[:] = kept
+            saw_asset = False
+            for name in filenames:
+                note_file(here, name)
+                dot = name.rfind(".")
+                suffix = name[dot:].lower() if dot >= 0 else ""
+                if suffix == ".cast" or suffix in _IMAGE_EXT:
+                    saw_asset = True
             parent = here.name.lower()
-            grand = here.parent.name.lower()
-            if parent and parent not in _GENERIC_DIRS:
+            if saw_asset and parent and parent not in _GENERIC_DIRS:
+                grand = here.parent.name.lower()
                 label = f"{grand}_{parent}" if grand and grand not in _GENERIC_DIRS else parent
                 if label not in seen_tex:
                     seen_tex.add(label)
                     tex.append(label)
-            for name in filenames:
-                note_file(here, name)
 
     for start in priority:
         consume(start, [])

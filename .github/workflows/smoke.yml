@@ -14,3 +14,4 @@ jobs:
           python-version: "3.11"
       - name: Import smoke
         run: python scripts/smoke_import.py
+

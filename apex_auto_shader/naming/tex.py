@@ -311,8 +311,7 @@ def split_mesh_variant(prefix: str) -> tuple[str, str]:
     return text, rc
 
 
-# Mesh file codename differs from the texture set stored for the skin.
-# Void Prowler / Hellcat / Punk Prowler: model wraith_v20_heist, maps boosted.
+# Model file id and texture set id are not always the same string.
 _TEXTURE_FOR_MESH = {
     "wraith_v20_heist": "wraith_lgnd_v20_boosted",
     "wraith_lgnd_v20_heist": "wraith_lgnd_v20_boosted",

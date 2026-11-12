@@ -1077,14 +1077,14 @@ def main() -> int:
     assert not (PKG_DIR / "skins.json").exists(), "plaintext skins.json must not exist"
 
     ver = apex_auto_shader.bl_info["version"]
-    assert ver == (2, 1, 2), ver
+    assert ver == (2, 2, 0), ver
     from apex_auto_shader import config
 
     assert config.ADDON_VERSION == ver
-    assert config.ADDON_VERSION_STR == "2.1.2"
+    assert config.ADDON_VERSION_STR == "2.2.0"
     manifest = (PKG_DIR / "blender_manifest.toml").read_text(encoding="utf-8")
     found = re.search(r'(?m)^version\s*=\s*"([^"]+)"', manifest)
-    assert found and found.group(1) == "2.1.2", manifest
+    assert found and found.group(1) == "2.2.0", manifest
     panel_src = (PKG_DIR / "panel.py").read_text(encoding="utf-8")
     assert "apexaddon.uninstall" not in panel_src
     from apex_auto_shader.install import other_copies
