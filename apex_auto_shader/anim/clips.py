@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .const import ANIM_LIST_CAP, ANIM_MIN_BYTES, ANIM_SUFFIXES
+from .const import ANIM_MIN_BYTES
 from ..blender_compat import ignore_rna
 from ..log import existing_dir, log
 from ..naming import (
@@ -19,13 +19,15 @@ from ..naming import (
     guess_legend_from_path,
     is_victim_execution,
     legend_display_name,
+    legend_from_anim_path,
     parse_execution,
     pick_banner_list_clips,
     skip_bannerpose,
     strip_unique_trailing_index,
+    clip_display_name,
 )
 
-from .files import _hidden, list_animation_files
+from .files import _hidden, is_ignored_clip, list_animation_files
 
 
 def _scan_execution_casts(root: Path) -> list[tuple[str, str]]:
@@ -41,6 +43,8 @@ def _scan_execution_casts(root: Path) -> list[tuple[str, str]]:
         except OSError:
             continue
         if "execution" not in path.stem.lower() and "finish" not in path.stem.lower():
+            continue
+        if is_ignored_clip(path.stem):
             continue
         if _hidden(path, path.stem, path.parent.name):
             continue
@@ -140,6 +144,20 @@ def _emit_named_clips(scene, clips, group, legend, indent, namer):
 
 
 def fill_animation_list(scene, folder: str | Path | None = None, sources=None, expand_legend: str = "") -> int:
+    from ..prefs import anim_folder_pref, path_is_under
+
+    locked = anim_folder_pref()
+    if locked is not None:
+        if sources:
+            sources = [
+                (raw, hint)
+                for raw, hint in sources
+                if path_is_under(raw, locked)
+            ]
+            if not sources:
+                sources = [(locked, "")]
+        elif folder is None or not path_is_under(folder, locked):
+            folder = locked
     packs: list[tuple[Path, str, list[tuple[str, str]]]] = []
     if sources:
         for raw, hint in sources:
@@ -157,41 +175,50 @@ def fill_animation_list(scene, folder: str | Path | None = None, sources=None, e
         scene.apex_anim_items.clear()
         return 0
 
-    rows: list[tuple[str, str, str]] = []
+    rows: list[tuple[str, str, str, Path]] = []
     seen_paths: set[str] = set()
-    for _folder, hint, files in packs:
+    for folder_path, hint, files in packs:
         for name, path in files:
-            if path in seen_paths:
+            if path in seen_paths or is_ignored_clip(name):
                 continue
             seen_paths.add(path)
-            rows.append((name, path, hint))
+            rows.append((name, path, hint, folder_path))
 
-    def assigned_legend(name: str, hint: str = "") -> str:
+    def assigned_legend(name: str, hint: str = "", path: str = "", root: Path | None = None) -> str:
+        from ..naming import is_skin_legend
+
+        found = legend_from_anim_path(path or name, root)
+        if is_skin_legend(found):
+            return found
         guessed = guess_legend_from_anim(name)
-        if guessed:
+        if is_skin_legend(guessed):
             return guessed
-        return hint or "shared"
+        if is_skin_legend(hint):
+            return hint
+        return "other"
 
     legends: dict[str, dict[str, list]] = {}
-    for name, path, hint in rows:
+    for name, path, hint, root in rows:
         kind = classify_animation(name)
         if kind == "finisher":
             continue
         if kind == "pose" and skip_bannerpose(name):
             continue
-        legend = assigned_legend(name, hint)
+        legend = assigned_legend(name, hint, path, root)
         bucket = legends.setdefault(legend, {key: [] for key, _ in ANIM_GROUP_ORDER})
         bucket.setdefault(kind, []).append((name, path))
     for folder_path, hint, files in packs:
         solo, full = _pair_finishers(files, folder_path)
         for name, path in solo:
-            legend = assigned_legend(name, hint)
+            legend = assigned_legend(name, hint, path, folder_path)
             bucket = legends.setdefault(legend, {key: [] for key, _ in ANIM_GROUP_ORDER})
             bucket.setdefault("finisher_solo", []).append((name, path))
         for clip, attack_path, victim_path in full:
             source = Path(victim_path).stem if victim_path else clip
             info = parse_execution(source)
-            legend = info["legend"] if info else assigned_legend(source, hint)
+            legend = info["legend"] if info else assigned_legend(
+                source, hint, victim_path or attack_path, folder_path
+            )
             bucket = legends.setdefault(legend, {key: [] for key, _ in ANIM_GROUP_ORDER})
             bucket.setdefault("finisher_full", []).append((clip, attack_path, victim_path))
     scene.apex_anim_items.clear()
@@ -297,7 +324,7 @@ def fill_animation_list(scene, folder: str | Path | None = None, sources=None, e
                     type_key,
                     legend,
                     2,
-                    lambda n: n,
+                    lambda n, lg=legend, k=key: clip_display_name(n, lg, k),
                 )
     scene.apex_anim_index = min(int(getattr(scene, "apex_anim_index", 0) or 0), max(len(scene.apex_anim_items) - 1, 0))
     return total
@@ -306,12 +333,16 @@ def fill_animation_list(scene, folder: str | Path | None = None, sources=None, e
 def _anim_sources_for_scene(context, prefer_cast: str | Path | None = None):
     from ..extras import CHAR_ANIM, CHAR_CAST, CHAR_LEGEND, armature_legend, tagged_armatures
     from ..log import existing_dir
+    from ..prefs import anim_folder_pref
 
     prefer_legend = ""
     if prefer_cast:
         prefer_legend = guess_legend_from_path(prefer_cast) or guess_legend_from_anim(
             Path(prefer_cast).stem
         )
+    locked = anim_folder_pref()
+    if locked is not None:
+        return [(locked, prefer_legend)], prefer_legend
     arms = list(tagged_armatures(context.scene))
     ordered = []
     if prefer_legend:

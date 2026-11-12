@@ -101,6 +101,8 @@ def _test_object_and_techart() -> None:
     assert "object" in SHADER_ADDERS
     assert ObjectNodeAdder is not PlusNodeAdder
     assert issubclass(ObjectNodeAdder, PlusNodeAdder)
+    from apex_auto_shader.prefs import SHADER_ITEMS
+    assert all(item[0] != "object" for item in SHADER_ITEMS)
 
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
@@ -273,8 +275,10 @@ def _test_cosmetics_and_index() -> None:
     mesh, variant = naming.split_mesh_variant("alter_epic_01")
     assert mesh == "alter_base" and variant == "epic_01"
     assert "alter_base" in naming.cast_search_prefixes("alter_rare_01")
-    mesh, variant = naming.split_mesh_variant("alter_lgnd_v23_fashionfatale_rc02")
-    assert mesh == "alter_lgnd_v23_fashionfatale" and variant == "rc02"
+    mesh, variant = naming.split_mesh_variant("wraith_epicp_v23_voidsinister")
+    assert mesh == "wraith_epicp_v23_voidsinister", (mesh, variant)
+    assert "wraith_base" not in naming.cast_search_prefixes("wraith_epicp_v23_voidsinister")
+    assert "wraith_epic_v23_voidsinister" in naming.cast_search_prefixes("wraith_epicp_v23_voidsinister")
 
     assert naming.finisher_display_name("medium_overdrive_execution_lgnd_knee_wheel", "axle") == (
         "Face First"
@@ -283,6 +287,126 @@ def _test_cosmetics_and_index() -> None:
     assert naming.finisher_display_name("medium_wraith_execution_ninja", "wraith") == (
         "Existential Crisis"
     )
+    assert naming.clip_display_name("AIM_alter_idle", "alter", "idle") == "AIM"
+    assert naming.clip_display_name("AIM_alter_crouch_idle", "alter", "idle") == "Crouch"
+    assert naming.clip_display_name("alter_AIM_sprint", "alter", "ingame") == "Sprint"
+    assert naming.clip_display_name("newcastle_melee_01", "newcastle", "ingame") == "Melee_01"
+    assert naming.clip_display_name("alter_confirmation_select", "alter", "select") == "Confirmation"
+    lobby = naming.clip_display_name("alter_lobby_refresh_ready01_idle_0", "alter", "select")
+    assert lobby == "Refresh Ready01 Idle_0", lobby
+    assert "alter" not in lobby.lower() and "lobby" not in lobby.lower()
+    intro = naming.clip_display_name("alter_lobby_refresh_pose01_intro_0", "alter", "select")
+    assert intro == "Refresh Pose01_0", intro
+    assert naming.action_subgroup("AIM_newcastle_crouch_pistol_0", "ingame") == ("crouch", "Crouch")
+    assert naming.action_subgroup("AIM_alter_idle", "idle") == ("aim", "AIM")
+    from apex_auto_shader.prop import pick_socket_bone, pick_weapon_bone
+
+    class _Bone:
+        def __init__(self, name, parent=None):
+            self.name = name
+            self.parent = parent
+
+    gun = [_Bone("def_c_root"), _Bone("ja_c_propGun", parent=True), _Bone("def_c_trigger")]
+    assert pick_socket_bone(gun) == "ja_c_propGun"
+    assert pick_weapon_bone(gun) == "ja_c_propGun"
+    loose = [_Bone("wpn_r301_root")]
+    assert pick_weapon_bone(loose) == "wpn_r301_root"
+    assert pick_socket_bone(loose) == ""
+    from apex_auto_shader.anim.const import ANIM_PLAY_MIN_BYTES
+
+    assert ANIM_PLAY_MIN_BYTES == 200 * 1024
+    assert naming.plain_folder_legend("Jump") == ""
+    assert naming.plain_folder_legend("Land") == ""
+    assert naming.plain_folder_legend("Lower") == ""
+    assert naming.is_skin_legend(naming.plain_folder_legend("Wraith"))
+    assert naming.plain_folder_legend("Wraith") == "wraith"
+    from apex_auto_shader.prop import is_prop_main_mesh
+
+    assert is_prop_main_mesh("body_0_car_base_main")
+    assert is_prop_main_mesh("sight_front_1_car_base_main")
+    assert not is_prop_main_mesh("sight_hcog_1_hcog_r2")
+    assert not is_prop_main_mesh("lasersight_sml_1_laser_sight")
+    from apex_auto_shader.prop import find_prop_texture_folder, is_ref_prop, prop_kind, prop_label, prop_texture_files, prop_texture_match
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "v18_kunai"
+        tex = root / "heirloom_wraith_v18_kunai_w"
+        tex.mkdir(parents=True)
+        (tex / "throwing_knife_col.png").write_bytes(b"x")
+        (tex / "throwing_knife_cav.png").write_bytes(b"x")
+        cast = root / "heirloom_wraith_v18_kunai_w_LOD0.cast"
+        cast.write_bytes(b"x")
+        assert prop_kind(cast) == "heirloom"
+        assert find_prop_texture_folder(cast) == tex
+        names = {path.name for path in prop_texture_files(tex, cast.name)}
+        assert names == {"throwing_knife_col.png", "throwing_knife_cav.png"}
+        match = prop_texture_match(tex, cast.name)
+        assert match is not None
+        assert {tex.slot for tex in match.textures} == {"albedo", "cavity"}
+        weird = Path(tmp) / "box"
+        maps = weird / "textures_here"
+        maps.mkdir(parents=True)
+        (maps / "knife_col.png").write_bytes(b"x")
+        other = weird / "unrelated_LOD0.cast"
+        other.write_bytes(b"x")
+        assert find_prop_texture_folder(other) == maps
+        assert prop_kind(other) == "gun"
+    assert prop_label(Path("heirloom_wraith_v18_kunai_w_LOD0.cast"), "heirloom") == "wraith v18 kunai w"
+    assert "heirloom" not in prop_label(Path("heirloom_wraith_v18_kunai.cast"), "heirloom").lower()
+    assert prop_label(Path("car_base_ref_0_w_LOD0.cast"), "gun") == "car base w"
+    assert is_ref_prop(Path("wraith_ref_0.cast"))
+    assert naming.anim_query_match("eldi_retla", "AIM_alter_idle")
+    bases = naming.bases_with_extra_index(["pose_0", "pose_1", "only_0"])
+    assert naming.hide_lone_zero("only_0", bases)
+    assert not naming.hide_lone_zero("pose_0", bases)
+    assert not naming.hide_lone_zero("pose_1", bases)
+    from apex_auto_shader.anim import _bases_that_keep_zero, _clip_row_label
+
+    class _Clip:
+        def __init__(self, name, path, group, legend):
+            self.name = name
+            self.path = path
+            self.group = group
+            self.legend = legend
+            self.is_header = False
+
+    lone = _Clip("x", "AIM_alter_idle_0.cast", "alter:idle", "alter")
+    assert _clip_row_label(lone, set()) == "AIM"
+    assert _bases_that_keep_zero(["AIM_0", "AIM_1"]) == {"AIM"}
+    assert _clip_row_label(lone, {"AIM"}) == "AIM_0"
+    from apex_auto_shader.panel import _order_find_rows, _rarity_rank
+
+    skins = [
+        ("Wraith", "Zebra", "", "Common", True),
+        ("Wraith", "Alpha", "", "Legendary", True),
+        ("Ash", "Beta", "", "Epic", True),
+    ]
+    ordered = _order_find_rows(list(skins), "rarity", False)
+    assert [row[1] for row in ordered] == ["Alpha", "Beta", "Zebra"]
+    assert _rarity_rank("Legendary Recolor") < _rarity_rank("Common")
+    import tempfile
+    from apex_auto_shader.naming.tex import scan_recolor_stack
+
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp) / "wraith_base"
+        rec = base.parent / "wraith_base_rc01"
+        base.mkdir()
+        rec.mkdir()
+        (base / "body_0_wraith_base_col.png").write_bytes(b"base")
+        (rec / "body_0_wraith_base_rc01_col.png").write_bytes(b"recolor")
+        match = scan_recolor_stack(base, "wraith_base", apply_recolor=True, recolor_code="rc01")
+        albedo = [tex.path for tex in match.textures if tex.slot == "albedo"]
+        assert albedo and "rc01" in albedo[0].replace("\\", "/"), albedo
+    from apex_auto_shader.shade.utils import hold_rig_visibility, rig_visibility_held
+
+    assert not rig_visibility_held()
+    hold_rig_visibility(True)
+    assert rig_visibility_held()
+    hold_rig_visibility(False)
+    assert not rig_visibility_held()
+    assert naming.anim_query_match("crouch aim", "AIM_alter_crouch_idle")
+    assert not naming.anim_query_match("wraith", "AIM_alter_idle")
 
     rows = pack.load_index()
     assert len(rows) >= 2652, len(rows)
@@ -304,6 +428,43 @@ def _test_cosmetics_and_index() -> None:
     assert any(n == "Fashion Fatale" for _lg, n, _e in pack.search_index("fatale", "Alter"))
     sugs = pack.suggest_names("wall", "Alter")
     assert any("Wallflower" == s for s in sugs), sugs
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        folder = root / "pilot_light_wraith_cyber_ninja"
+        folder.mkdir()
+        cast = folder / "pilot_light_wraith_cyber_ninja_LOD0.cast"
+        cast.write_bytes(b"wraith_lgnd_v19_voidwalker_body_col")
+        (folder / "wraith_lgnd_v19_voidwalker_body_col.png").write_bytes(b"")
+        pack.walk_model_index(root)
+        cyber = pack.search_index("cyber")
+        assert any(name == "Voidwalker" for _lg, name, _e in cyber), cyber
+        ninja = pack.search_index("cyber_ninja")
+        assert any(name == "Voidwalker" for _lg, name, _e in ninja), ninja
+        assert pack.search_index("Voidwalker")[0][1] == "Voidwalker"
+        linked = pack.casts_for_skin("wraith_lgnd_v19_voidwalker", [str(cast)])
+        assert linked and "cyber_ninja" in linked[0].replace("\\", "/"), linked
+        alone = root / "codename"
+        alone.mkdir()
+        hidden = alone / "pilot_light_wraith_cyber_ninja_LOD0.cast"
+        hidden.write_bytes(b"xx wraith_lgnd_v19_voidwalker_body_albedoTexture.png \x00")
+        pack.walk_model_index(alone)
+        named = pack.search_index("cyber_ninja")
+        assert any(name == "Voidwalker" for _lg, name, _e in named), named
+        linked = pack.casts_for_skin("wraith_lgnd_v19_voidwalker", [str(hidden)])
+        assert linked and hidden.name in Path(linked[0]).name, linked
+        assert "Voidwalker" in pack.suggest_names("cyber"), pack.suggest_names("cyber")
+        assert "Voidwalker" in pack.suggest_names("cyb"), pack.suggest_names("cyb")
+        assert "Voidwalker" in pack.suggest_names("nin"), pack.suggest_names("nin")
+        from apex_auto_shader.anim.files import is_ignored_clip
+        assert is_ignored_clip("radoll_0")
+        assert is_ignored_clip("wraith_radoll_0.cast")
+        assert is_ignored_clip("ref_0")
+        assert is_ignored_clip("pathfinder_ref_0")
+        assert not is_ignored_clip("wraith_emote_wave")
+        empty = root / "missing"
+        empty.mkdir()
+        pack.walk_model_index(empty)
     base, code = naming.split_recolor_prefix("alter_lgnd_v23_fashionfatale_rc02")
     assert base == "alter_lgnd_v23_fashionfatale" and code == "rc02"
     assert naming.split_recolor_prefix("bloodhound_lgnd_v19_plaguedoctor_rt01rc01")[1] == "rt01rc01"
@@ -312,6 +473,455 @@ def _test_cosmetics_and_index() -> None:
     assert (cosmetics / "character_emotes_by_legend.json").is_file()
     assert (cosmetics / "character_executions_by_legend.json").is_file()
     assert (cosmetics / "itemflav_clips.json").is_file()
+
+    assert naming.base_prefix_from_pilot("pilot_light_wattson_LOD0.cast") == "wattson_base"
+    assert naming.texture_prefix_from_source("pilot_medium_pathfinder") == "pathfinder_base"
+    assert naming.prefixes_compatible(
+        "pathfinder_lgnd_v24_anniversary_body_col.png", "pathfinder_lgnd_v24_prowear"
+    ) is False
+    assert naming.prefixes_compatible(
+        "pathfinder_mythic_v24_pilot_body_col.png", "pathfinder_lgnd_v24_prowear"
+    ) is False
+    assert naming.prefixes_compatible(
+        "pathfinder_lgnd_v24_prowear_body_col.png", "pathfinder_lgnd_v24_prowear"
+    ) is True
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        folder = Path(tmp)
+        for name in (
+            "wattson_base_gear_ao.png",
+            "wattson_base_gear_asd.png",
+            "wattson_base_gear_cav.png",
+            "wattson_base_gear_col.png",
+            "pathfinder_lgnd_v24_prowear_body_col.png",
+            "pathfinder_lgnd_v24_prowear_body_ao.png",
+            "pathfinder_lgnd_v24_anniversary_body_col.png",
+            "pathfinder_mythic_v24_pilot_body_col.png",
+        ):
+            (folder / name).write_bytes(b"x")
+        wattson = naming.scan_folder(folder, naming.base_prefix_from_pilot("pilot_light_wattson"))
+        assert naming.guess_bodypart(["body_0_wattson_base_gear"], wattson.bodyparts()) == "gear"
+        prowear = naming.scan_folder(folder, "pathfinder_lgnd_v24_prowear")
+        assert prowear.bodyparts() == ["body"], prowear.bodyparts()
+        assert (
+            naming.guess_bodypart(
+                ["body_0_pathfinder_lgnd_v24_prowear_body.001"], prowear.bodyparts()
+            )
+            == "body"
+        )
+        assert naming.skin_prefix("body_0_pathfinder_lgnd_v20_boosted_body") == (
+            "pathfinder_lgnd_v20_boosted"
+        )
+        assert naming.skin_prefix("pathfinder_v20_bp_LOD0.cast") == "pathfinder_v20_bp"
+        assert naming.season_prefix_aliases(
+            "pathfinder_v20_bp",
+            ["body_0_pathfinder_lgnd_v20_boosted_body"],
+        )[0] == "pathfinder_lgnd_v20_boosted"
+        assert naming.season_prefix_aliases(
+            "pathfinder_v19_pacer",
+            ["body_0_pathfinder_lgnd_v19_pacer_gear"],
+        )[0] == "pathfinder_lgnd_v19_pacer"
+        v21 = naming.season_prefix_aliases(
+            "pathfinder_v21_arenas",
+            ["body_0_pathfinder_v21_arenas_body"],
+        )
+        assert v21[0] == "pathfinder_lgnd_v21_arenas", v21
+        assert naming.season_prefix_aliases("pathfinder_lgnd_v22_magicgoth", [])[0] == (
+            "pathfinder_lgnd_v22_magicgoth"
+        )
+        assert naming.pilot_slot_model("pilot_heavy_pathfinder_legendary_01") == (
+            "pathfinder",
+            "legendary",
+        )
+        assert naming.pilot_slot_model("pilot_light_wraith_legendary_03") == (
+            "wraith",
+            "legendary",
+        )
+        assert naming.pilot_slot_model("pilot_medium_bangalore_epic_02") == (
+            "bangalore",
+            "epic",
+        )
+        assert naming.texture_set_prefix("pathfinder_lgnd_v19_pacer_body_col.png") == (
+            "pathfinder_lgnd_v19_pacer"
+        )
+        assert naming.texture_set_prefix("wraith_lgnd_v19_voidwalker_rt01_body_col.png") == (
+            "wraith_lgnd_v19_voidwalker"
+        )
+        assert naming.prefixes_for_pilot_model(
+            "pilot_heavy_pathfinder_legendary_01",
+            [
+                "pathfinder_lgnd_v19_pacer_body_col.png",
+                "pathfinder_lgnd_v19_pacer_body_ao.png",
+                "pathfinder_lgnd_v19_pacer_rt01_body_col.png",
+            ],
+        ) == ["pathfinder_lgnd_v19_pacer"]
+        assert naming.prefixes_for_pilot_model(
+            "pilot_light_wraith_legendary_02",
+            [
+                "wraith_lgnd_v19_voidwalker_gear_col.png",
+                "wraith_lgnd_v19_voidwalker_body_col.png",
+            ],
+        ) == ["wraith_lgnd_v19_voidwalker"]
+        assert naming.prefixes_for_pilot_model(
+            "pilot_medium_bangalore_legendary_04",
+            ["bangalore_lgnd_v19_overdrive_body_col.png"],
+        ) == ["bangalore_lgnd_v19_overdrive"]
+        assert naming.texture_set_prefix("pathfinder_lgnd_v24_prowear_emotes_col.png") == (
+            "pathfinder_lgnd_v24_prowear"
+        )
+        assert naming.texture_set_prefix(
+            "pathfinder_lgnd_v24_onesieelite_vfx_lines_col.png"
+        ) == "pathfinder_lgnd_v24_onesieelite"
+        assert naming.skin_prefix("body_0_pathfinder_lgnd_v24_prowear_emotes") == (
+            "pathfinder_lgnd_v24_prowear"
+        )
+        assert naming.parse_skin_identity("pathfinder_lgnd_v24_prowear_emotes").skin == "prowear"
+        assert naming.skin_prefix("body_0_pathfinder_lgnd_v24_prowear_jumpkit") == (
+            "pathfinder_lgnd_v24_prowear"
+        )
+        assert naming.texture_set_prefix(
+            "pathfinder_lgnd_v24_prowear_emotes_frightened_col.png"
+        ) == "pathfinder_lgnd_v24_prowear"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_jumpkit"], ["body", "gear"]
+        ) == "gear"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_gauntlet"], ["body", "grapple"]
+        ) == "grapple"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_grapple"], ["gauntlet", "body"]
+        ) == "gauntlet"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_emotes_frightened"],
+            ["body", "emotes_frightened"],
+        ) == "emotes_frightened"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_shield"], ["body", "shield"]
+        ) == "shield"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_fur"], ["body", "fur"]
+        ) == "fur"
+        assert naming.skin_prefix("body_0_pathfinder_lgnd_v24_prowear_zipline") == (
+            "pathfinder_lgnd_v24_prowear"
+        )
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_zipline"], ["body", "head", "gear"]
+        ) == "gear"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear"], ["body", "head", "gear"]
+        ) == "body"
+        assert naming.guess_bodypart(
+            ["head_0_pathfinder_lgnd_v24_prowear"],
+            ["onesieelite_head", "prowear_head", "body"],
+        ) == "prowear_head"
+        assert naming.guess_bodypart(
+            ["body_0_pathfinder_lgnd_v24_prowear_head"], ["body", "head", "gear", "zipline"]
+        ) == "head"
+        assert naming.prefixes_compatible(
+            "pathfinder_mythic_v24_pilot_body_col.png",
+            "pathfinder_lgnd_v24_prowear",
+        ) is False
+        assert naming.candidate_matches_mesh(
+            "body_0_pathfinder_lgnd_v24_prowear_head",
+            "pathfinder_mythic_v24_pilot",
+        ) is False
+        assert naming.candidate_matches_mesh(
+            "body_0_pathfinder_lgnd_v24_prowear_head",
+            "pathfinder_lgnd_v24_prowear",
+        ) is True
+        assert naming.skin_prefix("body_0_8533931396491904913") == ""
+        assert naming.part_hash_kind("body_0_9444831493659426347.001") == "head"
+        assert naming.part_hash_kind("body_0_10849430867501589620") == "hair"
+        assert naming.eye_hash_kind("body_0_16564475196701862357.002") == "eyecornea"
+        assert naming.is_numeric_filler_mesh("body_0_8533931396491904913") is False
+        assert naming.is_numeric_filler_mesh("body_0_999") is True
+        assert naming.candidate_matches_mesh(
+            "body_0_8533931396491904913",
+            "wraith_lgnd_v19_voidwalker",
+        ) is True
+        assert naming.guess_bodypart(
+            ["body_0_8533931396491904913"],
+            ["body", "head", "hair", "gear"],
+        ) == "gear"
+        assert naming.guess_bodypart(
+            ["wraith_lgnd_v19_voidwalker_body", "body_0_9444831493659426347"],
+            ["body", "head", "hair", "gear"],
+        ) == "head"
+        assert naming.guess_bodypart(
+            ["wraith_lgnd_v19_voidwalker_body", "body_0_10849430867501589620"],
+            ["body", "head", "hair", "gear"],
+        ) == "hair"
+        assert naming.guess_bodypart(
+            ["wraith_lgnd_v19_voidwalker_body", "body_0_8533931396491904913"],
+            ["body", "gear", "head"],
+        ) == "gear"
+        assert naming.preferred_skin_prefix(
+            "wraith_lgnd_v19_voidwalker",
+            "pilot_light_wraith_cyber_ninja_LOD0.cast",
+        ) == "wraith_lgnd_v19_voidwalker"
+        void_files = [
+            "wraith_base_body_col.png",
+            "wraith_base_hair_col.png",
+            "wraith_lgnd_v19_voidwalker_body_col.png",
+            "wraith_lgnd_v19_voidwalker_helmet_col.png",
+            "wraith_lgnd_v19_voidwalker_hair_col.png",
+            "wraith_lgnd_v19_voidwalker_gear_col.png",
+        ]
+        assert naming.prefixes_for_legend_codename(
+            "pilot_light_wraith_cyber_ninja", void_files
+        ) == ["wraith_lgnd_v19_voidwalker"]
+        assert naming.prefixes_for_legend_codename(
+            "pilot_light_wraith_cyber_ninja",
+            void_files + ["wraith_lgnd_v20_other_body_col.png"],
+        ) == []
+        assert naming.prefer_non_base_sets(
+            ["wraith_base", "wraith_lgnd_v19_voidwalker"],
+            "body_0_10849430867501589620",
+        ) == ["wraith_lgnd_v19_voidwalker", "wraith_base"]
+        assert naming.guess_bodypart(
+            ["body_0_9444831493659426347"],
+            ["body", "head"],
+        ) == "head"
+        assert naming.guess_bodypart(
+            ["body_0_10849430867501589620"],
+            ["hair", "body"],
+        ) == "hair"
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v19_voidwalker_helmet"],
+            ["body", "head", "gear"],
+        ) == "head"
+        assert naming.guess_bodypart(
+            [
+                "body_0_wraith_lgnd_v19_voidwalker_body",
+                "body_0_wraith_lgnd_v19_voidwalker_helmet",
+            ],
+            ["body", "head", "helmet", "gear"],
+        ) == "helmet"
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v24_proyoungbpelite_suit"],
+            ["body", "gear"],
+        ) == "gear"
+        assert naming.fallback_bodypart(
+            "body_0_wraith_lgnd_v23_resdopb_suit",
+            ["body", "gauntlet", "hair02", "head"],
+        ) == "suit"
+        assert naming.fallback_bodypart(
+            "body_0_8533931396491904913",
+            ["body", "head", "hair"],
+        ) is None
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v24_proyoungbpelite_stubinahair"],
+            ["hair02", "body"],
+        ) == "hair02"
+        assert naming.texture_set_prefix(
+            "wraith_lgnd_v24_cosmicmerc_stubinhair_col.png"
+        ) == "wraith_lgnd_v24_cosmicmerc"
+        assert naming.texture_set_prefix(
+            "wraith_lgnd_v24_proyoungbpelite_stubinahair_col.png"
+        ) == "wraith_lgnd_v24_proyoungbpelite"
+        stub = naming.parse_texture_name(
+            "wraith_lgnd_v24_cosmicmerc_stubinhair_col.png",
+            "wraith_lgnd_v24_cosmicmerc",
+        )
+        assert stub is not None and stub.bodypart == "stubinhair" and stub.slot == "albedo"
+        assert naming.skin_prefix(
+            "body_0_wraith_lgnd_v24_cosmicmerc_stubinhair"
+        ) == "wraith_lgnd_v24_cosmicmerc"
+        assert naming.parse_skin_identity(
+            "wraith_lgnd_v24_cosmicmerc_stubinhair_col.png"
+        ).skin == "cosmicmerc"
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v24_cosmicmerc_stubinhair"],
+            ["stubinhair", "hair", "body", "head"],
+        ) == "stubinhair"
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v24_cosmicmerc_stubinhair"],
+            ["hair02", "body"],
+        ) == "hair02"
+        hair_col = naming.parse_texture_name(
+            "wraith_lgnd_v24_cosmicmerc_hair_col.png",
+            "wraith_lgnd_v24_cosmicmerc",
+        )
+        stub_nml = naming.parse_texture_name(
+            "wraith_lgnd_v24_cosmicmerc_stubinhair_nml.png",
+            "wraith_lgnd_v24_cosmicmerc",
+        )
+        picked = naming.prefer_textures([stub, hair_col, stub_nml], "stubinhair")
+        by_slot = {tex.slot: tex.bodypart for tex in picked}
+        assert by_slot.get("albedo") == "stubinhair", by_slot
+        assert by_slot.get("normal") == "stubinhair", by_slot
+        assert naming.base_hair02_to_hide(
+            [
+                "body_0_wraith_base_hair02",
+                "body_0_wraith_lgnd_v24_cosmicmerc_hair02",
+                "body_0_10849430867501589620",
+            ]
+        ) == ["body_0_wraith_base_hair02"]
+        assert naming.base_hair02_to_hide(["body_0_wraith_base_hair02"]) == []
+        assert naming.base_hair02_to_hide(
+            [
+                "body_0_wraith_lgnd_v24_cosmicmerc_hair02",
+                "body_0_10849430867501589620",
+            ]
+        ) == []
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v24_proyoungbpelite_lens"],
+            ["gear", "body", "lens"],
+        ) == "lens"
+        assert naming.related_bodyparts("lens", ["gear", "lens", "kit"]) == ["lens"]
+        assert naming.texture_set_prefix(
+            "wraith_lgnd_v24_proyoungbpelite_vfx_scarf_col.png"
+        ) == "wraith_lgnd_v24_proyoungbpelite"
+        scarf = naming.parse_texture_name(
+            "wraith_lgnd_v24_proyoungbpelite_vfx_scarf_albedoTexture.png",
+            "wraith_lgnd_v24_proyoungbpelite",
+        )
+        assert scarf is not None and scarf.bodypart == "vfx_scarf" and scarf.slot == "albedo"
+        plain_vfx = naming.parse_texture_name(
+            "wraith_lgnd_v24_proyoungbpelite_vfx_col.png",
+            "wraith_lgnd_v24_proyoungbpelite",
+        )
+        assert plain_vfx is not None and plain_vfx.bodypart == "vfx" and plain_vfx.slot == "albedo"
+        assert naming.guess_bodypart(
+            ["body_0_wraith_lgnd_v24_proyoungbpelite_vfx_scarf"],
+            ["vfx", "vfx_scarf", "body"],
+        ) == "vfx_scarf"
+        assert naming.dominant_mesh_prefix(
+            [
+                "body_0_8533931396491904913",
+                "body_0_wraith_lgnd_v19_voidwalker_helmet",
+                "body_0_wraith_base_hair",
+            ]
+        ) == "wraith_lgnd_v19_voidwalker"
+        numbered = naming.mesh_texture_prefixes(
+            "pilot_light_wraith_cyber_ninja_LOD0",
+            "body_0_8533931396491904913",
+            ["wraith_lgnd_v19_voidwalker"],
+            "wraith_lgnd_v19_voidwalker",
+        )
+        assert numbered[0] == "wraith_lgnd_v19_voidwalker"
+        assert naming.candidate_matches_mesh(
+            "body_0_8533931396491904913",
+            numbered[0],
+        )
+        assert naming.mesh_requests_head("head_0_pathfinder_lgnd_v24_prowear")
+        assert naming.detect_target_level(
+            "octane_lgnd_v22_thrillseeker",
+            ["octane_mythic_v22_thrillseeker_body_col_level03.png"],
+        ) == ""
+        assert naming.variant_priority("level03", "") < 0
+        assert naming.skin_prefix("body_0_octane_lgnd_v22_thrillseeker_body_upper") == (
+            "octane_lgnd_v22_thrillseeker"
+        )
+        assert naming.texture_set_prefix(
+            "octane_lgnd_v22_thrillseeker_body_lower_col.png"
+        ) == "octane_lgnd_v22_thrillseeker"
+        assert naming.guess_bodypart(
+            ["body_0_octane_lgnd_v22_thrillseeker_body_upper"],
+            ["body", "gear"],
+        ) == "body"
+        assert naming.guess_bodypart(
+            ["body_0_octane_lgnd_v22_thrillseeker_body_lower"],
+            ["body_lower", "body"],
+        ) == "body_lower"
+        arenas = naming.season_prefix_aliases(
+            "pathfinder_v21_arenas",
+            ["body_0_pathfinder_lgnd_v21_thrillseeker_body"],
+        )
+        assert arenas[0] == "pathfinder_lgnd_v21_thrillseeker"
+        assert all("mythic" not in item for item in naming.season_prefix_aliases("pathfinder_v20_bp"))
+        assert all("mythic" not in item for item in naming.season_prefix_aliases("pathfinder_v20_death"))
+        assert naming.prefixes_for_short_season(
+            "pathfinder_v21_arenas_w_LOD0",
+            [
+                "pathfinder_lgnd_v21_thrillseeker_body_col.png",
+                "pathfinder_mythic_v21_thrillseeker_body_col.png",
+                "pathfinder_lgnd_v20_detective_body_col.png",
+            ],
+            ["body_0_pathfinder_lgnd_v21_thrillseeker_body"],
+        ) == ["pathfinder_lgnd_v21_thrillseeker"]
+        bp_order = naming.mesh_texture_prefixes(
+            "pathfinder_v20_bp",
+            "body_0_pathfinder_v20_bp_body",
+            ["pathfinder_mythic_v20_bp", "pathfinder_lgnd_v20_boosted"],
+            "pathfinder_lgnd_v20_boosted",
+        )
+        assert bp_order[0] == "pathfinder_lgnd_v20_boosted"
+        assert "pathfinder_mythic_v20_bp" not in bp_order
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "exported_files" / "mdl" / "humans" / "class" / "heavy").mkdir(parents=True)
+            (root / "exported_files" / "mdl" / "techart" / "mshop" / "characters" / "legends").mkdir(parents=True)
+            seed = root / "exported_files" / "mdl" / "humans" / "class" / "heavy" / "pilot_heavy_pathfinder_w_LOD0.cast"
+            seed.write_text("", encoding="utf-8")
+            hit = naming.suggest_rsx_model_dir([seed])
+            assert hit.replace("\\", "/").endswith("exported_files/mdl"), hit
+            skin = root / "skin"
+            wide = root / "legendary"
+            other = wide / "v20_other"
+            mine = wide / "v19_voidwalker"
+            skin.mkdir()
+            other.mkdir(parents=True)
+            mine.mkdir(parents=True)
+            (skin / "wraith_lgnd_v19_voidwalker_body_col.png").write_bytes(b"")
+            (other / "wraith_lgnd_v20_other_body_col.png").write_bytes(b"")
+            (mine / "wraith_lgnd_v19_voidwalker_body_col.png").write_bytes(b"")
+            naming.push_texture_cache()
+            try:
+                listed = naming.list_texture_files(skin)
+                assert len(listed) == 1, listed
+                again = naming.list_texture_files(skin)
+                assert again == listed
+                focused = naming.list_texture_files(wide, ("voidwalker",))
+                assert len(focused) == 1 and "voidwalker" in focused[0].name, focused
+            finally:
+                naming.pop_texture_cache()
+        legend, rarity, label = naming.character_bucket("pilot_heavy_pathfinder_legendary_01")
+        assert (legend, rarity) == ("Pathfinder", "Legendary"), (legend, rarity, label)
+        legend, rarity, _label = naming.character_bucket("pilot_light_wattson")
+        assert (legend, rarity) == ("Wattson", "Original"), (legend, rarity)
+        legend, rarity, skin = naming.character_bucket("heavy_pathfinder_lgnd_v20_boosted_w_LOD0")
+        assert legend == "Pathfinder" and rarity == "Legendary" and skin == "boosted", (legend, rarity, skin)
+        legend, rarity, skin = naming.character_bucket("pathfinder_lgnd_v21_thrillseeker")
+        assert legend == "Pathfinder" and skin == "thrillseeker", (legend, rarity, skin)
+        v24 = ["pathfinder_lgnd_v24_onesieelite", "pathfinder_lgnd_v24_prowear"]
+        assert naming.mesh_texture_prefixes(
+            "pathfinder_lgnd_v24_prowear",
+            "body_0_pathfinder_lgnd_v24_prowear_emotes",
+            v24,
+        )[0] == "pathfinder_lgnd_v24_prowear"
+        sets = [
+            "pathfinder_lgnd_v19_pacer",
+            "pathfinder_lgnd_v22_magicgoth",
+            "pathfinder_lgnd_v20_boosted",
+        ]
+        assert naming.mesh_texture_prefixes(
+            "pilot_heavy_pathfinder_legendary_01",
+            "body_0_pathfinder_lgnd_v22_magicgoth_body",
+            sets,
+            discovered="pathfinder_lgnd_v19_pacer",
+        )[0] == "pathfinder_lgnd_v22_magicgoth"
+        assert naming.mesh_texture_prefixes(
+            "pilot_heavy_pathfinder_legendary_01",
+            "body_0_pathfinder_lgnd_v19_pacer_gear",
+            sets,
+            discovered="pathfinder_lgnd_v19_pacer",
+        )[0] == "pathfinder_lgnd_v19_pacer"
+        assert naming.mesh_texture_prefixes(
+            "pathfinder_v20_bp",
+            "body_0_pathfinder_lgnd_v20_boosted_body",
+            sets,
+        )[0] == "pathfinder_lgnd_v20_boosted"
+        boosted = naming.scan_folder(folder, "pathfinder_lgnd_v20_boosted")
+        assert boosted.bodyparts() == [], boosted.bodyparts()
+        (folder / "pathfinder_lgnd_v20_boosted_body_col.png").write_bytes(b"x")
+        (folder / "pathfinder_lgnd_v20_boosted_body_ao.png").write_bytes(b"x")
+        short = naming.scan_folder(folder, "pathfinder_v20_bp")
+        long = naming.scan_folder(folder, naming.skin_prefix("body_0_pathfinder_lgnd_v20_boosted_body"))
+        assert short.bodyparts() == [], short.bodyparts()
+        assert long.bodyparts() == ["body"], long.bodyparts()
 
 
 def main() -> int:
@@ -367,6 +977,46 @@ def main() -> int:
     assert hasattr(anim, "_action_fcurves")
     assert hasattr(anim, "_pin_object_layout")
     assert hasattr(anim, "_restore_transform")
+    assert [row[0] for row in anim._layout_pin_channels((2.0, 3.0, 4.0))] == [
+        "scale",
+        "scale",
+        "scale",
+    ]
+
+    class _LocCurve:
+        def __init__(self, path):
+            self.data_path = path
+
+    class _LocCurves(list):
+        def remove(self, curve):
+            list.remove(self, curve)
+
+    class _LocAction:
+        def __init__(self):
+            self.fcurves = _LocCurves(
+                [
+                    _LocCurve("location"),
+                    _LocCurve("delta_location"),
+                    _LocCurve("scale"),
+                    _LocCurve('pose.bones["def_c_hips"].location'),
+                ]
+            )
+            self.layers = []
+            self.slots = []
+            self.props = {}
+
+        def get(self, key, default=None):
+            return self.props.get(key, default)
+
+        def __setitem__(self, key, value):
+            self.props[key] = value
+
+    loc_action = _LocAction()
+    loc_obj = types.SimpleNamespace(animation_data=types.SimpleNamespace(action=loc_action))
+    anim._strip_location_keys(loc_obj)
+    loc_paths = [curve.data_path for curve in loc_action.fcurves]
+    assert loc_paths == ["scale", 'pose.bones["def_c_hips"].location'], loc_paths
+    assert loc_action.get("apex_loc_free") is True
 
     class _TruthyEmpty(list):
         def __bool__(self):
@@ -427,14 +1077,14 @@ def main() -> int:
     assert not (PKG_DIR / "skins.json").exists(), "plaintext skins.json must not exist"
 
     ver = apex_auto_shader.bl_info["version"]
-    assert ver == (2, 1, 1), ver
+    assert ver == (2, 1, 2), ver
     from apex_auto_shader import config
 
     assert config.ADDON_VERSION == ver
-    assert config.ADDON_VERSION_STR == "2.1.1"
+    assert config.ADDON_VERSION_STR == "2.1.2"
     manifest = (PKG_DIR / "blender_manifest.toml").read_text(encoding="utf-8")
     found = re.search(r'(?m)^version\s*=\s*"([^"]+)"', manifest)
-    assert found and found.group(1) == "2.1.1", manifest
+    assert found and found.group(1) == "2.1.2", manifest
     panel_src = (PKG_DIR / "panel.py").read_text(encoding="utf-8")
     assert "apexaddon.uninstall" not in panel_src
     from apex_auto_shader.install import other_copies
@@ -449,10 +1099,216 @@ def main() -> int:
     here.mkdir(exist_ok=True)
     old.mkdir(exist_ok=True)
     dupes = other_copies(
-        [{"path": str(here), "version": "2.1.1"}, {"path": str(old), "version": "2.0.1"}],
+        [{"path": str(here), "version": "2.1.0"}, {"path": str(old), "version": "2.0.1"}],
         current=here,
     )
     assert len(dupes) == 1 and dupes[0]["version"] == "2.0.1"
+
+    from apex_auto_shader.prefs import (
+        ApexAutoShaderPreferences,
+        anim_folder_pref,
+        model_folder_pref,
+        path_is_under,
+    )
+    from apex_auto_shader.anim.character import limit_to_model_folder
+    from apex_auto_shader import panel as apex_panel
+    from apex_auto_shader.shade.utils import hide_rig, rig_is_hidden, set_rig_hidden, show_rig
+
+    anns = ApexAutoShaderPreferences.__annotations__
+    assert "model_dir" in anns and "anim_dir" in anns
+    assert "post_shade_hide_rig" in anns
+    assert path_is_under("/tmp/aas-models/skin/a.cast", "/tmp/aas-models")
+    assert path_is_under("/tmp/aas-models", "/tmp/aas-models")
+    assert not path_is_under("/tmp/aas-anims/clip.cast", "/tmp/aas-models")
+    sample = [Path("/tmp/aas-models/skin/a.cast")]
+    assert model_folder_pref() is None and anim_folder_pref() is None
+    assert limit_to_model_folder(sample) == sample
+    assert callable(show_rig) and callable(set_rig_hidden) and callable(rig_is_hidden)
+    assert callable(hide_rig)
+    assert hasattr(apex_panel, "APEX_OT_toggle_bones")
+    assert "APEX_OT_toggle_bones" in {cls.__name__ for cls in apex_panel.panel_classes}
+    assert "Only the Animation folder" not in panel_src
+    assert "Limited to the Model folder" not in panel_src
+
+    import tempfile
+
+    from apex_auto_shader.anim import files as anim_files
+    from apex_auto_shader.naming import legend_from_anim_path
+
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp) / "2_Animation"
+        alter = root / "Alter" / "pilot"
+        newc = root / "Newcastle" / "pilot_heavy_newcastle"
+        inner = newc / "anims_pilot_heavy_newcastle"
+        maggie = root / "Mad Maggie"
+        dummy = root / "Dummy"
+        for folder in (alter, inner, maggie, dummy):
+            folder.mkdir(parents=True)
+        for i in range(4):
+            (alter / f"AIM_alter_idle_{i}.cast").write_bytes(b"x" * 300)
+        (newc / "AIM_newcastle_crouch_pistol_0.cast").write_bytes(b"x" * 300)
+        (inner / "newcastle_emote_dance.cast").write_bytes(b"x" * 300)
+        (maggie / "foo_bar.cast").write_bytes(b"x" * 300)
+        (dummy / "idle_wait.cast").write_bytes(b"x" * 300)
+        old_cap = anim_files._PER_DIR_CAP
+        anim_files._PER_DIR_CAP = 1
+        try:
+            found = dict(anim_files.list_animation_files(root))
+        finally:
+            anim_files._PER_DIR_CAP = old_cap
+        assert "AIM_newcastle_crouch_pistol_0" in found
+        assert "newcastle_emote_dance" in found
+        assert "foo_bar" in found
+        assert "idle_wait" in found
+        assert len([name for name in found if name.startswith("AIM_alter_idle_")]) == 1
+        assert legend_from_anim_path(inner / "newcastle_emote_dance.cast", root) == "newcastle"
+        assert legend_from_anim_path(maggie / "foo_bar.cast", root) == "madmaggie"
+        assert legend_from_anim_path(dummy / "idle_wait.cast", root) == ""
+        jump = root / "Jump"
+        jump.mkdir()
+        assert legend_from_anim_path(jump / "idle_wait.cast", root) == ""
+        picked = anim_files.picked_anim_dirs(str(root), ["Newcastle", "Alter"], lambda text: text)
+        assert {path.name for path in picked} == {"Newcastle", "Alter"}
+        assert anim_files.picked_anim_dirs(str(root), [], lambda text: text) == [root]
+
+    warm = anim.kelvin_to_rgb(2700)
+    white = anim.kelvin_to_rgb(6500)
+    assert warm[0] > warm[2], warm
+    assert min(white) > 0.85, white
+    assert hasattr(anim, "apply_light_kelvin") and hasattr(anim, "apply_composition_guides")
+
+    from apex_auto_shader import pack as skin_pack
+
+    casts = [
+        "/m/wraith_lgnd_v19_voidwalker_w_LOD0.cast",
+        "/m/wraith_base_w_LOD0.cast",
+        "/m/bloodhound_base_w_LOD0.cast",
+        "/m/pilot_light_wraith_base_w_LOD0.cast",
+    ]
+    corrupted = skin_pack.rank_cast_for_prefix("wraith_epicp_v23_voidsinister", casts)
+    assert corrupted == "", corrupted
+    no_lod = skin_pack.rank_cast_for_prefix(
+        "wraith_epicp_v23_voidsinister",
+        ["/m/wraith_epic_v23_voidsinister.cast"],
+    )
+    assert no_lod.endswith("wraith_epic_v23_voidsinister.cast"), no_lod
+    airship = skin_pack.files_present_indexed(
+        (),
+        (),
+        ("wraith_airship_assassin",),
+        "wraith_lgnd_v19_quarantine_rt02",
+        "Airship Assassin",
+        "Wraith",
+    )
+    assert airship, "airship name on disk"
+    assert skin_pack.files_present_indexed(
+        ("wraith_v20_heist",),
+        (),
+        (),
+        "wraith_v20_heist",
+        "Hellcat",
+        "Wraith",
+    )
+    assert skin_pack.files_present_indexed(
+        ("wraith_v20_heist",),
+        (),
+        (),
+        "wraith_v20_heist",
+        "Void Prowler",
+        "Wraith",
+    )
+    assert not skin_pack.files_present_indexed(
+        ("wraith_lgnd_v19_quarantine",),
+        (),
+        ("wraith_lgnd_v19_quarantine_body_col",),
+        "wraith_lgnd_v19_quarantine_rt02",
+        "Airship Assassin",
+        "Wraith",
+    )
+    depths = skin_pack.rank_cast_for_prefix("wraith_lgnd_v19_quarantine_rc01", casts[:2])
+    assert depths == "", depths
+    void_rc = skin_pack.rank_cast_for_prefix("wraith_lgnd_v19_voidwalker_rc01", casts)
+    assert void_rc.endswith("voidwalker_w_LOD0.cast"), void_rc
+    own = skin_pack.rank_cast_for_prefix(
+        "wraith_epicp_v23_voidsinister",
+        casts + ["/m/wraith_epicp_v23_voidsinister_w_LOD0.cast"],
+    )
+    assert own.endswith("voidsinister_w_LOD0.cast"), own
+    pilot = skin_pack.rank_cast_for_prefix(
+        "wraith_epicp_v23_voidsinister",
+        ["/m/pilot_light_wraith_base_w_LOD0.cast"],
+    )
+    assert pilot == "", pilot
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        export = Path(tmp) / "exported_files"
+        mats = export / "materials" / "noise"
+        klass = export / "mdl" / "humans" / "class" / "light"
+        legends = export / "mdl" / "techart" / "mshop" / "characters" / "legends" / "wraith"
+        mats.mkdir(parents=True)
+        klass.mkdir(parents=True)
+        legends.mkdir(parents=True)
+        for i in range(40):
+            (mats / f"noise_{i}.png").write_bytes(b"x")
+        (mats / "extra_weapon_w_LOD0.cast").write_bytes(b"x")
+        (klass / "wraith_v20_heist_w_LOD0.cast").write_bytes(b"x")
+        (legends / "wraith_lgnd_v21_shop_w_LOD0.cast").write_bytes(b"x")
+        found_casts, _blobs, _tex, _cut, paths = skin_pack.walk_model_index(export, limit=8)
+        assert "wraith_v20_heist" in found_casts, found_casts
+        assert "extra_weapon" in found_casts, found_casts
+        assert "wraith_lgnd_v21_shop" in found_casts, found_casts
+        assert any(path.endswith("wraith_v20_heist_w_LOD0.cast") for path in paths)
+    assert skin_pack.prefix_for("Wraith", "Void Prowler") == "wraith_v20_heist"
+    assert skin_pack.prefix_for("Wraith", "Hellcat") == "wraith_v20_heist"
+    assert skin_pack.prefix_for("Wraith", "Punk Prowler") == "wraith_lgnd_v20_heist_rt02"
+    assert skin_pack.prefix_for("Wraith", "Nanite Skirmisher") == "wraith_lgnd_v26_evocon"
+    assert skin_pack.files_present_indexed(
+        ("wraith_v20_heist",),
+        (),
+        (),
+        "wraith_lgnd_v20_boosted",
+        "Void Prowler",
+        "Wraith",
+    )
+    assert not skin_pack.files_present_indexed(
+        ("wraith_v20_heist",),
+        (),
+        (),
+        "wraith_lgnd_v20_boosted_rt01",
+        "Hellcat",
+        "Wraith",
+    )
+    assert skin_pack.files_present_indexed(
+        (),
+        (),
+        ("wraith_lgnd_v20_boosted_rt01_body_col",),
+        "wraith_lgnd_v20_boosted_rt01",
+        "Hellcat",
+        "Wraith",
+    )
+    heist = skin_pack.rank_cast_for_prefix(
+        "wraith_lgnd_v20_boosted_rt01",
+        ["/m/light/wraith_v20_heist_w_LOD0.cast"],
+    )
+    assert heist.endswith("wraith_v20_heist_w_LOD0.cast"), heist
+    from apex_auto_shader.naming.tex import cycle_recolor_code, scan_recolor_stack
+
+    assert cycle_recolor_code(["rt01", "rt02"], "") == "rt01"
+    assert cycle_recolor_code(["rt01", "rt02"], "rt01") == "rt02"
+    assert cycle_recolor_code(["rt01", "rt02"], "rt02") == ""
+
+    with tempfile.TemporaryDirectory() as tmp2:
+        base = Path(tmp2) / "exported_files"
+        wrong = base / "mdl" / "techart" / "mshop" / "characters" / "legends" / "wraith"
+        art = base / "texture" / "art" / "mshop" / "characters" / "legends" / "wraith"
+        wrong.mkdir(parents=True)
+        art.mkdir(parents=True)
+        (art / "wraith_lgnd_v20_boosted_rt01_body_col.png").write_bytes(b"recolor")
+        match = scan_recolor_stack(
+            wrong, "wraith_lgnd_v20_boosted", apply_recolor=True, recolor_code="rt01"
+        )
+        albedo = [tex.path for tex in match.textures if tex.slot == "albedo"]
+        assert albedo and "boosted_rt01" in albedo[0].replace("\\", "/"), albedo
 
     print("smoke_import: OK")
     return 0

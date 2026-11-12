@@ -1,6 +1,7 @@
 """Animation / import / studio camera — split for maintainability; public API unchanged."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import bpy
@@ -40,14 +41,21 @@ class APEX_OT_import_cast(bpy.types.Operator):
         from .. import utils
         from ..extras import tag_character
         from ..node_adder import current_node_adder
+        from ..prefs import model_folder_pref
 
-        paths = _gather_import_casts(self.directory, self.filepath, self.files)
+        paths = limit_to_model_folder(
+            _gather_import_casts(self.directory, self.filepath, self.files)
+        )
         if not paths:
-            folder = existing_dir(self.directory or self.filepath)
-            if folder is None:
-                self.report({"ERROR"}, "No folder or CAST file selected")
+            locked = model_folder_pref()
+            if locked is not None:
+                self.report({"ERROR"}, f"Models load only from the Model folder: {locked}")
             else:
-                self.report({"ERROR"}, f"No LOD0 .cast models in {folder}")
+                folder = existing_dir(self.directory or self.filepath)
+                if folder is None:
+                    self.report({"ERROR"}, "No folder or CAST file selected")
+                else:
+                    self.report({"ERROR"}, f"No LOD0 .cast models in {folder}")
             return {"CANCELLED"}
         last = None
         last_path = None
@@ -115,6 +123,18 @@ class APEX_OT_import_cast(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        from ..log import existing_dir
+        from ..prefs import model_folder_pref, pref
+
+        locked = model_folder_pref()
+        raw = str(locked) if locked is not None else str(pref("rsx_export_dir", "") or "").strip()
+        folder = existing_dir(raw) if raw else None
+        if folder is not None:
+            text = str(folder)
+            if not text.endswith(("/", "\\")):
+                text += "/"
+            self.directory = text
+            self.filepath = text
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
 
@@ -168,12 +188,67 @@ class APEX_OT_toggle_anim_group(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def _plain_clip_label(item) -> str:
+    from ..naming import clip_display_name
+
+    parts = [part for part in (item.group or "").split(":") if part]
+    kind = parts[1] if len(parts) >= 2 and parts[0] != "legend" else ""
+    raw = Path(item.path).stem if item.path else (item.name or "")
+    if kind in {"idle", "ingame", "select", "other"}:
+        return clip_display_name(raw, item.legend or "", kind) or item.name or raw
+    return item.name or raw
+
+
+def _bases_that_keep_zero(labels) -> set[str]:
+    """A trailing _0 stays only when the same name also has _1, _2, …"""
+    found: dict[str, set[str]] = {}
+    for label in labels:
+        match = re.search(r"_(\d+)$", label or "")
+        if not match:
+            continue
+        found.setdefault(label[: match.start()], set()).add(match.group(1))
+    return {base for base, numbers in found.items() if numbers - {"0"}}
+
+
+def _kept_zero_bases(data) -> dict[str, set[str]]:
+    items = getattr(data, "apex_anim_items", None)
+    grouped: dict[str, list[str]] = {}
+    for item in items or []:
+        if getattr(item, "is_header", False):
+            continue
+        grouped.setdefault(item.group or "", []).append(_plain_clip_label(item))
+    return {group: _bases_that_keep_zero(labels) for group, labels in grouped.items()}
+
+
+def _clip_row_label(item, kept: set[str] | None = None) -> str:
+    """Clean legend and group words. Drop a lone trailing _0."""
+    label = _plain_clip_label(item)
+    if label.endswith("_0") and (kept is None or label[:-2] not in kept):
+        label = label[:-2].rstrip("_ ")
+    return label or item.name or ""
+
+
+class APEX_OT_anim_search(bpy.types.Operator):
+    bl_idname = "apexaddon.anim_search"
+    bl_label = "Search Poses"
+    bl_description = "Search the animation list. A reversed name matches too"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context):
+        scene = context.scene
+        open_now = not bool(getattr(scene, "apex_anim_search", False))
+        scene.apex_anim_search = open_now
+        if not open_now:
+            scene.apex_anim_query = ""
+        return {"FINISHED"}
+
+
 class APEX_UL_anims(bpy.types.UIList):
     bl_idname = "APEX_UL_anims"
 
     def draw_filter(self, context, layout):
-        row = layout.row(align=True)
-        row.prop(self, "filter_name", text="", icon="VIEWZOOM")
+        # Search lives on the Loop row. Keep this empty so the list has one field.
+        return
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         indent = int(getattr(item, "indent", 0) or 0)
@@ -193,20 +268,40 @@ class APEX_UL_anims(bpy.types.UIList):
         row = layout.row(align=True)
         row.separator(factor=max(indent, 2))
         row.operator_context = "INVOKE_DEFAULT"
+        kept = getattr(self, "_kept_zero", None)
+        items = getattr(data, "apex_anim_items", None)
+        last = ""
+        try:
+            last = items[-1].path if items else ""
+        except Exception:
+            last = ""
+        key = (len(items or []), last)
+        if getattr(self, "_kept_key", None) != key or kept is None:
+            kept = _kept_zero_bases(data)
+            self._kept_zero = kept
+            self._kept_key = key
         op = row.operator(
             APEX_OT_apply_animation.bl_idname,
-            text=item.name,
+            text=_clip_row_label(item, kept.get(item.group or "", set())),
             emboss=False,
             icon="ARMATURE_DATA" if not item.victim_path else "COMMUNITY",
         )
         op.filepath = item.path
         op.victim_path = item.victim_path
         op.legend = item.legend
+        op.index = index
 
     def filter_items(self, context, data, propname):
+        from ..naming import anim_query_match
+
         items = getattr(data, propname)
         show = self.bitflag_filter_item
-        query = (getattr(self, "filter_name", "") or "").strip().lower()
+        scene = getattr(context, "scene", None)
+        query = ""
+        if scene is not None and bool(getattr(scene, "apex_anim_search", False)):
+            query = (getattr(scene, "apex_anim_query", "") or "").strip().lower()
+        if not query:
+            query = (getattr(self, "filter_name", "") or "").strip().lower()
         flags = []
         collapsed = {item.group for item in items if item.is_header and item.collapsed}
 
@@ -222,8 +317,9 @@ class APEX_UL_anims(bpy.types.UIList):
                 if item.is_header:
                     matched.append(False)
                     continue
-                hay = f"{item.name} {item.legend} {Path(item.path).stem}".lower()
-                hit = query in hay
+                hay_name = item.name or ""
+                hay_path = Path(item.path).stem if item.path else ""
+                hit = anim_query_match(query, hay_name, item.legend, hay_path, item.group)
                 matched.append(hit)
                 if hit:
                     match_groups.add(item.group)
@@ -266,9 +362,11 @@ class APEX_OT_toggle_frame(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        from .studio import apply_frame_orientation
+        from .studio import apply_frame_orientation, render_is_portrait
         scene = context.scene
-        scene.apex_cam_portrait = not bool(getattr(scene, "apex_cam_portrait", True))
+        # Flip the frame that is actually rendering, not a stale checkbox.
+        # A fresh 16:9 camera becomes 9:16 on the first click.
+        scene.apex_cam_portrait = not render_is_portrait(scene)
         apply_frame_orientation(scene)
         label = "9:16" if scene.apex_cam_portrait else "16:9"
         self.report({"INFO"}, label)
@@ -429,25 +527,51 @@ def unregister_camera_keys():
 class APEX_OT_pick_anim_folder(bpy.types.Operator):
     bl_idname = "apexaddon.pick_anim_folder"
     bl_label = "Choose Animation Folder"
-    bl_description = "Pick the folder and list every .cast animation"
+    bl_description = "Pick the folder and list every .cast animation, including subfolders"
     bl_options = {"REGISTER"}
     directory: StringProperty(name="Directory", options={"HIDDEN"})
+    files: CollectionProperty(type=bpy.types.OperatorFileListElement)
     filter_folder: bpy.props.BoolProperty(default=True, options={"HIDDEN"})
 
     def execute(self, context):
-        context.scene.apex_anim_dir = self.directory
-        folder = Path(bpy.path.abspath(self.directory))
-        if not folder.is_dir():
+        from .files import picked_anim_dirs
+        from ..prefs import anim_folder_pref
+
+        locked = anim_folder_pref()
+        names = [getattr(entry, "name", "") or "" for entry in (self.files or [])]
+        dirs = picked_anim_dirs(self.directory, names, bpy.path.abspath)
+        if locked is not None:
+            dirs = [Path(locked)]
+        if not dirs:
             self.report({"ERROR"}, "Not a folder")
             return {"CANCELLED"}
-        n = fill_animation_list(context.scene, folder)
+        if len(dirs) == 1:
+            context.scene.apex_anim_dir = str(dirs[0])
+            n = fill_animation_list(context.scene, dirs[0])
+            shown = dirs[0]
+        else:
+            parent = Path(bpy.path.abspath(self.directory)) if self.directory else dirs[0].parent
+            context.scene.apex_anim_dir = str(parent)
+            n = fill_animation_list(context.scene, sources=[(path, "") for path in dirs])
+            shown = parent
         if not n:
-            self.report({"ERROR"}, f"No .cast files in {folder}")
+            self.report({"ERROR"}, f"No .cast files in {shown}")
             return {"CANCELLED"}
-        self.report({"INFO"}, f"Loaded {n} animation(s)")
+        if locked is not None and self.directory and Path(bpy.path.abspath(self.directory)) != Path(locked):
+            self.report({"INFO"}, f"Animations load only from {locked}")
+        else:
+            self.report({"INFO"}, f"Loaded {n} animation(s)")
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        from ..prefs import anim_folder_pref
+
+        locked = anim_folder_pref()
+        if locked is not None:
+            text = str(locked)
+            if not text.endswith(("/", "\\")):
+                text += "/"
+            self.directory = text
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
 
@@ -469,10 +593,21 @@ class APEX_OT_pick_victim_cast(bpy.types.Operator):
     victim_anim: StringProperty(name="Victim Anim", options={"HIDDEN"})
 
     def invoke(self, context, event):
+        from ..prefs import model_folder_pref
+
+        locked = model_folder_pref()
+        if locked is not None:
+            text = str(locked)
+            if not text.endswith(("/", "\\")):
+                text += "/"
+            self.directory = text
+            self.filepath = text
         context.window_manager.fileselect_add(self)
         return {"RUNNING_MODAL"}
 
     def execute(self, context):
+        from ..prefs import model_folder_pref, path_is_under
+
         path = None
         if self.files:
             root = Path(bpy.path.abspath(self.directory or self.filepath))
@@ -485,6 +620,10 @@ class APEX_OT_pick_victim_cast(bpy.types.Operator):
             path = Path(bpy.path.abspath(self.filepath))
         if path is None or not path.is_file():
             self.report({"ERROR"}, "No .cast file selected")
+            return {"CANCELLED"}
+        locked = model_folder_pref()
+        if locked is not None and not path_is_under(path, locked):
+            self.report({"ERROR"}, f"Models load only from the Model folder: {locked}")
             return {"CANCELLED"}
         arm = resolve_character(context)
         if arm is None:
@@ -541,6 +680,21 @@ class APEX_OT_apply_animation(bpy.types.Operator):
         description="Keep the already loaded victim legend",
         default=True,
     )
+    index: bpy.props.IntProperty(name="Index", default=-1, options={"HIDDEN"})
+
+    def _keep_row(self, context) -> None:
+        items = getattr(context.scene, "apex_anim_items", None)
+        if items is None:
+            return
+        if 0 <= self.index < len(items) and not items[self.index].is_header:
+            context.scene.apex_anim_index = self.index
+            return
+        for i, item in enumerate(items):
+            if item.is_header or not item.path:
+                continue
+            if item.path == self.filepath and (item.victim_path or "") == (self.victim_path or ""):
+                context.scene.apex_anim_index = i
+                return
 
     def draw(self, context):
         layout = self.layout
@@ -549,6 +703,7 @@ class APEX_OT_apply_animation(bpy.types.Operator):
         layout.prop(self, "specific_victim")
 
     def invoke(self, context, event):
+        self._keep_row(context)
         if self.victim_path:
             return context.window_manager.invoke_props_dialog(self, width=320)
         return self.execute(context)
@@ -556,6 +711,7 @@ class APEX_OT_apply_animation(bpy.types.Operator):
     def execute(self, context):
         if not self.filepath:
             return {"CANCELLED"}
+        self._keep_row(context)
         arm = resolve_character_by_legend(context, self.legend)
         if arm is None:
             self.report({"ERROR"}, "No character armature found")
@@ -588,10 +744,19 @@ class APEX_OT_apply_animation(bpy.types.Operator):
             return {"CANCELLED"}
         redraw_view3d(context)
         clip = Path(self.filepath).stem
+        from .files import clip_should_autoplay
+
+        plays = clip_should_autoplay(self.filepath)
         if self.victim_path:
-            self.report({"INFO"}, "Playing finisher")
+            self.report(
+                {"INFO"},
+                "Playing finisher" if plays else "Finisher loaded (under 200KB, not playing)",
+            )
         else:
-            self.report({"INFO"}, f"Playing {clip}")
+            self.report(
+                {"INFO"},
+                f"Playing {clip}" if plays else f"Loaded {clip} (under 200KB, not playing)",
+            )
         return {"FINISHED"}
 
 
@@ -643,7 +808,6 @@ class APEX_OT_anim_delete(bpy.types.Operator):
             return {"CANCELLED"}
         clear_animation(context, arm)
         view_front_and_frame(context, arm)
-        hide_rig(arm)
         deselect_all(context)
         self.report({"INFO"}, f"Cleared animation on {arm.name}")
         return {"FINISHED"}
@@ -683,7 +847,6 @@ class APEX_OT_focus_character(bpy.types.Operator):
             context.scene.apex_texture_dir = str(tex)
         make_armature_active(context, obj)
         view_front_and_frame(context, obj)
-        hide_rig(obj)
         return {"FINISHED"}
 
 
@@ -883,6 +1046,7 @@ anim_classes = (
     APEX_OT_upgrade,
     APEX_PG_anim_item,
     APEX_OT_toggle_anim_group,
+    APEX_OT_anim_search,
     APEX_UL_anims,
     APEX_OT_add_camera,
     APEX_OT_toggle_frame,

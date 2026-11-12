@@ -11,6 +11,8 @@ LAYOUT_FORWARD = (0.0, 0.0, 1.0)
 ANIM_SUFFIXES = {".cast"}
 ANIM_LIST_CAP = 12000
 ANIM_MIN_BYTES = 256
+# Clips under this size still list, but do not start playback on their own.
+ANIM_PLAY_MIN_BYTES = 200 * 1024
 CHAR_VICTIM = "apex_is_victim"
 IMPORT_GAP = 1.5
 

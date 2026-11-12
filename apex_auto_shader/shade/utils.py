@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Iterable
 
 import bpy
+from bpy.app.handlers import persistent
 
 from ..blender_compat import (
     ensure_material_tree,
@@ -22,6 +23,9 @@ from ..naming import (
     TextureRef,
     cycle_recolor_code,
     eye_hash_kind,
+    is_base_hair02_name,
+    base_hair02_to_hide,
+    fallback_bodypart,
     find_texture_folder,
     guess_bodypart,
     is_glass_family,
@@ -46,7 +50,13 @@ from ..naming import (
     scan_object_folder,
     scan_recolor_stack,
     season_prefix_aliases,
+    part_hash_kind,
+    prefer_non_base_sets,
+    preferred_skin_prefix,
+    prefixes_for_legend_codename,
     should_hide_base_hair,
+    strip_blender_suffix,
+    tokenize,
     skin_prefix,
     split_mesh_variant,
     split_recolor_prefix,
@@ -57,6 +67,7 @@ from ..naming import (
     mesh_texture_prefixes,
     candidate_matches_mesh,
     mesh_requests_head,
+    dominant_mesh_prefix,
     prefixes_for_short_season,
     texture_set_prefix,
     texture_prefix_from_source,
@@ -102,9 +113,12 @@ def detect_prefix(obj: bpy.types.Object | None, scene=None) -> str:
     sources = []
     arm = resolve_armature(obj) if obj is not None else None
     if arm is not None:
-        sources.extend([arm.get(CHAR_CAST, ""), arm.get(CHAR_TAG, ""), arm.name])
+        sources.extend([arm.get(CHAR_TAG, ""), arm.get(CHAR_CAST, ""), arm.name])
     if obj is not None:
         sources.append(object_source_name(obj))
+    picked = preferred_skin_prefix(*sources)
+    if picked:
+        return picked
     object_mode = is_object_shader(scene)
     for source in sources:
         if not source:
@@ -335,29 +349,512 @@ def hide_object(obj: bpy.types.Object) -> None:
     obj.hide_render = True
 
 
-def hide_rig(obj: bpy.types.Object | None) -> None:
+def _armature_of(obj: bpy.types.Object | None):
     if obj is None:
-        return
-    arm = obj if obj.type == "ARMATURE" else None
-    if arm is None and obj.type == "MESH":
-        arm = obj.find_armature()
+        return None
+    try:
+        if obj.type == "ARMATURE":
+            return obj
+    except ReferenceError:
+        return None
+    if getattr(obj, "type", "") == "MESH":
+        arm = None
+        try:
+            arm = obj.find_armature()
+        except Exception:
+            arm = None
         if arm is None:
             cursor = obj
-            while cursor.parent is not None:
+            while getattr(cursor, "parent", None) is not None:
                 cursor = cursor.parent
-                if cursor.type == "ARMATURE":
+                if getattr(cursor, "type", "") == "ARMATURE":
                     arm = cursor
                     break
+        return arm
+    return None
+
+
+def _bone_collections(data):
+    cols = getattr(data, "collections_all", None)
+    if cols:
+        return list(cols)
+    cols = getattr(data, "collections", None)
+    return list(cols) if cols else []
+
+
+def _enable_bone_overlay() -> None:
+    """The Joints armature draws nothing while the viewport Bones overlay is off."""
+    try:
+        wm = bpy.context.window_manager
+    except Exception:
+        return
+    for window in getattr(wm, "windows", []) or []:
+        screen = getattr(window, "screen", None)
+        if screen is None:
+            continue
+        for area in getattr(screen, "areas", []) or []:
+            if getattr(area, "type", "") != "VIEW_3D":
+                continue
+            space = getattr(area, "spaces", None)
+            space = space.active if space is not None else None
+            overlay = getattr(space, "overlay", None)
+            if overlay is None:
+                continue
+            try:
+                overlay.show_overlays = True
+            except Exception:
+                pass
+            for attr in ("show_bones", "show_extras"):
+                if hasattr(overlay, attr):
+                    try:
+                        setattr(overlay, attr, True)
+                    except Exception:
+                        pass
+
+
+def _is_cast_armature(obj) -> bool:
+    if getattr(obj, "type", "") != "ARMATURE":
+        return False
+    if obj.get("apex_cast_path") or obj.get("apex_tag") or obj.get("apex_is_victim"):
+        return True
+    name = getattr(getattr(obj, "data", None), "name", "") or ""
+    return name == "Joints" or name.startswith("Joints.")
+
+
+def _clear_joint_shapes(arm: bpy.types.Object) -> None:
+    """Shapes draws the custom octahedron. Leave that checkbox off."""
+    data = getattr(arm, "data", None)
+    if data is not None:
+        try:
+            data.show_bone_custom_shapes = False
+        except Exception:
+            pass
+    pose = getattr(arm, "pose", None)
+    if pose is not None:
+        for pb in pose.bones:
+            try:
+                if pb.custom_shape is not None:
+                    pb.custom_shape = None
+            except Exception:
+                pass
+    junk = bpy.data.objects.get("ApexJointShape")
+    if junk is not None:
+        try:
+            bpy.data.objects.remove(junk, do_unlink=True)
+        except Exception:
+            pass
+
+
+def _lengthen_stub_bones(arm: bpy.types.Object) -> None:
+    """CAST creates every bone 0.0025 long, so the armature draws as nothing."""
+    if arm.get("apex_joints_sized"):
+        return
+    data = getattr(arm, "data", None)
+    bones = list(getattr(data, "bones", []) or [])
+    if data is None or not bones:
+        return
+    from mathutils import Vector
+
+    heads = []
+    lengths = []
+    for bone in bones:
+        head = Vector(bone.head_local)
+        tail = Vector(bone.tail_local)
+        heads.append(head)
+        lengths.append((tail - head).length)
+    span = 0.0
+    if heads:
+        xs = [head.x for head in heads]
+        ys = [head.y for head in heads]
+        zs = [head.z for head in heads]
+        span = max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs))
+    min_len = max(span * 0.02, 0.02) if span >= 0.05 else 0.04
+    ordered = sorted(lengths)
+    median = ordered[len(ordered) // 2] if ordered else 0.0
+    if median >= min_len * 0.75:
+        arm["apex_joints_sized"] = True
+        return
+    found = None
+    try:
+        wm = bpy.context.window_manager
+        for window in wm.windows:
+            screen = window.screen
+            if screen is None:
+                continue
+            for area in screen.areas:
+                if area.type != "VIEW_3D":
+                    continue
+                region = next((reg for reg in area.regions if reg.type == "WINDOW"), None)
+                if region is not None:
+                    found = (window, area, region)
+                    break
+            if found:
+                break
+    except Exception:
+        found = None
+    if found is None:
+        return
+    window, area, region = found
+    prev_active = bpy.context.view_layer.objects.active
+    prev_mode = arm.mode
+    try:
+        bpy.context.view_layer.objects.active = arm
+        with bpy.context.temp_override(window=window, area=area, region=region, active_object=arm, object=arm):
+            if arm.mode != "EDIT":
+                bpy.ops.object.mode_set(mode="EDIT")
+            for eb in data.edit_bones:
+                direction = eb.tail - eb.head
+                if direction.length >= min_len:
+                    continue
+                if direction.length < 1e-8:
+                    direction = Vector((0.0, min_len, 0.0))
+                else:
+                    direction = direction.normalized() * min_len
+                eb.tail = eb.head + direction
+            restore = prev_mode if prev_mode in {"OBJECT", "POSE"} else "OBJECT"
+            if arm.mode != restore:
+                bpy.ops.object.mode_set(mode=restore)
+        arm["apex_joints_sized"] = True
+    except Exception as exc:
+        log.warning("Could not lengthen joints on %s: %s", arm.name, exc)
+    finally:
+        try:
+            bpy.context.view_layer.objects.active = prev_active
+        except Exception:
+            pass
+
+
+def _use_native_bones(arm: bpy.types.Object) -> None:
+    _clear_joint_shapes(arm)
+    _lengthen_stub_bones(arm)
+    try:
+        arm["apex_joints_native"] = True
+        arm["apex_joint_shapes"] = 0
+    except Exception:
+        pass
+
+
+def _reveal_joint_draw(arm: bpy.types.Object) -> None:
+    """Make the CAST 'Joints' armature actually draw.
+
+    Hiding used to set hide_viewport. That flag is the monitor icon, which the
+    outliner eye does not clear, so the armature stayed invisible. Stick bones
+    inside the mesh also read as 'not there' unless they draw in front.
+    """
+    try:
+        arm.hide_set(False)
+    except Exception:
+        pass
+    try:
+        arm.hide_viewport = False
+        arm.hide_render = False
+    except Exception:
+        pass
+    try:
+        arm.show_in_front = True
+    except Exception:
+        pass
+    data = getattr(arm, "data", None)
+    if data is not None:
+        try:
+            data.display_type = "OCTAHEDRAL"
+        except Exception:
+            pass
+        for bone in list(getattr(data, "bones", []) or []):
+            try:
+                bone.hide = False
+            except Exception:
+                pass
+        for col in _bone_collections(data):
+            try:
+                col.is_visible = True
+            except Exception:
+                pass
+            if hasattr(col, "is_solo"):
+                try:
+                    col.is_solo = False
+                except Exception:
+                    pass
+    pose = getattr(arm, "pose", None)
+    if pose is not None:
+        for pb in getattr(pose, "bones", []) or []:
+            try:
+                pb.bone.hide = False
+            except Exception:
+                pass
+    _use_native_bones(arm)
+    _enable_bone_overlay()
+
+
+def show_rig(obj: bpy.types.Object | None) -> None:
+    """Unhide the armature and its bones in the viewport."""
+    arm = _armature_of(obj)
+    if arm is None:
+        return
+    try:
+        arm["apex_bones_shown"] = True
+        arm["apex_rig_gated"] = False
+    except Exception:
+        pass
+    _reveal_joint_draw(arm)
+    try:
+        bpy.context.scene.apex_character = arm.name
+    except Exception:
+        pass
+
+
+def _hide_rig_now(obj: bpy.types.Object | None) -> None:
+    arm = _armature_of(obj)
+    if arm is None:
+        return
+    try:
+        arm["apex_bones_shown"] = False
+        arm["apex_rig_gated"] = True
+    except Exception:
+        pass
+    # Eye only. hide_viewport survives the outliner eye and keeps Joints invisible.
+    try:
+        arm.hide_viewport = False
+    except Exception:
+        pass
+    hide_object(arm)
+    try:
+        arm.hide_set(True)
+    except Exception:
+        pass
+    try:
+        bpy.context.scene.apex_character = arm.name
+    except Exception:
+        pass
+
+
+def set_rig_hidden(obj: bpy.types.Object | None, hidden: bool) -> None:
+    if hidden:
+        _hide_rig_now(obj)
+    else:
+        show_rig(obj)
+
+
+_VIS_HOLD = 0
+
+
+def hold_rig_visibility(hold: bool) -> None:
+    """Animation apply unhides the armature so it can be selected. Do not treat that as the user turning joints on."""
+    global _VIS_HOLD
+    _VIS_HOLD += 1 if hold else -1
+    if _VIS_HOLD < 0:
+        _VIS_HOLD = 0
+
+
+def rig_visibility_held() -> bool:
+    return _VIS_HOLD > 0
+
+
+def restore_rig_visibility(obj: bpy.types.Object | None, hidden: bool) -> None:
+    """Put joints back. Off stays off, on stays on."""
+    arm = _armature_of(obj)
     if arm is not None:
+        _reveal_names.discard(getattr(arm, "name", ""))
+    set_rig_hidden(obj, bool(hidden))
+
+
+def hide_rig(obj: bpy.types.Object | None) -> None:
+    """Hide bones only while Preferences → Hide bones is on.
+
+    The eye on a character row sets apex_bones_shown so a later shade or
+    animation does not hide that rig again.
+    """
+    if obj is None:
+        return
+    try:
+        from ..prefs import post_shade_hide_rig
+    except Exception:
+        post_shade_hide_rig = lambda: True  # noqa: E731
+    if not post_shade_hide_rig():
+        return
+    arm = _armature_of(obj)
+    if arm is not None and arm.get("apex_bones_shown"):
+        return
+    _hide_rig_now(obj)
+
+
+def rig_is_hidden(obj: bpy.types.Object | None) -> bool:
+    arm = _armature_of(obj)
+    if arm is None:
+        return False
+    try:
+        if arm.hide_viewport:
+            return True
+    except Exception:
+        pass
+    try:
+        return bool(arm.hide_get())
+    except Exception:
+        return False
+
+
+def character_objects(arm: bpy.types.Object | None) -> list:
+    """Armature, its children, and the rest of the imported CAST collection."""
+    if arm is None:
+        return []
+    found = []
+    seen: set[str] = set()
+
+    def add(obj):
+        if obj is None or getattr(obj, "name", "") in seen:
+            return
+        if (getattr(obj, "name", "") or "").startswith("Apex "):
+            return
+        seen.add(obj.name)
+        found.append(obj)
+
+    add(arm)
+    for obj in list(getattr(arm, "children_recursive", []) or []):
+        add(obj)
+    raw = str(arm.get("apex_cast_collection", "") or "")
+    for name in raw.split("|"):
+        col = bpy.data.collections.get(name) if name else None
+        if col is None:
+            continue
+        for obj in list(getattr(col, "all_objects", []) or []):
+            add(obj)
+    return found
+
+
+def character_is_hidden(obj: bpy.types.Object | None) -> bool:
+    arm = _armature_of(obj)
+    if arm is None:
+        return False
+    bodies = [item for item in character_objects(arm) if getattr(item, "type", "") == "MESH"]
+    targets = bodies or [arm]
+    hidden = True
+    for item in targets:
         try:
-            arm.hide_viewport = False
+            hidden = hidden and bool(item.hide_get())
+        except Exception:
+            hidden = False
+    return hidden
+
+
+def set_character_hidden(obj: bpy.types.Object | None, hidden: bool) -> None:
+    """Hide or show the mesh and the armature. The eye is hide_set, not hide_viewport."""
+    arm = _armature_of(obj)
+    if arm is None:
+        return
+    for item in character_objects(arm):
+        try:
+            item.hide_viewport = False
         except Exception:
             pass
-        hide_object(arm)
         try:
-            bpy.context.scene.apex_character = arm.name
+            item.hide_set(bool(hidden))
         except Exception:
             pass
+    if hidden:
+        return
+    try:
+        from ..prefs import post_shade_hide_rig
+    except Exception:
+        return
+    if post_shade_hide_rig():
+        try:
+            arm.hide_set(True)
+            arm["apex_bones_shown"] = False
+        except Exception:
+            pass
+
+
+_reveal_names: set[str] = set()
+
+
+def _armature_needs_reveal(obj) -> bool:
+    """Eye is open, but Joints still cannot draw."""
+    if not _is_cast_armature(obj):
+        return False
+    try:
+        if obj.hide_get():
+            return False
+    except Exception:
+        return False
+    if getattr(obj, "hide_viewport", False):
+        return True
+    if obj.get("apex_rig_gated") and not bool(obj.get("apex_bones_shown")):
+        return True
+    # CAST bones are 0.0025 long and the custom-shape checkbox hides the real joints.
+    return not bool(obj.get("apex_joints_native")) or bool(obj.get("apex_joint_shapes"))
+
+
+def _flush_rig_reveal():
+    if rig_visibility_held():
+        return None
+    names = list(_reveal_names)
+    _reveal_names.clear()
+    for name in names:
+        obj = bpy.data.objects.get(name)
+        if obj is None or not _armature_needs_reveal(obj):
+            continue
+        try:
+            show_rig(obj)
+        except Exception:
+            pass
+    return None
+
+
+def reveal_visible_joints() -> None:
+    """CAST joints are stubs. Give every visible one a shape the viewport can draw."""
+    if rig_visibility_held():
+        return
+    for obj in list(getattr(bpy.data, "objects", []) or []):
+        try:
+            if not _is_cast_armature(obj) or obj.hide_get():
+                continue
+            if obj.get("apex_joints_native") and not obj.get("apex_joint_shapes"):
+                continue
+            show_rig(obj)
+        except Exception:
+            continue
+
+
+def _reveal_visible_joints_later():
+    reveal_visible_joints()
+    return None
+
+
+@persistent
+def apex_reveal_visible_joints(_dummy):
+    try:
+        if not bpy.app.timers.is_registered(_reveal_visible_joints_later):
+            bpy.app.timers.register(_reveal_visible_joints_later, first_interval=0.4)
+    except Exception:
+        reveal_visible_joints()
+
+
+def queue_rig_reveal(obj) -> None:
+    if rig_visibility_held() or not _armature_needs_reveal(obj):
+        return
+    _reveal_names.add(obj.name)
+    try:
+        if not bpy.app.timers.is_registered(_flush_rig_reveal):
+            bpy.app.timers.register(_flush_rig_reveal, first_interval=0.05)
+    except Exception:
+        _flush_rig_reveal()
+
+
+@persistent
+def apex_reveal_unhidden_rigs(scene, depsgraph=None):
+    """Outliner eye opens the Joints armature. Finish the unhide on a timer."""
+    _ = scene
+    updates = getattr(depsgraph, "updates", None) if depsgraph is not None else None
+    if not updates:
+        return
+    for update in updates:
+        obj = getattr(update, "id", None)
+        if obj is None:
+            continue
+        try:
+            queue_rig_reveal(obj)
+        except Exception:
+            continue
 
 
 def mesh_has_eye_material(mesh: bpy.types.Object) -> bool:
@@ -608,19 +1105,67 @@ def apply_eye_shader(mesh: bpy.types.Object) -> None:
 
 
 def hide_duplicate_hair(root: bpy.types.Object) -> None:
+    """Hide base lashes and base hair02 when a real hair mesh is in the rig.
+
+    body_0_*_base_hair hides when any real hair exists.
+    body_0_*_base_hair02 hides only when another mesh ends in hair02.
+    The numbered hair mesh and the cosmetic hair02 stay visible.
+    """
     meshes = material_meshes(root)
-    names = []
+    lashes = []
+    has_real = False
     for mesh in meshes:
-        names.append(mesh.name)
-        names.extend(m.name for m in mesh.data.materials if m)
-    if not should_hide_base_hair(names):
-        return
+        if is_base_hair02_name(mesh.name):
+            has_real = True
+            continue
+        if _is_base_lash(mesh.name):
+            lashes.append(mesh)
+            continue
+        if part_hash_kind(mesh.name) == "hair":
+            has_real = True
+            continue
+        toks = [t.lower() for t in tokenize(strip_blender_suffix(mesh.name))]
+        if "hair02" in toks or "stubinhair" in toks or "stubinahair" in toks:
+            has_real = True
+        elif toks and toks[-1] in {"hair", "hair02"}:
+            has_real = True
+    if has_real:
+        for mesh in lashes:
+            _hide_fully(mesh)
+            log.info("Hide %s (base hair / lashes, real hair present)", mesh.name)
+    hide_names = set(base_hair02_to_hide(mesh.name for mesh in meshes))
     for mesh in meshes:
-        tokens = [last_name_token(mesh.name)]
-        tokens.extend(last_name_token(m.name) for m in mesh.data.materials if m)
-        if "hair" in tokens and "hair02" not in tokens:
-            hide_object(mesh)
-            log.info("Hide %s (hair replaced by hair02)", mesh.name)
+        if mesh.name not in hide_names:
+            continue
+        _hide_fully(mesh)
+        log.info("Hide %s (base hair02, cosmetic hair02 present)", mesh.name)
+
+
+def _is_base_lash(name: str) -> bool:
+    if part_hash_kind(name) == "hair":
+        return False
+    low = strip_blender_suffix(name).lower()
+    if "hair02" in low or "stubinhair" in low or "stubinahair" in low:
+        return False
+    if low.endswith("_base_hair") or "_base_hair" in low:
+        return True
+    toks = [t.lower() for t in tokenize(name)]
+    return bool(toks) and toks[-1] == "hair" and "base" in toks
+
+
+def _hide_fully(mesh: bpy.types.Object) -> None:
+    try:
+        mesh.hide_set(True)
+    except Exception:
+        pass
+    try:
+        mesh.hide_viewport = True
+    except Exception:
+        pass
+    try:
+        mesh.hide_render = True
+    except Exception:
+        pass
 
 
 def _cast_identity_names(obj) -> list[str]:
@@ -682,6 +1227,120 @@ def _connect_albedo_alpha(mat, group, textures) -> None:
     link(mat.node_tree, img_node.outputs.get("Alpha"), alpha_in)
 
 
+def _skin_is_base(pref: str) -> bool:
+    if not pref:
+        return False
+    ident = parse_skin_identity(pref)
+    if ident.rarity == "base":
+        return True
+    return ident.skin in {"", "base"} and ident.rarity in {"", "base"}
+
+
+def _part_ok_for_hash(bodypart: str, kind: str) -> bool:
+    last = (bodypart or "").split("_")[-1]
+    if kind == "head":
+        return last in {"head", "helmet", "face"}
+    if kind == "hair":
+        return last in {"hair", "hair02", "stubinhair", "stubinahair"}
+    if kind == "gear":
+        return last in {"gear", "suit", "kit", "jumpkit", "zipline"}
+    return True
+
+
+def _fill_missing_slots(primary: list, fallback: list) -> list:
+    have = {tex.slot for tex in primary if getattr(tex, "slot", None)}
+    out = list(primary)
+    for tex in fallback:
+        slot = getattr(tex, "slot", None)
+        if slot and slot not in have:
+            out.append(tex)
+            have.add(slot)
+    return out
+
+
+def _blank_hash_material(mesh, prefix: str, kind: str) -> None:
+    """Copy a shared material off this mesh so a body shade cannot stick to it."""
+    mats = [m for m in mesh.data.materials if m is not None]
+    if mesh.active_material is not None and mesh.active_material not in mats:
+        mats.append(mesh.active_material)
+    for mat in mats:
+        mat = uniquify_material(mesh, mat, prefix or "apex", kind)
+        tree = getattr(mat, "node_tree", None)
+        if tree is not None:
+            tree.nodes.clear()
+
+
+_TEX_LABEL = {
+    "albedo": "Albedo",
+    "ao": "AO",
+    "normal": "Normal",
+    "gloss": "Glossiness",
+    "emissive": "Emissive",
+    "spec": "Specular",
+    "cavity": "Cavity",
+    "opacity": "Opacity",
+    "scatter": "Subsurface",
+    "aniso": "Aniso",
+    "ehl": "EHL",
+    "ehm": "EHM",
+}
+_TEX_RANK = {name: index for index, name in enumerate(_TEX_LABEL)}
+
+
+def _layout_wired_textures(mat, group, output, textures) -> None:
+    """Stack map nodes in shader-socket order, collapsed, one row per input."""
+    tree = getattr(mat, "node_tree", None)
+    if tree is None or group is None:
+        return
+    by_file: dict[str, str] = {}
+    for tex in textures:
+        slot = getattr(tex, "slot", None) or ""
+        for raw in (getattr(tex, "filename", ""), getattr(tex, "path", "")):
+            name = Path(str(raw)).name.lower()
+            if name:
+                by_file[name] = slot
+    placed: dict = {}
+    try:
+        sockets = list(group.inputs)
+    except Exception:
+        sockets = []
+    for index, sock in enumerate(sockets):
+        for link_ in list(getattr(sock, "links", []) or []):
+            src = getattr(link_, "from_node", None)
+            if src is not None and getattr(src, "type", "") == "TEX_IMAGE":
+                placed.setdefault(src, index)
+    for node in tree.nodes:
+        if getattr(node, "type", "") != "TEX_IMAGE" or getattr(node, "image", None) is None:
+            continue
+        blob = f"{node.image.name} {getattr(node.image, 'filepath', '')}".lower()
+        slot = ""
+        for name, found in by_file.items():
+            if name in blob:
+                slot = found
+                break
+        if slot:
+            node.label = _TEX_LABEL.get(slot, slot)
+        node.hide = True
+        try:
+            node.width = 240.0
+        except Exception:
+            pass
+    group.location = (460.0, 0.0)
+    if output is not None:
+        output.location = (820.0, 0.0)
+    header = 32.0
+    pitch = 22.0
+    for node, index in placed.items():
+        node.location = (group.location.x - 300.0, group.location.y - header - pitch * index)
+    spare = group.location.y - header - pitch * max(len(sockets), 1)
+    for node in tree.nodes:
+        if getattr(node, "type", "") == "TEX_IMAGE" and node not in placed:
+            node.location = (group.location.x - 300.0, spare)
+            spare -= pitch
+        elif getattr(node, "type", "") in {"MIX_SHADER", "BSDF_TRANSPARENT"}:
+            node.location = (group.location.x, group.location.y + 160.0)
+
+
 def shade_material(
     mat: bpy.types.Material,
     node_adder_cls: type[NodeAdder],
@@ -701,11 +1360,15 @@ def shade_material(
     output_node.location = (700.0, 0.0)
     links.new(cas_node_group.outputs[0], output_node.inputs[0])
 
+    ordered = sorted(
+        list(textures),
+        key=lambda tex: _TEX_RANK.get(tex.slot or "", 50),
+    )
     wired = 0
     has_opacity = False
-    for i, tex in enumerate(textures):
+    for tex in ordered:
         ok = node_adder_cls.addImageTexture(
-            Path(tex.path), mat, cas_node_group, (0.0, -70.0 * i)
+            Path(tex.path), mat, cas_node_group, (0.0, 0.0)
         )
         flag = "O" if ok else "X"
         log.info("Add %s (%s) %s", tex.filename, tex.slot or tex.slot_raw, flag)
@@ -713,6 +1376,7 @@ def shade_material(
             wired += 1
             if tex.slot == "opacity":
                 has_opacity = True
+    _layout_wired_textures(mat, cas_node_group, output_node, ordered)
     if has_opacity:
         set_alpha_clip(mat)
     elif (
@@ -781,6 +1445,11 @@ def shade_mesh(
             f"Could not read a CAST prefix from '{mesh.name}'. "
             "Select the imported armature or a mesh named after the CAST file."
         )
+    hash_kind = part_hash_kind(mesh.name)
+    if hash_kind:
+        # Shared CAST materials are named "..._body". Detach before any miss
+        # so a gear/head/hair mesh cannot keep the body maps.
+        _blank_hash_material(mesh, prefix, hash_kind)
 
     extra = _cast_identity_names(mesh)
     select_level = _scan_target_level(prefix, *extra)
@@ -806,12 +1475,35 @@ def shade_mesh(
     recolor_locked = bool(getattr(match, "recolor_code", "") or "")
     if match is not None and getattr(match, "textures", None):
         bodypart = _fits(match)
-        if bodypart or recolor_locked:
+        if hash_kind in {"head", "hair", "gear"}:
+            forced = guess_bodypart([mesh.name], match.bodyparts())
+            if forced and _part_ok_for_hash(forced, hash_kind):
+                bodypart = forced
+                chosen = match
+        elif bodypart or recolor_locked:
             chosen = match
     if chosen is None and not recolor_locked:
-        order = mesh_texture_prefixes(prefix or "", mesh.name, known_sets or [], discovered)
+        order = prefer_non_base_sets(
+            mesh_texture_prefixes(prefix or "", mesh.name, known_sets or [], discovered),
+            mesh.name,
+        )
+        if hash_kind in {"head", "hair", "gear"}:
+            legend = _mesh_legend(mesh) or parse_skin_identity(prefix or "").legend
+            if legend:
+                base_name = f"{legend}_base"
+                if base_name not in order:
+                    order.append(base_name)
+            if hash_kind == "gear":
+                for extra_pref in list(known_sets or []):
+                    extra_pref = (extra_pref or "").strip("_").lower()
+                    if extra_pref and extra_pref not in order:
+                        order.append(extra_pref)
+            rest = [item for item in order if not _skin_is_base(item)]
+            base_prefs = [item for item in order if _skin_is_base(item)]
+            if rest:
+                order = rest + base_prefs
         mesh_pref = skin_prefix(mesh.name)
-        wants_head = mesh_requests_head(mesh.name)
+        wants_head = hash_kind == "head" or mesh_requests_head(mesh.name)
         own = None
         own_prefix = ""
         for cand in order:
@@ -819,6 +1511,10 @@ def shade_mesh(
                 continue
             trial = _scanned(cand)
             hit = _fits(trial)
+            if hash_kind in {"head", "hair", "gear"}:
+                forced = guess_bodypart([mesh.name], trial.bodyparts() if trial else [])
+                # The material name is often "..._body". Do not wear that on gear/head/hair.
+                hit = forced or None
             if wants_head and hit and hit.split("_")[-1] not in {"head", "helmet", "face"}:
                 hit = None
             if hit:
@@ -904,7 +1600,45 @@ def shade_mesh(
             "hidden": True,
         }
     parts = match.bodyparts()
-    if not textures0:
+    if hash_kind in {"head", "hair", "gear"}:
+        forced = guess_bodypart([mesh.name], parts)
+        if forced and _part_ok_for_hash(forced, hash_kind):
+            bodypart = forced
+            textures0 = _pick(bodypart)
+        elif bodypart and not _part_ok_for_hash(bodypart, hash_kind):
+            bodypart = None
+            textures0 = []
+    if bodypart is None:
+        named = fallback_bodypart(mesh.name, parts)
+        if named:
+            bodypart = named
+            textures0 = _pick(bodypart)
+    suit_tail = last_name_token(mesh.name)
+    if (
+        not textures0
+        and hash_kind != "gear"
+        and suit_tail in {"suit", "gear", "jumpkit", "zipline", "kit"}
+    ):
+        body_part = next((part for part in parts if part.split("_")[-1] == "body"), "")
+        if body_part:
+            bodypart = body_part
+            textures0 = _pick(bodypart)
+    if hash_kind in {"head", "hair"} and folder is not None:
+        legend = _mesh_legend(mesh) or parse_skin_identity(prefix or "").legend
+        base_name = f"{legend}_base" if legend else ""
+        if base_name and not _skin_is_base(prefix or ""):
+            trial = _scanned(base_name)
+            if trial and getattr(trial, "textures", None):
+                base_bp = guess_bodypart([mesh.name], trial.bodyparts())
+                if base_bp and _part_ok_for_hash(base_bp, hash_kind):
+                    base_tex = prefer_textures(trial.textures, base_bp)
+                    if base_tex:
+                        if not textures0:
+                            textures0 = base_tex
+                            bodypart = base_bp
+                        else:
+                            textures0 = _fill_missing_slots(textures0, base_tex)
+    if not textures0 and hash_kind not in {"head", "hair", "gear"}:
         if len(parts) == 1:
             bodypart = parts[0]
             textures0 = _pick(bodypart)
@@ -914,6 +1648,8 @@ def shade_mesh(
     if bodypart is None and textures0:
         bodypart = parts[0] if parts else "object"
     if bodypart is None:
+        if hash_kind:
+            _blank_hash_material(mesh, prefix or mesh.name, hash_kind)
         raise RuntimeError(
             f"Could not match mesh '{mesh.name}' to a body part. "
             f"Known parts: {', '.join(match.bodyparts()) or '(none)'}"
@@ -934,12 +1670,16 @@ def shade_mesh(
     have: list[str] = []
     parts_used: list[str] = []
     for mat in mats:
-        slot_names = [mat.name, mesh.name]
-        slot_bp = guess_bodypart(slot_names, match.bodyparts()) or bodypart
+        if hash_kind in {"head", "hair", "gear"} and bodypart:
+            slot_bp = bodypart
+            textures = list(textures0)
+        else:
+            slot_names = [mat.name, mesh.name]
+            slot_bp = guess_bodypart(slot_names, match.bodyparts()) or bodypart
+            textures = _pick(slot_bp)
+            if not textures:
+                textures = textures0
         mat = uniquify_material(mesh, mat, prefix, slot_bp)
-        textures = _pick(slot_bp)
-        if not textures:
-            textures = textures0
         hashed = is_glass_family(slot_bp) or is_transparent_family(slot_bp)
         wired += shade_material(
             mat, adder, textures, bodypart=slot_bp, alpha_hashed=hashed
@@ -999,6 +1739,15 @@ def shade_armature(
             if ranked and (own_folder or len(ranked) == 1):
                 discovered = ranked[0]
         if not discovered:
+            coded = prefixes_for_legend_codename(prefix or folder.name, file_names)
+            if not coded and folder is not None:
+                coded = prefixes_for_legend_codename(prefix or "", file_names)
+            if coded:
+                discovered = coded[0]
+        if not discovered:
+            mesh_names = [mesh.name for mesh in material_meshes(armature)]
+            discovered = dominant_mesh_prefix(mesh_names)
+        if not discovered:
             mesh_names = [mesh.name for mesh in material_meshes(armature)]
             ranked = prefixes_for_short_season(prefix or folder.name, file_names, mesh_names)
             if ranked:
@@ -1030,10 +1779,30 @@ def shade_armature(
             reports.append(
                 {"mesh": mesh.name, "bodypart": None, "wired": 0, "total": 0, "error": str(exc)}
             )
+    hide_duplicate_hair(armature)
     return reports
 
 
 def shade_selected(
+    objects: Iterable[bpy.types.Object],
+    node_adder_cls: type[NodeAdder],
+    folder: Path | None = None,
+    prefix: str | None = None,
+    match: object | None = None,
+    finish: bool = True,
+) -> list[dict]:
+    from ..naming import pop_texture_cache, push_texture_cache
+
+    push_texture_cache()
+    try:
+        return _shade_selected(
+            objects, node_adder_cls, folder=folder, prefix=prefix, match=match, finish=finish
+        )
+    finally:
+        pop_texture_cache()
+
+
+def _shade_selected(
     objects: Iterable[bpy.types.Object],
     node_adder_cls: type[NodeAdder],
     folder: Path | None = None,
@@ -1135,6 +1904,9 @@ def uniquify_material(mesh, mat, prefix: str, bodypart: str):
         if other is not None and arm is not None and other != arm:
             shared = True
             break
+        if part_hash_kind(mesh.name) and (other == arm or other is None):
+            shared = True
+            break
     if not shared:
         return mat
     copy = mat.copy()
@@ -1183,6 +1955,11 @@ def recolorSelected(
             ordered.append(value)
 
     _add_cand(prefix)
+    from ..naming.tex import texture_prefixes_for_mesh
+
+    for alias in texture_prefixes_for_mesh(prefix):
+        if alias and alias not in ordered:
+            ordered.insert(0, alias)
     for mesh_name in mesh_names:
         _add_cand(skin_prefix(mesh_name))
     for cand in _candidate_prefixes(prefix, folder, mesh_names):
@@ -1193,21 +1970,25 @@ def recolorSelected(
     extra = _cast_identity_names(arm)
     merged = None
     nxt = ""
+    chosen = ""
     for cand in ordered:
         available = list_folder_recolors(folder, cand)
-        nxt_try = cycle_recolor_code(available, current)
-        if not nxt_try:
+        if not available:
             continue
+        nxt_try = cycle_recolor_code(available, current)
+        if nxt_try == (current or ""):
+            continue
+        base = split_recolor_prefix(cand)[0] or cand
         trial = scan_recolor_stack(
             folder,
-            cand,
-            apply_recolor=True,
-            recolor_code=nxt_try,
-            target_level=_scan_target_level(cand, *extra),
+            base,
+            apply_recolor=bool(nxt_try),
+            recolor_code=nxt_try or None,
+            target_level=_scan_target_level(base, *extra),
             source_name=extra[0] if extra else "",
         )
         if trial.textures:
-            prefix = cand
+            chosen = base
             nxt = nxt_try
             merged = trial
             break
@@ -1215,14 +1996,29 @@ def recolorSelected(
         raise RuntimeError(
             f"No recolor / level maps for prefix '{prefix}' in {folder}."
         )
+    tex_path = Path(str(merged.textures[0].path))
+    if tex_path.parent.is_dir():
+        folder = tex_path.parent
+        arm["apex_texture_dir"] = str(folder)
     reports = shade_selected(
-        [arm], node_adder_cls, folder=folder, prefix=prefix, match=merged, finish=False
+        [arm], node_adder_cls, folder=folder, prefix=chosen or prefix, match=merged, finish=False
     )
-    from ..naming import with_recolor_prefix
+    from ..naming import texture_prefixes_for_mesh, with_recolor_prefix
 
-    arm[CHAR_RECOLOR] = nxt
-    tagged = str(arm.get(CHAR_TAG, "") or prefix)
-    arm[CHAR_TAG] = with_recolor_prefix(tagged, nxt) if nxt else split_recolor_prefix(tagged)[0] or tagged
+    tagged = str(arm.get(CHAR_TAG, "") or chosen or prefix)
+    base_tag = split_recolor_prefix(tagged)[0] or tagged
+    alias = texture_prefixes_for_mesh(base_tag)
+    skin_base = split_recolor_prefix(alias[0])[0] if alias else (chosen or base_tag)
+    if nxt:
+        arm[CHAR_RECOLOR] = nxt
+        arm[CHAR_TAG] = with_recolor_prefix(skin_base, nxt)
+    else:
+        if CHAR_RECOLOR in arm:
+            try:
+                del arm[CHAR_RECOLOR]
+            except Exception:
+                arm[CHAR_RECOLOR] = ""
+        arm[CHAR_TAG] = skin_base
     deselect_all(bpy.context)
     return nxt or "original", reports
 

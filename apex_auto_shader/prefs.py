@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-import bpy
-from bpy.props import BoolProperty, EnumProperty, FloatProperty
+from pathlib import Path
 
-from .log import log
+import bpy
+from bpy.props import BoolProperty, EnumProperty, FloatProperty, StringProperty
+
+from .log import existing_dir, log
 
 SHADER_ITEMS = (
     ("plus_se", "se Apex Shader Plus", "se_Apex Shader Plus (default)"),
@@ -45,6 +47,30 @@ def pref(name: str, default):
         return getattr(prefs, name, default)
     except Exception:
         return default
+
+
+def favorite_key(legend: str, name: str) -> str:
+    return f"{(legend or '').strip().lower()}|{(name or '').strip().lower()}"
+
+
+def favorite_set() -> set[str]:
+    raw = str(pref("favorite_skins", "") or "")
+    return {line.strip().lower() for line in raw.splitlines() if "|" in line}
+
+
+def toggle_favorite(legend: str, name: str) -> bool:
+    """Return True when the skin is now a favorite."""
+    key = favorite_key(legend, name)
+    keys = favorite_set()
+    enabled = key not in keys
+    if enabled:
+        keys.add(key)
+    else:
+        keys.discard(key)
+    prefs = addon_prefs()
+    if prefs is not None:
+        prefs.favorite_skins = "\n".join(sorted(keys))
+    return enabled
 
 
 def model_scale() -> float:
@@ -97,6 +123,173 @@ def post_shade_frame_view() -> bool:
     return bool(pref("post_shade_frame_view", True))
 
 
+def path_is_under(path, root) -> bool:
+    """True when path is root or a file/folder inside it."""
+    try:
+        child = Path(path).resolve()
+        base = Path(root).resolve()
+    except Exception:
+        return False
+    if child == base:
+        return True
+    try:
+        child.relative_to(base)
+        return True
+    except ValueError:
+        return False
+
+
+def _folder_pref(name: str):
+    """Return a set preference folder. Missing paths still lock the search."""
+    raw = str(pref(name, "") or "").strip()
+    if not raw:
+        return None
+    found = existing_dir(raw)
+    if found is not None:
+        return found
+    from .log import safe_path
+
+    return safe_path(raw)
+
+
+def model_folder_pref():
+    """Set folder = models load only from here. Empty = no lock."""
+    return _folder_pref("model_dir")
+
+
+def anim_folder_pref():
+    """Set folder = animations load only from here. Empty = search as usual."""
+    return _folder_pref("anim_dir")
+
+
+def prop_folder_pref():
+    """Set folder = the Prop panel lists guns only from here. Empty = no lock."""
+    return _folder_pref("prop_dir")
+
+
+def _on_prop_dir_update(self, context):
+    """Preference is a starting folder. A path already chosen in the panel stays."""
+    folder = prop_folder_pref()
+    if folder is None:
+        return
+    scenes = []
+    try:
+        scenes = list(bpy.data.scenes)
+    except Exception:
+        scene = getattr(context, "scene", None)
+        if scene is not None:
+            scenes = [scene]
+    for scene in scenes:
+        try:
+            if not str(getattr(scene, "apex_prop_dir", "") or ""):
+                scene.apex_prop_dir = str(folder)
+        except Exception:
+            pass
+
+
+def _tagged_arms(context):
+    try:
+        from .shade.extras import tagged_armatures
+    except Exception:
+        return []
+    scene = getattr(context, "scene", None)
+    try:
+        return list(tagged_armatures(scene))
+    except Exception:
+        return []
+
+
+def _on_model_scale_update(self, context):
+    try:
+        scale = max(0.001, min(1.0, float(getattr(self, "model_scale", 0.025))))
+    except (TypeError, ValueError):
+        return
+    for arm in _tagged_arms(context):
+        try:
+            arm.scale = (scale, scale, scale)
+        except Exception:
+            pass
+
+
+def _on_anim_loop_update(self, context):
+    value = bool(getattr(self, "anim_loop", True))
+    scenes = []
+    try:
+        scenes = list(bpy.data.scenes)
+    except Exception:
+        scene = getattr(context, "scene", None)
+        if scene is not None:
+            scenes = [scene]
+    for scene in scenes:
+        try:
+            scene.apex_anim_loop = value
+        except Exception:
+            pass
+
+
+def _on_hide_lods_update(self, context):
+    hide = bool(getattr(self, "hide_higher_lods", True))
+    try:
+        from .shade.extras import hide_higher_lods, reveal_higher_lods
+    except Exception:
+        return
+    for arm in _tagged_arms(context):
+        try:
+            if hide:
+                hide_higher_lods(arm)
+            else:
+                reveal_higher_lods(arm)
+        except Exception:
+            pass
+
+
+def _on_hide_rig_update(self, context):
+    hide = bool(getattr(self, "post_shade_hide_rig", True))
+    try:
+        from .shade.utils import set_rig_hidden
+    except Exception:
+        return
+    for arm in _tagged_arms(context):
+        try:
+            set_rig_hidden(arm, hide)
+        except Exception:
+            pass
+
+
+def _on_model_dir_update(self, context):
+    folder = model_folder_pref()
+    if folder is None or context is None:
+        return
+    scene = getattr(context, "scene", None)
+    if scene is None:
+        return
+    try:
+        scene.apex_model_dir = str(folder)
+    except Exception:
+        pass
+
+
+def _on_anim_dir_update(self, context):
+    folder = anim_folder_pref()
+    if folder is None or context is None:
+        return
+    scene = getattr(context, "scene", None)
+    if scene is None:
+        return
+    try:
+        if str(getattr(scene, "apex_anim_dir", "") or "") != str(folder):
+            scene.apex_anim_dir = str(folder)
+            return
+    except Exception:
+        return
+    try:
+        from .anim.clips import fill_animation_list
+
+        fill_animation_list(scene, folder)
+    except Exception:
+        pass
+
+
 
 def cast_importer_available() -> bool:
     try:
@@ -144,8 +337,8 @@ def optic_enhancer_available() -> bool:
 
 class APEX_OT_uninstall(bpy.types.Operator):
     bl_idname = "apexaddon.uninstall"
-    bl_label = "Deinstallieren"
-    bl_description = "Schaltet Apex Auto Shader aus und entfernt das Addon"
+    bl_label = "Uninstall"
+    bl_description = "Disable Apex Auto Shader and remove the add-on"
     bl_options = {"INTERNAL"}
 
     def invoke(self, context, event):
@@ -189,12 +382,13 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
     )
     model_scale: FloatProperty(
         name="Model Scale",
-        description="Applied after CAST import / shade",
+        description="Applied to imported characters. Changing it rescales the current ones",
         default=0.025,
         min=0.001,
         max=1.0,
         step=0.1,
         precision=4,
+        update=_on_model_scale_update,
     )
     auto_shade: BoolProperty(
         name="Auto-shade on import",
@@ -203,19 +397,21 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
     )
     auto_load_anims: BoolProperty(
         name="Auto-load legend animations",
-        description="Fill the animation list from animseq when the legend is known",
+        description="Fill the animation list when a legend is imported",
         default=True,
     )
     anim_loop: BoolProperty(
         name="Loop animations",
-        description="Default for the Loop toggle on new scenes",
+        description="Loop clips. Applies to open scenes immediately",
         default=True,
+        update=_on_anim_loop_update,
     )
 
     hide_higher_lods: BoolProperty(
         name="Hide higher LODs",
-        description="Hide LOD1+ meshes when shading (keep LOD0 only)",
+        description="Hide LOD1+ meshes. Applies to the current character immediately",
         default=True,
+        update=_on_hide_lods_update,
     )
     post_shade_orient: BoolProperty(
         name="Orient after shade",
@@ -223,14 +419,50 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
         default=True,
     )
     post_shade_hide_rig: BoolProperty(
-        name="Hide rig after shade",
-        description="Hide the armature after shading (meshes stay visible)",
+        name="Hide bones",
+        description="Hide armature bones. Turn off to show them now, on the current model",
         default=True,
+        update=_on_hide_rig_update,
     )
     post_shade_frame_view: BoolProperty(
         name="Frame view after shade",
         description="Frame the camera on the character after shading",
         default=True,
+    )
+    rsx_export_dir: StringProperty(
+        name="RSX export folder",
+        description=(
+            "Folder RSX exports into. Find Skins starts here when Model folder is empty"
+        ),
+        subtype="DIR_PATH",
+        default="",
+    )
+    model_dir: StringProperty(
+        name="Model folder",
+        description="Optional. If set, Import CAST and Find Skins load models only from this folder",
+        subtype="DIR_PATH",
+        default="",
+        update=_on_model_dir_update,
+    )
+    anim_dir: StringProperty(
+        name="Animation folder",
+        description="Optional. If set, animations load only from this folder",
+        subtype="DIR_PATH",
+        default="",
+        update=_on_anim_dir_update,
+    )
+    prop_dir: StringProperty(
+        name="Prop folder",
+        description="Optional. If set, the Prop panel lists guns only from this folder",
+        subtype="DIR_PATH",
+        default="",
+        update=_on_prop_dir_update,
+    )
+    favorite_skins: StringProperty(
+        name="Favorite skins",
+        description="Find Skins favorites. One legend|name per line",
+        default="",
+        options={"HIDDEN"},
     )
 
 
@@ -239,29 +471,19 @@ class ApexAutoShaderPreferences(bpy.types.AddonPreferences):
         row = layout.row()
         row.label(text="Auto-shade Apex Legends Models")
         row = layout.row(align=True)
-        row.operator("apexaddon.install_zip", text="ZIP installieren", icon="IMPORT")
-        row.operator(APEX_OT_uninstall.bl_idname, text="Deinstallieren", icon="TRASH")
+        row.operator("apexaddon.install_zip", text="Install ZIP", icon="IMPORT")
+        row.operator(APEX_OT_uninstall.bl_idname, text="Uninstall", icon="TRASH")
         layout.prop(self, "default_shader")
+        layout.prop(self, "rsx_export_dir")
+        layout.prop(self, "model_dir")
+        layout.prop(self, "anim_dir")
+        layout.prop(self, "prop_dir")
         layout.prop(self, "model_scale")
         layout.prop(self, "auto_shade")
         layout.prop(self, "auto_load_anims")
         layout.prop(self, "anim_loop")
-        layout.prop(self, "hide_higher_lods")
+        layout.prop(self, "post_shade_hide_rig")
         box_post = layout.box()
         box_post.label(text="After shade")
         box_post.prop(self, "post_shade_orient")
-        box_post.prop(self, "post_shade_hide_rig")
         box_post.prop(self, "post_shade_frame_view")
-        box = layout.box()
-        if cast_importer_available():
-            box.label(text="CAST importer: found", icon="CHECKMARK")
-        else:
-            box.label(text="CAST importer: missing", icon="ERROR")
-            box.label(text="Install dtzxporter/cast")
-        box_oe = layout.box()
-        if optic_enhancer_available():
-            box_oe.label(text="Optic Enhancer: found", icon="CHECKMARK")
-        else:
-            box_oe.label(text="Optic Enhancer: optional companion not found", icon="INFO")
-            box_oe.label(text="Look expansion pack (creases, wear, glow, portrait)")
-            box_oe.label(text=OPTIC_URL)
